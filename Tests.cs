@@ -1751,7 +1751,7 @@ S
         // test below from http://genshi.edgewall.org/
 
         [Test]
-        public void sanitize_unchangedTest()
+        public void SanitizeUnchangedTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<a href=""#"">fo<br />o</a>";
@@ -1762,7 +1762,7 @@ S
         }
 
         [Test]
-        public void sanitize_escape_textTest()
+        public void SanitizeEscapeTextTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<a href=""#"">fo&amp;</a>";
@@ -1773,7 +1773,7 @@ S
         }
 
         [Test]
-        public void sanitize_entityref_textTest()
+        public void SanitizeEntityrefTextTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<a href=""#"">fo&ouml;</a>";
@@ -1781,7 +1781,7 @@ S
         }
 
         [Test]
-        public void sanitize_escape_attrTest()
+        public void SanitizeEscapeAttrTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<div title=""&lt;foo&gt;""></div>";
@@ -1789,7 +1789,7 @@ S
         }
 
         [Test]
-        public void sanitize_close_empty_tagTest()
+        public void SanitizeCloseEmptyTagTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<a href=""#"">fo<br>o</a>";
@@ -1797,7 +1797,7 @@ S
         }
 
         [Test]
-        public void sanitize_invalid_entityTest()
+        public void SanitizeInvalidEntityTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"&junk;";
@@ -1805,7 +1805,7 @@ S
         }
 
         [Test]
-        public void sanitize_remove_script_elemTest()
+        public void SanitizeRemoveScriptElemTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<script>alert(""Foo"")</script>";
@@ -1815,7 +1815,7 @@ S
         }
 
         [Test]
-        public void sanitize_remove_onclick_attrTest()
+        public void SanitizeRemoveOnclickAttrTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<div onclick=\'alert(""foo"")\' />";
@@ -1823,7 +1823,7 @@ S
         }
 
         [Test]
-        public void sanitize_remove_commentsTest()
+        public void SanitizeRemoveCommentsTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<div><!-- conditional comment crap --></div>";
@@ -1831,7 +1831,7 @@ S
         }
 
         [Test]
-        public void sanitize_remove_style_scriptsTest()
+        public void SanitizeRemoveStyleScriptsTest()
         {
             var sanitizer = new HtmlSanitizer();
             // Inline style with url() using javascript: scheme
@@ -1867,7 +1867,7 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Test]
-        public void sanitize_remove_style_phishingTest()
+        public void SanitizeRemoveStylePhishingTest()
         {
             var sanitizer = new HtmlSanitizer();
             // The position property is not allowed
@@ -1879,7 +1879,7 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Test]
-        public void sanitize_remove_src_javascriptTest()
+        public void SanitizeRemoveSrcJavascriptTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<img src=\'javascript:alert(""foo"")\'>";
@@ -1908,7 +1908,7 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Test]
-        public void sanitize_expressionTest()
+        public void SanitizeExpressionTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<div style=""top:expression(alert())"">XSS</div>";
@@ -1916,7 +1916,7 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Test]
-        public void capital_expressionTest()
+        public void capitalExpressionTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<div style=""top:EXPRESSION(alert())"">XSS</div>";
@@ -1924,7 +1924,7 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Test]
-        public void sanitize_url_with_javascriptTest()
+        public void SanitizeUrlWithJavascriptTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<div style=""background-image:url(javascript:alert())"">XSS</div>";
@@ -1932,7 +1932,7 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Test]
-        public void sanitize_capital_url_with_javascriptTest()
+        public void SanitizeCapitalUrlWithJavascriptTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<div style=""background-image:URL(javascript:alert())"">XSS</div>";
@@ -1940,7 +1940,7 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Test]
-        public void sanitize_unicode_escapesTest()
+        public void SanitizeUnicodeEscapesTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<div style=""top:exp\72 ess\000069 on(alert())"">XSS</div>";
@@ -1948,7 +1948,7 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Test]
-        public void sanitize_backslash_without_hexTest()
+        public void SanitizeBackslashWithoutHexTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<div style=""top:e\xp\ression(alert())"">XSS</div>";
@@ -1958,7 +1958,7 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Test]
-        public void sanitize_unsafe_propsTest()
+        public void SanitizeUnsafePropsTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<div style=""POSITION:RELATIVE"">XSS</div>";
@@ -1978,26 +1978,23 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Test]
-        public void sanitize_css_hackTest()
+        public void SanitizeCssHackTest()
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<div style=""*position:static"">XSS</div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div>XSS</div>").IgnoreCase);
-
-            html = @"<div style=""_margin:-10px"">XSS</div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div>XSS</div>").IgnoreCase);
         }
 
         [Test]
-        public void sanitize_property_nameTest()
+        public void SanitizePropertyNameTest()
         {
             var sanitizer = new HtmlSanitizer();
-            var html = @"<div style=""display:none;border-left-color:red;user_defined:1;-moz-user-selct:-moz-all"">prop</div>";
+            var html = @"<div style=""display:none;border-left-color:red;userDefined:1;-moz-user-selct:-moz-all"">prop</div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""display: none; border-left-color: red;"">prop</div>").IgnoreCase);
         }
 
         [Test]
-        public void sanitize_unicode_expressionTest()
+        public void SanitizeUnicodeExpressionTest()
         {
             var sanitizer = new HtmlSanitizer();
             // Fullwidth small letters
@@ -2012,7 +2009,7 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Test]
-        public void sanitize_unicode_urlTest()
+        public void SanitizeUnicodeUrlTest()
         {
             var sanitizer = new HtmlSanitizer();
             // IPA extensions
