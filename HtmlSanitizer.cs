@@ -7,6 +7,42 @@ using System.Text.RegularExpressions;
 
 namespace Html
 {
+    /// <summary>
+    /// Cleans HTML fragments from constructs that can lead to <a href="https://en.wikipedia.org/wiki/Cross-site_scripting">XSS attacks</a>.
+    /// </summary>
+    /// <remarks>
+    /// XSS attacks can occur at several levels within an HTML fragment:
+    /// <list type="bullet">
+    /// <item>HTML Tags (e.g. the &lt;script&gt; tag)</item>
+    /// <item>HTML attributes (e.g. the "onload" attribute)</item>
+    /// <item>CSS styles (url property values)</item>
+    /// <item>malformed HTML or HTML that exploits parser bugs in specific browsers</item>
+    /// </list>
+    /// <para>
+    /// The HtmlSanitizer class addresses all of these possible attack vectors by using an HTML parser that is based on the one used
+    /// in the Gecko browser engine (see <a href="https://github.com/jamietre/CsQuery">CsQuery</a>).
+    /// </para>
+    /// <para>
+    /// In order to facilitate different use cases, HtmlSanitizer can be customized at the levels mentioned above:
+    /// <list type="bullet">
+    /// <item>You can specify the allowed HTML tags through the property <see cref="AllowedTags"/>. All other tags will be stripped.</item>
+    /// <item>You can specify the allowed HTML attributes through the property <see cref="AllowedAttributes"/>. All other attributes will be stripped.</item>
+    /// <item>You can specify the allowed CSS property names through the property <see cref="AllowedCssProperties"/>. All other styles will be stripped.</item>
+    /// <item>You can specify the allowed URI schemes through the property <see cref="AllowedCssProperties"/>. All other URIs will be stripped.</item>
+    /// <item>You can specify the HTML attributes that contain URIs (such as "src", "href" etc.) through the property <see cref="UriAttributes"/>.</item>
+    /// </list>
+    /// </para>
+    /// </remarks>
+    /// <example>
+    /// <code>
+    /// <![CDATA[
+    /// var sanitizer = new HtmlSanitizer();
+    /// var html = @"<script>alert('xss')</script><div onload=""alert('xss')"" style=""background-color: test"">Test<img src=""test.gif"" style=""background-image: url(javascript:alert('xss')); margin: 10px""></div>";
+    /// var sanitized = sanitizer.Sanitize(html, "http://www.example.com");
+    /// // -> "<div style="background-color: test">Test<img style="margin: 10px" src="http://www.example.com/test.gif"></div>"
+    /// ]]>
+    /// </code>
+    /// </example>
     public class HtmlSanitizer
     {
         private IEnumerable<string> _allowedSchemes;
@@ -235,11 +271,11 @@ namespace Html
         }
 
         // frolm http://genshi.edgewall.org/
-        protected static readonly Regex CssUnicodeEscapes = new Regex(@"\\([0-9a-fA-F]{1,6})\s?|\\([^\r\n\f0-9a-fA-F'""{};:()#*])", RegexOptions.Compiled);
-        protected static readonly Regex CssComments = new Regex(@"/\*.*?\*/", RegexOptions.Compiled);
+        private static readonly Regex CssUnicodeEscapes = new Regex(@"\\([0-9a-fA-F]{1,6})\s?|\\([^\r\n\f0-9a-fA-F'""{};:()#*])", RegexOptions.Compiled);
+        private static readonly Regex CssComments = new Regex(@"/\*.*?\*/", RegexOptions.Compiled);
         // IE6 <http://heideri.ch/jso/#80>
-        protected static readonly Regex CssExpression = new Regex(@"[eE\uFF25\uFF45][xX\uFF38\uFF58][pP\uFF30\uFF50][rR\u0280\uFF32\uFF52][eE\uFF25\uFF45][sS\uFF33\uFF53]{2}[iI\u026A\uFF29\uFF49][oO\uFF2F\uFF4F][nN\u0274\uFF2E\uFF4E]", RegexOptions.Compiled);
-        protected static readonly Regex CssUrl = new Regex(@"[Uu][Rr\u0280][Ll\u029F]\s*\(\s*['""]?\s*([^'"")]+)", RegexOptions.Compiled);
+        private static readonly Regex CssExpression = new Regex(@"[eE\uFF25\uFF45][xX\uFF38\uFF58][pP\uFF30\uFF50][rR\u0280\uFF32\uFF52][eE\uFF25\uFF45][sS\uFF33\uFF53]{2}[iI\u026A\uFF29\uFF49][oO\uFF2F\uFF4F][nN\u0274\uFF2E\uFF4E]", RegexOptions.Compiled);
+        private static readonly Regex CssUrl = new Regex(@"[Uu][Rr\u0280][Ll\u029F]\s*\(\s*['""]?\s*([^'"")]+)", RegexOptions.Compiled);
 
         /// <summary>
         /// Sanitizes the style.

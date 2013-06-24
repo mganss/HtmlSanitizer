@@ -10,6 +10,9 @@ using System.Text;
 // https://www.owasp.org/index.php/XSS_(Cross_Site_Scripting)_Prevention_Cheat_Sheet#RULE_.232_-_Attribute_Escape_Before_Inserting_Untrusted_Data_into_HTML_Common_Attributes
 // and http://ha.ckers.org/xss.html
 
+// disable XML comments warnings
+#pragma warning disable 1591
+
 namespace Html
 {
     /// <summary>
@@ -1661,6 +1664,11 @@ S
             actual = sanitizer.Sanitize(html);
             expected = "<img>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+
+            html = "<script>alert('xss')</script><div onload=\"alert('xss')\" style=\"background-color: test\">Test<img src=\"test.gif\" style=\"background-image: url(javascript:alert('xss')); margin: 10px\"></div>";
+            actual = sanitizer.Sanitize(html, "http://www.example.com");
+            expected = @"<div style=""background-color: test"">Test<img style=""margin: 10px"" src=""http://www.example.com/test.gif""></div>";
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
         /// <summary>
@@ -1730,7 +1738,7 @@ S
         }
 
         /// <summary>
-        /// Tests sanitiuation of URLs that are contained in CSS property values.
+        /// Tests sanitization of URLs that are contained in CSS property values.
         /// </summary>
         [Test]
         public void UrlStyleTest()
@@ -2018,3 +2026,5 @@ rl(javascript:alert(""foo""))'>";
         }
     }
 }
+
+#pragma warning restore 1591
