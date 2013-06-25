@@ -17,9 +17,12 @@ Usage
 -----
 
     var sanitizer = new HtmlSanitizer();
-    var html = @"<script>alert('xss')</script><div onload=""alert('xss')"" style=""background-color: test"">Test<img src=""test.gif"" style=""background-image: url(javascript:alert('xss')); margin: 10px""></div>";
+    var html = @"<script>alert('xss')</script><div onload=""alert('xss')"""
+    	+ @"style=""background-color: test"">Test<img src=""test.gif"""
+    	+ @"style=""background-image: url(javascript:alert('xss')); margin: 10px""></div>";
     var sanitized = sanitizer.Sanitize(html, "http://www.example.com");
-    // -> "<div style="background-color: test">Test<img style="margin: 10px" src="http://www.example.com/test.gif"></div>"
+    Assert.That(sanitized, Is.EqualTo(@"<div style=""background-color: test"">"
+    	+ @"Test<img style=""margin: 10px"" src=""http://www.example.com/test.gif""></div>");
 
 License
 -------
