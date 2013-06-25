@@ -19,6 +19,7 @@ Usage
 - Install the CsQuery NuGet package
 - Copy `HtmlSanitizer.cs` into your project
 
+
     var sanitizer = new HtmlSanitizer();
     var html = @"<script>alert('xss')</script><div onload=""alert('xss')"""
     	+ @"style=""background-color: test"">Test<img src=""test.gif"""
