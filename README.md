@@ -16,8 +16,7 @@ In order to facilitate different use cases, HtmlSanitizer can be customized at s
 Usage
 -----
 
-- Install the CsQuery NuGet package
-- Copy `HtmlSanitizer.cs` into your project
+Install the HtmlSanitizer NuGet package. Then:
 
 <!-- end list -->
 

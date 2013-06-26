@@ -146,3 +146,6 @@ $RECYCLE.BIN/
 
 # Mac crap
 .DS_Store
+
+# NuGet packages
+HtmlSanitizer.*.nupkg

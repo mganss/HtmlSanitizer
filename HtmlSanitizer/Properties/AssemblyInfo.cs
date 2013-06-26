@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
 [assembly: AssemblyTitle("HtmlSanitizer")]
-[assembly: AssemblyDescription("Cleans HTML from constructs that can be used for XSS")]
+[assembly: AssemblyDescription("Cleans HTML from constructs that can be used for cross site scripting (XSS)")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Michael Ganss")]
 [assembly: AssemblyProduct("HtmlSanitizer")]
-[assembly: AssemblyCopyright("Copyright ©  2013")]
+[assembly: AssemblyCopyright("Copyright © 2013 Michael Ganss")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
