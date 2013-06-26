@@ -1,7 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HtmlSanitizer", "HtmlSanitizer.csproj", "{CCDB0C26-D683-4943-B5D8-AC07116461E5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HtmlSanitizer", "HtmlSanitizer\HtmlSanitizer.csproj", "{CCDB0C26-D683-4943-B5D8-AC07116461E5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HtmlSanitizer.Tests", "HtmlSanitizer.Tests\HtmlSanitizer.Tests.csproj", "{55D772A0-8D8C-4CF7-A876-E6DAB8ED42C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +15,10 @@ Global
 		{CCDB0C26-D683-4943-B5D8-AC07116461E5}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CCDB0C26-D683-4943-B5D8-AC07116461E5}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CCDB0C26-D683-4943-B5D8-AC07116461E5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55D772A0-8D8C-4CF7-A876-E6DAB8ED42C0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55D772A0-8D8C-4CF7-A876-E6DAB8ED42C0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55D772A0-8D8C-4CF7-A876-E6DAB8ED42C0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55D772A0-8D8C-4CF7-A876-E6DAB8ED42C0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
