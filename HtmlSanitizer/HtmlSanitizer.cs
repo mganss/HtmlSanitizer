@@ -270,7 +270,7 @@ namespace Html
             return output;
         }
 
-        // frolm http://genshi.edgewall.org/
+        // from http://genshi.edgewall.org/
         private static readonly Regex CssUnicodeEscapes = new Regex(@"\\([0-9a-fA-F]{1,6})\s?|\\([^\r\n\f0-9a-fA-F'""{};:()#*])", RegexOptions.Compiled);
         private static readonly Regex CssComments = new Regex(@"/\*.*?\*/", RegexOptions.Compiled);
         // IE6 <http://heideri.ch/jso/#80>
