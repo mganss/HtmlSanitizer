@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using CsQuery;
 
 // Tests based on tests from http://roadkill.codeplex.com/
 
@@ -2023,6 +2024,33 @@ rl(javascript:alert(""foo""))'>";
             // IPA extensions
             var html = @"<div style=""background-image:uʀʟ(javascript:alert())"">XSS</div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div>XSS</div>").IgnoreCase);
+        }
+
+        [Test]
+        public void RemovingTagEventTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.RemovingTag += (s, e) => e.Cancel = e.Tag.NodeName == "BLINK";
+            var html = @"<div><script></script><blink>Test</blink></div>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div><blink>Test</blink></div>").IgnoreCase);
+        }
+
+        [Test]
+        public void RemovingAttributeEventTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.RemovingAttribute += (s, e) => e.Cancel = e.Attribute.Key == "onclick";
+            var html = @"<div alt=""alt"" onclick=""test"" onload=""test""></div>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div alt=""alt"" onclick=""test""></div>").IgnoreCase);
+        }
+
+        [Test]
+        public void RemovingStyleEventTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.RemovingStyle += (s, e) => e.Cancel = e.Style.Key == "test";
+            var html = @"<div style=""background: 0; test: xyz; bad: bad;""></div>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""background: 0; test: xyz;""></div>").IgnoreCase);
         }
     }
 }

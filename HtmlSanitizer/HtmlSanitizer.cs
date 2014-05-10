@@ -218,6 +218,46 @@ namespace Html
         }
 
         /// <summary>
+        /// Occurs before a tag is removed.
+        /// </summary>
+        public event EventHandler<RemovingTagEventArgs> RemovingTag;
+        /// <summary>
+        /// Occurs before an attribute is removed.
+        /// </summary>
+        public event EventHandler<RemovingAttributeEventArgs> RemovingAttribute;
+        /// <summary>
+        /// Occurs before a style is removed.
+        /// </summary>
+        public event EventHandler<RemovingStyleEventArgs> RemovingStyle;
+
+        /// <summary>
+        /// Raises the <see cref="E:RemovingTag" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="RemovingTagEventArgs"/> instance containing the event data.</param>
+        protected virtual void OnRemovingTag(RemovingTagEventArgs e)
+        {
+            if (RemovingTag != null) RemovingTag(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="E:RemovingAttribute" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="RemovingAttributeEventArgs"/> instance containing the event data.</param>
+        protected virtual void OnRemovingAttribute(RemovingAttributeEventArgs e)
+        {
+            if (RemovingAttribute != null) RemovingAttribute(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="E:RemovingStyle" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="RemovingStyleEventArgs"/> instance containing the event data.</param>
+        protected virtual void OnRemovingStyle(RemovingStyleEventArgs e)
+        {
+            if (RemovingStyle != null) RemovingStyle(this, e);
+        }
+        
+        /// <summary>
         /// The default regex for disallowed CSS property values.
         /// </summary>
         public static readonly Regex DefaultDisallowedCssPropertyValue = new Regex(@"[<>]", RegexOptions.Compiled);
@@ -237,17 +277,27 @@ namespace Html
         {
             var dom = CQ.Create(html);
 
-            dom["*"].Not(string.Join(",", AllowedTags.ToArray())).Remove();
+            foreach (var tag in dom["*"].Not(string.Join(",", AllowedTags.ToArray())).ToList())
+            {
+                var e = new RemovingTagEventArgs { Tag = tag };
+                OnRemovingTag(e);
+                if (!e.Cancel) tag.Remove();
+            }
+
             foreach (var tag in dom["*"])
             {
                 foreach (var attribute in tag.Attributes.Where(a => !AllowedAttributesSet.Contains(a.Key)).ToList())
-                    tag.RemoveAttribute(attribute.Key);
+                {
+                    RemoveAttribute(tag, attribute);
+                }
 
                 foreach (var attribute in tag.Attributes.Where(a => UriAttributes.Contains(a.Key)).ToList())
                 {
                     var url = SanitizeUrl(attribute.Value, baseUrl);
                     if (url == null)
-                        tag.RemoveAttribute(attribute.Key);
+                    {
+                        RemoveAttribute(tag, attribute);
+                    }
                     else
                         tag.SetAttribute(attribute.Key, url);
                 }
@@ -257,7 +307,7 @@ namespace Html
                 foreach (var attribute in tag.Attributes.ToList())
                 {
                     if (JSInclude.IsMatch(attribute.Value))
-                        tag.RemoveAttribute(attribute.Key);
+                        RemoveAttribute(tag, attribute);
 
                     var val = attribute.Value;
                     if (val.Contains('<')) { val = val.Replace("<", "&lt;"); tag.SetAttribute(attribute.Key, val); }
@@ -270,7 +320,14 @@ namespace Html
             return output;
         }
 
-        // frolm http://genshi.edgewall.org/
+        private void RemoveAttribute(IDomObject tag, KeyValuePair<string, string> attribute)
+        {
+            var e = new RemovingAttributeEventArgs { Attribute = attribute };
+            OnRemovingAttribute(e);
+            if (!e.Cancel) tag.RemoveAttribute(attribute.Key);
+        }
+
+        // from http://genshi.edgewall.org/
         private static readonly Regex CssUnicodeEscapes = new Regex(@"\\([0-9a-fA-F]{1,6})\s?|\\([^\r\n\f0-9a-fA-F'""{};:()#*])", RegexOptions.Compiled);
         private static readonly Regex CssComments = new Regex(@"/\*.*?\*/", RegexOptions.Compiled);
         // IE6 <http://heideri.ch/jso/#80>
@@ -286,7 +343,7 @@ namespace Html
         {
             if (styles == null || !styles.Any()) return;
 
-            var removeStyles = new List<string>();
+            var removeStyles = new List<KeyValuePair<string, string>>();
             var setStyles = new Dictionary<string, string>();
 
             foreach (var style in styles)
@@ -295,7 +352,7 @@ namespace Html
                 var val = DecodeCss(style.Value);
 
                 if (!AllowedCssPropertiesSet.Contains(key) || CssExpression.IsMatch(val) || DisallowCssPropertyValue.IsMatch(val))
-                    removeStyles.Add(style.Key);
+                    removeStyles.Add(style);
                 else
                 {
                     var urls = CssUrl.Matches(val);
@@ -303,13 +360,13 @@ namespace Html
                     if (urls.Count > 0)
                     {
                         if (urls.Cast<Match>().Any(m => GetSafeUri(m.Groups[1].Value) == null))
-                            removeStyles.Add(style.Key);
+                            removeStyles.Add(style);
                         else
                         {
                             var s = CssUrl.Replace(val, m => "url(" + SanitizeUrl(m.Groups[1].Value, baseUrl));
                             if (s != val)
                             {
-                                if (key != style.Key) removeStyles.Add(style.Key);
+                                if (key != style.Key) removeStyles.Add(style);
                                 setStyles[key] = s;
                             }
                         }
@@ -317,9 +374,11 @@ namespace Html
                 }
             }
 
-            foreach (var key in removeStyles)
+            foreach (var style in removeStyles)
             {
-                styles.RemoveStyle(key);
+                var e = new RemovingStyleEventArgs { Style = style };
+                OnRemovingStyle(e);
+                if (!e.Cancel) styles.RemoveStyle(style.Key);
             }
 
             foreach (var kvp in setStyles)

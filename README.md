@@ -12,21 +12,22 @@ In order to facilitate different use cases, HtmlSanitizer can be customized at s
 - Configure allowed URI schemes through the property `AllowedCssProperties`. All other URIs will be stripped.
 - Configure HTML attributes that contain URIs (such as "src", "href" etc.) through the property `UriAttributes`.
 - Provide a base URI that will be used to resolve relative URIs against.
+- Cancelable events are raised before a tag, attribute, or style is removed.
 
 Usage
 -----
 
 Install the HtmlSanitizer NuGet package. Then:
 
-<!-- end list -->
-
-    var sanitizer = new HtmlSanitizer();
-    var html = @"<script>alert('xss')</script><div onload=""alert('xss')"""
-    	+ @"style=""background-color: test"">Test<img src=""test.gif"""
-    	+ @"style=""background-image: url(javascript:alert('xss')); margin: 10px""></div>";
-    var sanitized = sanitizer.Sanitize(html, "http://www.example.com");
-    Assert.That(sanitized, Is.EqualTo(@"<div style=""background-color: test"">"
-    	+ @"Test<img style=""margin: 10px"" src=""http://www.example.com/test.gif""></div>");
+```C#
+var sanitizer = new HtmlSanitizer();
+var html = @"<script>alert('xss')</script><div onload=""alert('xss')"""
+    + @"style=""background-color: test"">Test<img src=""test.gif"""
+    + @"style=""background-image: url(javascript:alert('xss')); margin: 10px""></div>";
+var sanitized = sanitizer.Sanitize(html, "http://www.example.com");
+Assert.That(sanitized, Is.EqualTo(@"<div style=""background-color: test"">"
+    + @"Test<img style=""margin: 10px"" src=""http://www.example.com/test.gif""></div>");
+```
 
 License
 -------
