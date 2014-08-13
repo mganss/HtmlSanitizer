@@ -1,4 +1,5 @@
 ﻿using CsQuery;
+using CsQuery.Output;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -272,8 +273,9 @@ namespace Html
         /// </summary>
         /// <param name="html">The HTML to sanitize.</param>
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
+        /// <param name="outputFormatter">The CsQuery output formatter used to render the DOM. Using the default formatter if null.</param>
         /// <returns>The sanitized HTML.</returns>
-        public string Sanitize(string html, string baseUrl = "")
+        public string Sanitize(string html, string baseUrl = "", IOutputFormatter outputFormatter = null)
         {
             var dom = CQ.Create(html);
 
@@ -315,7 +317,10 @@ namespace Html
                 }
             }
 
-            var output = dom.Render(DomRenderingOptions.RemoveComments | DomRenderingOptions.QuoteAllAttributes);
+            if (outputFormatter == null)
+                outputFormatter = new FormatDefault(DomRenderingOptions.RemoveComments | DomRenderingOptions.QuoteAllAttributes, HtmlEncoders.Default);
+
+            var output = dom.Render(outputFormatter);
 
             return output;
         }
