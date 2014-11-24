@@ -61,7 +61,7 @@ namespace Html
         }
 
         /// <summary>
-        /// The default allowed HTTP schemes.
+        /// The default allowed URI schemes.
         /// </summary>
         public static readonly IEnumerable<string> DefaultAllowedSchemes = new[] { "http", "https" };
 
