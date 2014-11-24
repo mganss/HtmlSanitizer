@@ -131,8 +131,6 @@ namespace Html
             "type", "usemap", "valign", "value", "vspace", "width" };
         private static HashSet<string> DefaultAllowedAttributesSet = new HashSet<string>(DefaultAllowedAttributes, StringComparer.OrdinalIgnoreCase);
 
-        private IEnumerable<string> _uriAttributes;
-
         /// <summary>
         /// Gets or sets the HTML attributes that can contain a URI.
         /// </summary>
@@ -141,14 +139,26 @@ namespace Html
         /// </value>
         public IEnumerable<string> UriAttributes
         {
-            get { return _uriAttributes ?? DefaultUriAttributes; }
-            set { _uriAttributes = value; }
+            get { return _uriAttributesSet.ToArray(); }
+            set
+            {
+                UriAttributesSet = new HashSet<string>(value, StringComparer.OrdinalIgnoreCase);
+            }
+        }
+
+        private HashSet<string> _uriAttributesSet;
+
+        private HashSet<string> UriAttributesSet
+        {
+            get { return _uriAttributesSet ?? DefaultUriAttributesSet; }
+            set { _uriAttributesSet = value; }
         }
 
         /// <summary>
         /// The default URI attributes.
         /// </summary>
         public static readonly IEnumerable<string> DefaultUriAttributes = new[] { "action", "background", "dynsrc", "href", "lowsrc", "src" };
+        private static HashSet<string> DefaultUriAttributesSet = new HashSet<string>(DefaultUriAttributes, StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Gets or sets the allowed CSS properties.
@@ -293,7 +303,7 @@ namespace Html
                     RemoveAttribute(tag, attribute);
                 }
 
-                foreach (var attribute in tag.Attributes.Where(a => UriAttributes.Contains(a.Key)).ToList())
+                foreach (var attribute in tag.Attributes.Where(a => UriAttributesSet.Contains(a.Key)).ToList())
                 {
                     var url = SanitizeUrl(attribute.Value, baseUrl);
                     if (url == null)
