@@ -1,4 +1,4 @@
-﻿using NUnit.Framework;
+using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +14,7 @@ using CsQuery;
 // disable XML comments warnings
 #pragma warning disable 1591
 
-namespace Html
+namespace XSS
 {
     /// <summary>
     /// Tests for <see cref="HtmlSanitizer"/>.
