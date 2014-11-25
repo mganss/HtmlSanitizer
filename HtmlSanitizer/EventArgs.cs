@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Html
+namespace XSS
 {
     /// <summary>
     /// Provides data for the <see cref="HtmlSanitizer.RemovingTag"/> event.

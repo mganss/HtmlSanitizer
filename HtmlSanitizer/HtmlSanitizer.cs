@@ -6,7 +6,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Html
+namespace XSS
 {
     /// <summary>
     /// Cleans HTML fragments from constructs that can lead to <a href="https://en.wikipedia.org/wiki/Cross-site_scripting">XSS attacks</a>.
@@ -46,7 +46,17 @@ namespace Html
     /// </example>
     public class HtmlSanitizer
     {
-        private IEnumerable<string> _allowedSchemes;
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class.
+        /// </summary>
+        public HtmlSanitizer()
+        {
+            AllowedTags = new HashSet<string>(DefaultAllowedTags);
+            AllowedSchemes = new HashSet<string>(DefaultAllowedSchemes);
+            AllowedAttributes = new HashSet<string>(DefaultAllowedAttributes);
+            UriAttributes = new HashSet<string>(DefaultUriAttributes);
+            AllowedCssProperties = new HashSet<string>(DefaultAllowedCssProperties);
+        }
 
         /// <summary>
         /// Gets or sets the allowed HTTP schemes such as "http" and "https".
@@ -54,18 +64,12 @@ namespace Html
         /// <value>
         /// The allowed HTTP schemes.
         /// </value>
-        public IEnumerable<string> AllowedSchemes
-        {
-            get { return _allowedSchemes ?? DefaultAllowedSchemes; }
-            set { _allowedSchemes = value; }
-        }
+        public ISet<string> AllowedSchemes { get; private set; }
 
         /// <summary>
         /// The default allowed URI schemes.
         /// </summary>
-        public static readonly IEnumerable<string> DefaultAllowedSchemes = new[] { "http", "https" };
-
-        private IEnumerable<string> _allowedTags;
+        public static readonly ISet<string> DefaultAllowedSchemes = new HashSet<string> { "http", "https" };
 
         /// <summary>
         /// Gets or sets the allowed HTML tag names such as "a" and "div".
@@ -73,16 +77,12 @@ namespace Html
         /// <value>
         /// The allowed tag names.
         /// </value>
-        public IEnumerable<string> AllowedTags
-        {
-            get { return _allowedTags ?? DefaultAllowedTags; }
-            set { _allowedTags = value; }
-        }
+        public ISet<string> AllowedTags { get; private set; }
 
         /// <summary>
         /// The default allowed HTML tag names.
         /// </summary>
-        public static readonly IEnumerable<string> DefaultAllowedTags = new[] { "a", "abbr", "acronym", "address", "area", "b",
+        public static readonly ISet<string> DefaultAllowedTags = new HashSet<string> { "a", "abbr", "acronym", "address", "area", "b",
             "big", "blockquote", "br", "button", "caption", "center", "cite",
             "code", "col", "colgroup", "dd", "del", "dfn", "dir", "div", "dl", "dt",
             "em", "fieldset", "font", "form", "h1", "h2", "h3", "h4", "h5", "h6",
@@ -98,27 +98,12 @@ namespace Html
         /// <value>
         /// The allowed HTML attributes.
         /// </value>
-        public IEnumerable<string> AllowedAttributes
-        {
-            get { return AllowedAttributesSet.ToArray(); }
-            set
-            {
-                AllowedAttributesSet = new HashSet<string>(value, StringComparer.OrdinalIgnoreCase);
-            }
-        }
-
-        private HashSet<string> _allowedAttributesSet;
-
-        private HashSet<string> AllowedAttributesSet
-        {
-            get { return _allowedAttributesSet ?? DefaultAllowedAttributesSet; }
-            set { _allowedAttributesSet = value; }
-        }
+        public ISet<string> AllowedAttributes { get; private set; }
 
         /// <summary>
         /// The default allowed HTML attributes.
         /// </summary>
-        public static readonly IEnumerable<string> DefaultAllowedAttributes = new[] { "abbr", "accept", "accept-charset", "accesskey",
+        public static readonly ISet<string> DefaultAllowedAttributes = new HashSet<string> { "abbr", "accept", "accept-charset", "accesskey",
             "action", "align", "alt", "axis", "bgcolor", "border", "cellpadding",
             "cellspacing", "char", "charoff", "charset", "checked", "cite", /* "class", */
             "clear", "cols", "colspan", "color", "compact", "coords", "datetime",
@@ -129,7 +114,6 @@ namespace Html
             "rows", "rowspan", "rules", "scope", "selected", "shape", "size",
             "span", "src", "start", "style", "summary", "tabindex", "target", "title",
             "type", "usemap", "valign", "value", "vspace", "width" };
-        private static HashSet<string> DefaultAllowedAttributesSet = new HashSet<string>(DefaultAllowedAttributes, StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// Gets or sets the HTML attributes that can contain a URI.
@@ -137,28 +121,12 @@ namespace Html
         /// <value>
         /// The URI attributes.
         /// </value>
-        public IEnumerable<string> UriAttributes
-        {
-            get { return _uriAttributesSet.ToArray(); }
-            set
-            {
-                UriAttributesSet = new HashSet<string>(value, StringComparer.OrdinalIgnoreCase);
-            }
-        }
-
-        private HashSet<string> _uriAttributesSet;
-
-        private HashSet<string> UriAttributesSet
-        {
-            get { return _uriAttributesSet ?? DefaultUriAttributesSet; }
-            set { _uriAttributesSet = value; }
-        }
+        public ISet<string> UriAttributes { get; private set; }
 
         /// <summary>
         /// The default URI attributes.
         /// </summary>
-        public static readonly IEnumerable<string> DefaultUriAttributes = new[] { "action", "background", "dynsrc", "href", "lowsrc", "src" };
-        private static HashSet<string> DefaultUriAttributesSet = new HashSet<string>(DefaultUriAttributes, StringComparer.OrdinalIgnoreCase);
+        public static readonly ISet<string> DefaultUriAttributes = new HashSet<string> { "action", "background", "dynsrc", "href", "lowsrc", "src" };
 
         /// <summary>
         /// Gets or sets the allowed CSS properties.
@@ -166,27 +134,12 @@ namespace Html
         /// <value>
         /// The allowed CSS properties.
         /// </value>
-        public IEnumerable<string> AllowedCssProperties
-        {
-            get { return AllowedCssPropertiesSet.ToArray(); }
-            set
-            {
-                AllowedCssPropertiesSet = new HashSet<string>(value, StringComparer.OrdinalIgnoreCase);
-            }
-        }
-
-        private HashSet<string> _allowedCssPropertiesSet;
-
-        private HashSet<string> AllowedCssPropertiesSet
-        {
-            get { return _allowedCssPropertiesSet ?? DefaultAllowedCssPropertiesSet; }
-            set { _allowedCssPropertiesSet = value; }
-        }
+        public ISet<string> AllowedCssProperties { get; private set; }
 
         /// <summary>
         /// The default allowed CSS properties.
         /// </summary>
-        public static readonly IEnumerable<string> DefaultAllowedCssProperties = new[] { 
+        public static readonly ISet<string> DefaultAllowedCssProperties = new HashSet<string> { 
             // CSS 3 properties <http://www.w3.org/TR/CSS/#properties>
             "background", "background-attachment", "background-color",
             "background-image", "background-position", "background-repeat",
@@ -212,7 +165,6 @@ namespace Html
             "text-align", "text-decoration", "text-indent", "text-transform",
             "top", "unicode-bidi", "vertical-align", "visibility", "white-space",
             "widows", "width", "word-spacing", "z-index" };
-        private static HashSet<string> DefaultAllowedCssPropertiesSet = new HashSet<string>(DefaultAllowedCssProperties, StringComparer.OrdinalIgnoreCase);
 
         private Regex _disallowedCssPropertyValue;
 
@@ -289,7 +241,7 @@ namespace Html
         {
             var dom = CQ.Create(html);
 
-            foreach (var tag in dom["*"].Not(string.Join(",", AllowedTags.ToArray())).ToList())
+            foreach (var tag in dom["*"].Not(string.Join(",", AllowedTags)).ToList())
             {
                 var e = new RemovingTagEventArgs { Tag = tag };
                 OnRemovingTag(e);
@@ -298,12 +250,12 @@ namespace Html
 
             foreach (var tag in dom["*"])
             {
-                foreach (var attribute in tag.Attributes.Where(a => !AllowedAttributesSet.Contains(a.Key)).ToList())
+                foreach (var attribute in tag.Attributes.Where(a => !AllowedAttributes.Contains(a.Key)).ToList())
                 {
                     RemoveAttribute(tag, attribute);
                 }
 
-                foreach (var attribute in tag.Attributes.Where(a => UriAttributesSet.Contains(a.Key)).ToList())
+                foreach (var attribute in tag.Attributes.Where(a => UriAttributes.Contains(a.Key)).ToList())
                 {
                     var url = SanitizeUrl(attribute.Value, baseUrl);
                     if (url == null)
@@ -366,7 +318,7 @@ namespace Html
                 var key = DecodeCss(style.Key);
                 var val = DecodeCss(style.Value);
 
-                if (!AllowedCssPropertiesSet.Contains(key) || CssExpression.IsMatch(val) || DisallowCssPropertyValue.IsMatch(val))
+                if (!AllowedCssProperties.Contains(key) || CssExpression.IsMatch(val) || DisallowCssPropertyValue.IsMatch(val))
                     removeStyles.Add(style);
                 else
                 {
