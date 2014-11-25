@@ -1,4 +1,5 @@
 ﻿using CsQuery;
+using CsQuery.ExtensionMethods.Internal;
 using CsQuery.Output;
 using System;
 using System.Collections.Generic;
@@ -49,13 +50,28 @@ namespace XSS
         /// <summary>
         /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class.
         /// </summary>
-        public HtmlSanitizer()
+        /// <param name="allowedTags">The allowed tag names such as "a" and "div". When <c>null</c>, uses <see cref="DefaultAllowedTags"/></param>
+        /// <param name="allowedSchemes">The allowed HTTP schemes such as "http" and "https". When <c>null</c>,  uses <see cref="DefaultAllowedSchemes"/></param>
+        /// <param name="allowedAttributes">The allowed HTML attributes such as "href" and "alt". When <c>null</c>, uses <see cref="DefaultAllowedAttributes"/></param>
+        /// <param name="uriAttributes">the HTML attributes that can contain a URI such as "href". When <c>null</c>, uses <see cref="DefaultUriAttributes"/></param>
+        /// <param name="allowedCssProperties">the allowed CSS properties such as "font" and "margin". When <c>null</c>, uses <see cref="DefaultAllowedCssProperties"/></param>
+        public HtmlSanitizer(IEnumerable<string> allowedTags = null, IEnumerable<string> allowedSchemes = null,
+            IEnumerable<string> allowedAttributes = null, IEnumerable<string> uriAttributes = null, IEnumerable<string> allowedCssProperties = null)
         {
-            AllowedTags = new HashSet<string>(DefaultAllowedTags);
-            AllowedSchemes = new HashSet<string>(DefaultAllowedSchemes);
-            AllowedAttributes = new HashSet<string>(DefaultAllowedAttributes);
-            UriAttributes = new HashSet<string>(DefaultUriAttributes);
-            AllowedCssProperties = new HashSet<string>(DefaultAllowedCssProperties);
+            AllowedTags = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            AllowedTags.AddRange(allowedTags ?? DefaultAllowedTags);
+            
+            AllowedSchemes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            AllowedSchemes.AddRange(allowedSchemes ?? DefaultAllowedSchemes);
+
+            AllowedAttributes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            AllowedAttributes.AddRange(allowedAttributes ?? DefaultAllowedAttributes);
+
+            UriAttributes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            UriAttributes.AddRange(uriAttributes ?? DefaultUriAttributes);
+
+            AllowedCssProperties = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            AllowedCssProperties.AddRange(allowedCssProperties ?? DefaultAllowedCssProperties);
         }
 
         /// <summary>
@@ -158,7 +174,7 @@ namespace XSS
         };
 
         /// <summary>
-        /// Gets or sets the HTML attributes that can contain a URI.
+        /// Gets or sets the HTML attributes that can contain a URI such as "href".
         /// </summary>
         /// <value>
         /// The URI attributes.
@@ -171,7 +187,7 @@ namespace XSS
         public static readonly ISet<string> DefaultUriAttributes = new HashSet<string> { "action", "background", "dynsrc", "href", "lowsrc", "src" };
 
         /// <summary>
-        /// Gets or sets the allowed CSS properties.
+        /// Gets or sets the allowed CSS properties such as "font" and "margin".
         /// </summary>
         /// <value>
         /// The allowed CSS properties.
@@ -261,7 +277,7 @@ namespace XSS
         {
             if (RemovingStyle != null) RemovingStyle(this, e);
         }
-        
+
         /// <summary>
         /// The default regex for disallowed CSS property values.
         /// </summary>
@@ -427,7 +443,7 @@ namespace XSS
             if (!Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri)
                 || !uri.IsWellFormedOriginalString() && !IsWellFormedRelativeUri(uri)
                 || uri.IsAbsoluteUri && !AllowedSchemes.Contains(uri.Scheme, StringComparer.OrdinalIgnoreCase)
-                || !uri.IsAbsoluteUri && url.Contains(':')) 
+                || !uri.IsAbsoluteUri && url.Contains(':'))
                 return null;
 
             return uri;
