@@ -82,7 +82,9 @@ namespace XSS
         /// <summary>
         /// The default allowed HTML tag names.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedTags = new HashSet<string> { "a", "abbr", "acronym", "address", "area", "b",
+        public static readonly ISet<string> DefaultAllowedTags = new HashSet<string> { 
+            // https://developer.mozilla.org/en/docs/Web/Guide/HTML/HTML5/HTML5_element_list
+            "a", "abbr", "acronym", "address", "area", "b",
             "big", "blockquote", "br", "button", "caption", "center", "cite",
             "code", "col", "colgroup", "dd", "del", "dfn", "dir", "div", "dl", "dt",
             "em", "fieldset", "font", "form", "h1", "h2", "h3", "h4", "h5", "h6",
@@ -90,7 +92,19 @@ namespace XSS
             "menu", "ol", "optgroup", "option", "p", "pre", "q", "s", "samp",
             "select", "small", "span", "strike", "strong", "sub", "sup", "table",
             "tbody", "td", "textarea", "tfoot", "th", "thead", "tr", "tt", "u",
-            "ul", "var" };
+            "ul", "var",
+            // HTML5
+            // Sections
+            "section", "nav", "article", "aside", "header", "footer", "main",
+            // Grouping content
+            "figure", "figcaption",
+            // Text-level semantics
+            "data", "time", "mark", "ruby", "rt", "rp", "bdi", "wbr",
+            // Forms
+            "datalist", "keygen", "output", "progress", "meter",
+            // Interactive elements
+            "details", "summary", "menuitem"
+        };
 
         /// <summary>
         /// Gets or sets the allowed HTML attributes such as "href" and "alt".
@@ -103,7 +117,9 @@ namespace XSS
         /// <summary>
         /// The default allowed HTML attributes.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedAttributes = new HashSet<string> { "abbr", "accept", "accept-charset", "accesskey",
+        public static readonly ISet<string> DefaultAllowedAttributes = new HashSet<string> { 
+            // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
+            "abbr", "accept", "accept-charset", "accesskey",
             "action", "align", "alt", "axis", "bgcolor", "border", "cellpadding",
             "cellspacing", "char", "charoff", "charset", "checked", "cite", /* "class", */
             "clear", "cols", "colspan", "color", "compact", "coords", "datetime",
@@ -113,7 +129,33 @@ namespace XSS
             "nohref", "noshade", "nowrap", "prompt", "readonly", "rel", "rev",
             "rows", "rowspan", "rules", "scope", "selected", "shape", "size",
             "span", "src", "start", "style", "summary", "tabindex", "target", "title",
-            "type", "usemap", "valign", "value", "vspace", "width" };
+            "type", "usemap", "valign", "value", "vspace", "width",
+            // HTML5
+            "high", // <meter>
+            "keytype", // <keygen>
+            "list", // <input>
+            "low", // <meter>
+            "max", // <input>, <meter>, <progress>
+            "min", // <input>, <meter>
+            "novalidate", // <form>
+            "open", // <details>
+            "optimum", // <meter>
+            "pattern", // <input>
+            "placeholder", // <input>, <textarea>
+            "pubdate", // <time>
+            "radiogroup", // <menuitem>
+            "required", // <input>, <select>, <textarea>
+            "reversed", // <ol>
+            "spellcheck", // Global attribute
+            "step", // <input>
+            "wrap", // <textarea>
+            "challenge", // <keygen>
+            "contenteditable", // Global attribute
+            "draggable", // Global attribute
+            "dropzone", // Global attribute
+            "autocomplete", // <form>, <input>
+            "autosave", // <input>
+        };
 
         /// <summary>
         /// Gets or sets the HTML attributes that can contain a URI.
