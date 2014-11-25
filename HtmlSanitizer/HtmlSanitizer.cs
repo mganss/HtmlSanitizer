@@ -58,20 +58,11 @@ namespace XSS
         public HtmlSanitizer(IEnumerable<string> allowedTags = null, IEnumerable<string> allowedSchemes = null,
             IEnumerable<string> allowedAttributes = null, IEnumerable<string> uriAttributes = null, IEnumerable<string> allowedCssProperties = null)
         {
-            AllowedTags = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-            AllowedTags.AddRange(allowedTags ?? DefaultAllowedTags);
-            
-            AllowedSchemes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-            AllowedSchemes.AddRange(allowedSchemes ?? DefaultAllowedSchemes);
-
-            AllowedAttributes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-            AllowedAttributes.AddRange(allowedAttributes ?? DefaultAllowedAttributes);
-
-            UriAttributes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-            UriAttributes.AddRange(uriAttributes ?? DefaultUriAttributes);
-
-            AllowedCssProperties = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
-            AllowedCssProperties.AddRange(allowedCssProperties ?? DefaultAllowedCssProperties);
+            AllowedTags = new HashSet<string>(allowedTags ?? DefaultAllowedTags, StringComparer.OrdinalIgnoreCase);
+            AllowedSchemes = new HashSet<string>(allowedSchemes ?? DefaultAllowedSchemes, StringComparer.OrdinalIgnoreCase);
+            AllowedAttributes = new HashSet<string>(allowedAttributes ?? DefaultAllowedAttributes, StringComparer.OrdinalIgnoreCase);
+            UriAttributes = new HashSet<string>(uriAttributes ?? DefaultUriAttributes, StringComparer.OrdinalIgnoreCase);
+            AllowedCssProperties = new HashSet<string>(allowedCssProperties ?? DefaultAllowedCssProperties, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -85,7 +76,7 @@ namespace XSS
         /// <summary>
         /// The default allowed URI schemes.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedSchemes = new HashSet<string> { "http", "https" };
+        public static readonly ISet<string> DefaultAllowedSchemes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "http", "https" };
 
         /// <summary>
         /// Gets or sets the allowed HTML tag names such as "a" and "div".
@@ -98,7 +89,7 @@ namespace XSS
         /// <summary>
         /// The default allowed HTML tag names.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedTags = new HashSet<string> { 
+        public static readonly ISet<string> DefaultAllowedTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { 
             // https://developer.mozilla.org/en/docs/Web/Guide/HTML/HTML5/HTML5_element_list
             "a", "abbr", "acronym", "address", "area", "b",
             "big", "blockquote", "br", "button", "caption", "center", "cite",
@@ -133,7 +124,7 @@ namespace XSS
         /// <summary>
         /// The default allowed HTML attributes.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedAttributes = new HashSet<string> { 
+        public static readonly ISet<string> DefaultAllowedAttributes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { 
             // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
             "abbr", "accept", "accept-charset", "accesskey",
             "action", "align", "alt", "axis", "bgcolor", "border", "cellpadding",
@@ -184,7 +175,7 @@ namespace XSS
         /// <summary>
         /// The default URI attributes.
         /// </summary>
-        public static readonly ISet<string> DefaultUriAttributes = new HashSet<string> { "action", "background", "dynsrc", "href", "lowsrc", "src" };
+        public static readonly ISet<string> DefaultUriAttributes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "action", "background", "dynsrc", "href", "lowsrc", "src" };
 
         /// <summary>
         /// Gets or sets the allowed CSS properties such as "font" and "margin".
@@ -197,7 +188,7 @@ namespace XSS
         /// <summary>
         /// The default allowed CSS properties.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedCssProperties = new HashSet<string> { 
+        public static readonly ISet<string> DefaultAllowedCssProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { 
             // CSS 3 properties <http://www.w3.org/TR/CSS/#properties>
             "background", "background-attachment", "background-color",
             "background-image", "background-position", "background-repeat",
