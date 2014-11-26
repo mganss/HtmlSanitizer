@@ -290,6 +290,7 @@ namespace Ganss.XSS
         {
             var dom = CQ.Create(html);
 
+            //remove non-whitelisted tags
             foreach (var tag in dom["*"].Not(string.Join(",", AllowedTags)).ToList())
             {
                 var e = new RemovingTagEventArgs { Tag = tag };
@@ -297,13 +298,16 @@ namespace Ganss.XSS
                 if (!e.Cancel) tag.Remove();
             }
 
+            //cleanup attributes
             foreach (var tag in dom["*"])
             {
+                //remove non-whitelisted attributes
                 foreach (var attribute in tag.Attributes.Where(a => !AllowedAttributes.Contains(a.Key)).ToList())
                 {
                     RemoveAttribute(tag, attribute);
                 }
 
+                //sanitize URLs in URL-marked attributes 
                 foreach (var attribute in tag.Attributes.Where(a => UriAttributes.Contains(a.Key)).ToList())
                 {
                     var url = SanitizeUrl(attribute.Value, baseUrl);
