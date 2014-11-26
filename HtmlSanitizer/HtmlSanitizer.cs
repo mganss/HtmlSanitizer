@@ -1,5 +1,6 @@
 ﻿using CsQuery;
 using CsQuery.ExtensionMethods.Internal;
+using CsQuery.Implementation;
 using CsQuery.Output;
 using System;
 using System.Collections.Generic;
@@ -293,9 +294,7 @@ namespace Ganss.XSS
             //remove non-whitelisted tags
             foreach (var tag in dom["*"].Not(string.Join(",", AllowedTags)).ToList())
             {
-                var e = new RemovingTagEventArgs { Tag = tag };
-                OnRemovingTag(e);
-                if (!e.Cancel) tag.Remove();
+                RemoveTag(tag);
             }
 
             //cleanup attributes
@@ -327,8 +326,17 @@ namespace Ganss.XSS
                         RemoveAttribute(tag, attribute);
 
                     var val = attribute.Value;
-                    if (val.Contains('<')) { val = val.Replace("<", "&lt;"); tag.SetAttribute(attribute.Key, val); }
-                    if (val.Contains('>')) { val = val.Replace(">", "&gt;"); tag.SetAttribute(attribute.Key, val); }
+
+                    //escape attribute value
+                    var beforeLength = val.Length;
+                    val = val.Replace("<", "&lt;");
+                    val = val.Replace(">", "&gt;");
+                    var changed = beforeLength != val.Length;
+                    if (changed)
+                    {
+                        tag.SetAttribute(attribute.Key, val);
+                    }
+
                 }
             }
 
@@ -340,12 +348,7 @@ namespace Ganss.XSS
             return output;
         }
 
-        private void RemoveAttribute(IDomObject tag, KeyValuePair<string, string> attribute)
-        {
-            var e = new RemovingAttributeEventArgs { Attribute = attribute };
-            OnRemovingAttribute(e);
-            if (!e.Cancel) tag.RemoveAttribute(attribute.Key);
-        }
+
 
         // from http://genshi.edgewall.org/
         private static readonly Regex CssUnicodeEscapes = new Regex(@"\\([0-9a-fA-F]{1,6})\s?|\\([^\r\n\f0-9a-fA-F'""{};:()#*])", RegexOptions.Compiled);
@@ -396,9 +399,7 @@ namespace Ganss.XSS
 
             foreach (var style in removeStyles)
             {
-                var e = new RemovingStyleEventArgs { Style = style };
-                OnRemovingStyle(e);
-                if (!e.Cancel) styles.RemoveStyle(style.Key);
+                RemoveStyle(styles, style);
             }
 
             foreach (var kvp in setStyles)
@@ -406,6 +407,8 @@ namespace Ganss.XSS
                 styles.SetStyle(kvp.Key, kvp.Value);
             }
         }
+
+
 
         /// <summary>
         /// Decodes CSS unicode escapes and removes comments.
@@ -477,6 +480,27 @@ namespace Ganss.XSS
             }
 
             return uri.ToString();
+        }
+
+        private void RemoveTag(IDomObject tag)
+        {
+            var e = new RemovingTagEventArgs { Tag = tag };
+            OnRemovingTag(e);
+            if (!e.Cancel) tag.Remove();
+        }
+
+        private void RemoveAttribute(IDomObject tag, KeyValuePair<string, string> attribute)
+        {
+            var e = new RemovingAttributeEventArgs { Attribute = attribute };
+            OnRemovingAttribute(e);
+            if (!e.Cancel) tag.RemoveAttribute(attribute.Key);
+        }
+
+        private void RemoveStyle(CSSStyleDeclaration styles, KeyValuePair<string, string> style)
+        {
+            var e = new RemovingStyleEventArgs { Style = style };
+            OnRemovingStyle(e);
+            if (!e.Cancel) styles.RemoveStyle(style.Key);
         }
     }
 }
