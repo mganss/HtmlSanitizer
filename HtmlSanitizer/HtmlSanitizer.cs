@@ -482,6 +482,10 @@ namespace Ganss.XSS
             return uri.ToString();
         }
 
+        /// <summary>
+        /// Remove a tag from the document.
+        /// </summary>
+        /// <param name="tag">to be removed</param>
         private void RemoveTag(IDomObject tag)
         {
             var e = new RemovingTagEventArgs { Tag = tag };
@@ -489,6 +493,11 @@ namespace Ganss.XSS
             if (!e.Cancel) tag.Remove();
         }
 
+        /// <summary>
+        /// Remove an attribute from the document.
+        /// </summary>
+        /// <param name="tag">tag where the attribute to belongs</param>
+        /// <param name="attribute">to be removed</param>
         private void RemoveAttribute(IDomObject tag, KeyValuePair<string, string> attribute)
         {
             var e = new RemovingAttributeEventArgs { Attribute = attribute };
@@ -496,7 +505,12 @@ namespace Ganss.XSS
             if (!e.Cancel) tag.RemoveAttribute(attribute.Key);
         }
 
-        private void RemoveStyle(CSSStyleDeclaration styles, KeyValuePair<string, string> style)
+        /// <summary>
+        /// Remove a style from the document.
+        /// </summary>
+        /// <param name="styles">collection where the style to belongs</param>
+        /// <param name="style">to be removed</param>
+        private void RemoveStyle(ICSSStyleDeclaration styles, KeyValuePair<string, string> style)
         {
             var e = new RemovingStyleEventArgs { Style = style };
             OnRemovingStyle(e);
