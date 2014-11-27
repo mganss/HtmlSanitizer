@@ -276,8 +276,19 @@ namespace Ganss.XSS
         public static readonly Regex DefaultDisallowedCssPropertyValue = new Regex(@"[<>]", RegexOptions.Compiled);
 
         /// <summary>
-        /// The regex for Javascript includes (see https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#.26_JavaScript_includes)
+        /// Detect the '&amp; Javascript include' attack possibility.
+        /// 
+        /// The &amp; Javascript include is a possible method to execute Javascript and so lead to XSS. 
+        /// (see https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#.26_JavaScript_includes)
+        /// 
+        /// The regex matches &amp;{
+        /// 
         /// </summary>
+        /// <example>
+        /// <![CDATA[
+        /// <BR SIZE="&{alert('XSS')}">
+        /// ]]>
+        /// </example>
         protected static readonly Regex JSInclude = new Regex(@"\s*&{");
 
         /// <summary>
