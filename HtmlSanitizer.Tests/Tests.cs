@@ -14,7 +14,7 @@ using CsQuery;
 // disable XML comments warnings
 #pragma warning disable 1591
 
-namespace Ganss.XSS
+namespace Ganss.XSS.Tests
 {
     /// <summary>
     /// Tests for <see cref="HtmlSanitizer"/>.
