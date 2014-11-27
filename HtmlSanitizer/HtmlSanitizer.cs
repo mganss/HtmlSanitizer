@@ -329,8 +329,10 @@ namespace Ganss.XSS
                         tag.SetAttribute(attribute.Key, url);
                 }
 
+                //sanitize the style attribute
                 SanitizeStyle(tag.Style, baseUrl);
 
+                //sanitize the value of the attributes
                 foreach (var attribute in tag.Attributes.ToList())
                 {
                     if (JSInclude.IsMatch(attribute.Value))
