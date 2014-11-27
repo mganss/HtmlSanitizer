@@ -122,6 +122,11 @@ namespace Ganss.XSS
         public ISet<string> AllowedAttributes { get; private set; }
 
         /// <summary>
+        /// Allow all HTML5 data attributes; the attributes prefixed with data-
+        /// </summary>
+        public bool AllowDataAttributes { get; set; }
+
+        /// <summary>
         /// The default allowed HTML attributes.
         /// </summary>
         public static readonly ISet<string> DefaultAllowedAttributes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { 

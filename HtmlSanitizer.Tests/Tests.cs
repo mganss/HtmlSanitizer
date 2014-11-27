@@ -2052,6 +2052,33 @@ rl(javascript:alert(""foo""))'>";
             var html = @"<div style=""background: 0; test: xyz; bad: bad;""></div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""background: 0; test: xyz;""></div>").IgnoreCase);
         }
+
+        [Test]
+        public void AllowDataAttributesTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowDataAttributes = true;
+            var html = @"<div data-test1=""value x""></div>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(html).IgnoreCase);
+        }
+
+        [Test]
+        public void AllowDataAttributesCaseTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowDataAttributes = true;
+            var html = @"<div DAta-test1=""value x""></div>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(html).IgnoreCase);
+        }
+
+        [Test]
+        public void AllowDataAttributesOffTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowDataAttributes = false;
+            var html = @"<div data-test1=""value x""></div>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div></div>").IgnoreCase);
+        }
     }
 }
 
