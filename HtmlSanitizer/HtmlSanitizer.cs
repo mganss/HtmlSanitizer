@@ -1,4 +1,4 @@
-﻿using CsQuery;
+using CsQuery;
 using CsQuery.ExtensionMethods.Internal;
 using CsQuery.Output;
 using System;
