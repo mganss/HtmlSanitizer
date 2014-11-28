@@ -343,7 +343,7 @@ namespace Ganss.XSS
         }
 
         /// <summary>
-        /// Allowed Attribute
+        /// Is this attribute allowed?
         /// </summary>
         /// <param name="attribute"></param>
         /// <returns></returns>
