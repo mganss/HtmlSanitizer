@@ -1,5 +1,4 @@
 ﻿using CsQuery;
-using CsQuery.ExtensionMethods.Internal;
 using CsQuery.Implementation;
 using CsQuery.Output;
 using System;
@@ -370,7 +369,7 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="styles">The styles.</param>
         /// <param name="baseUrl">The base URL.</param>
-        protected void SanitizeStyle(CsQuery.Implementation.CSSStyleDeclaration styles, string baseUrl)
+        protected void SanitizeStyle(CSSStyleDeclaration styles, string baseUrl)
         {
             if (styles == null || !styles.Any()) return;
 
@@ -455,7 +454,7 @@ namespace Ganss.XSS
             return uri;
         }
 
-        private static Uri _exampleUri = new Uri("http://www.example.com/");
+        private static readonly Uri _exampleUri = new Uri("http://www.example.com/");
         private static bool IsWellFormedRelativeUri(Uri uri)
         {
             if (uri.IsAbsoluteUri) return false;
