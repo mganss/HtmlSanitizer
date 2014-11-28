@@ -306,7 +306,7 @@ namespace Ganss.XSS
             {
                 foreach (var attribute in tag.Attributes.Where(a => !AllowedAttributes.Contains(a.Key)).ToList())
                 {
-                    if (AllowDataAttributes && attribute.Key != null && attribute.Key.StartsWith("data-", StringComparison.CurrentCultureIgnoreCase))
+                    if (AllowDataAttributes && attribute.Key != null && attribute.Key.StartsWith("data-", StringComparison.OrdinalIgnoreCase))
                     {
                         continue;
                     }
