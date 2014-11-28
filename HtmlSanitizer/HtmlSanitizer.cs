@@ -291,7 +291,7 @@ namespace Ganss.XSS
             var dom = CQ.Create(html);
 
             //remove non-whitelisted tags
-            foreach (var tag in dom["*"].Where(t => !AllowedTags.Contains(t.NodeName)).ToList())
+            foreach (var tag in dom["*"].Where(t => !IsAllowedTag(t)).ToList())
             {
                 RemoveTag(tag);
             }
@@ -306,7 +306,7 @@ namespace Ganss.XSS
                 }
 
                 //sanitize URLs in URL-marked attributes 
-                foreach (var attribute in tag.Attributes.Where(a => UriAttributes.Contains(a.Key)).ToList())
+                foreach (var attribute in tag.Attributes.Where(IsUriAttribute).ToList())
                 {
                     var url = SanitizeUrl(attribute.Value, baseUrl);
                     if (url == null)
@@ -340,6 +340,24 @@ namespace Ganss.XSS
             var output = dom.Render(outputFormatter);
 
             return output;
+        }
+
+        /// <summary>
+        /// Is this an attribute with an URI?
+        /// </summary>
+        /// <param name="attribute"></param>
+        /// <returns></returns>
+        private bool IsUriAttribute(KeyValuePair<string, string> attribute)
+        {
+            return UriAttributes.Contains(attribute.Key);
+        }
+
+        /// <summary>
+        /// Is this tag allowed?
+        /// </summary>
+        private bool IsAllowedTag(IDomNode tag)
+        {
+            return AllowedTags.Contains(tag.NodeName);
         }
 
         /// <summary>
