@@ -2076,6 +2076,33 @@ rl(javascript:alert(""foo""))'>";
             string expected = "<BR>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
+
+        [Test]
+        public void AllowDataAttributesTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowDataAttributes = true;
+            var html = @"<div data-test1=""value x""></div>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(html).IgnoreCase);
+        }
+
+        [Test]
+        public void AllowDataAttributesCaseTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowDataAttributes = true;
+            var html = @"<div DAta-test1=""value x""></div>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(html).IgnoreCase);
+        }
+
+        [Test]
+        public void AllowDataAttributesOffTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowDataAttributes = false;
+            var html = @"<div data-test1=""value x""></div>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div></div>").IgnoreCase);
+        }
     }
 }
 

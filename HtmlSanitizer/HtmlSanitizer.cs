@@ -123,6 +123,11 @@ namespace Ganss.XSS
         public ISet<string> AllowedAttributes { get; private set; }
 
         /// <summary>
+        /// Allow all HTML5 data attributes; the attributes prefixed with data-
+        /// </summary>
+        public bool AllowDataAttributes { get; set; }
+
+        /// <summary>
         /// The default allowed HTML attributes.
         /// </summary>
         public static readonly ISet<string> DefaultAllowedAttributes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { 
@@ -296,7 +301,7 @@ namespace Ganss.XSS
             foreach (var tag in dom["*"])
             {
                 //remove non-whitelisted attributes
-                foreach (var attribute in tag.Attributes.Where(a => !AllowedAttributes.Contains(a.Key)).ToList())
+                foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
                 {
                     RemoveAttribute(tag, attribute);
                 }
@@ -335,6 +340,21 @@ namespace Ganss.XSS
             var output = dom.Render(outputFormatter);
 
             return output;
+        }
+
+        /// <summary>
+        /// Allowed Attribute
+        /// </summary>
+        /// <param name="attribute"></param>
+        /// <returns></returns>
+        private bool IsAllowedAttribute(KeyValuePair<string, string> attribute)
+        {
+            //test html5 data- attributes
+            if (AllowDataAttributes && attribute.Key != null && attribute.Key.StartsWith("data-", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            return AllowedAttributes.Contains(attribute.Key);
         }
 
         // from http://genshi.edgewall.org/
