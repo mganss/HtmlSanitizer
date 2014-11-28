@@ -286,18 +286,22 @@ namespace Ganss.XSS
         {
             var dom = CQ.Create(html);
 
+            //remove non-whitelisted tags
             foreach (var tag in dom["*"].Where(t => !AllowedTags.Contains(t.NodeName)).ToList())
             {
                 RemoveTag(tag);
             }
 
+            //cleanup attributes
             foreach (var tag in dom["*"])
             {
+                //remove non-whitelisted attributes
                 foreach (var attribute in tag.Attributes.Where(a => !AllowedAttributes.Contains(a.Key)).ToList())
                 {
                     RemoveAttribute(tag, attribute);
                 }
 
+                //sanitize URLs in URL-marked attributes 
                 foreach (var attribute in tag.Attributes.Where(a => UriAttributes.Contains(a.Key)).ToList())
                 {
                     var url = SanitizeUrl(attribute.Value, baseUrl);
@@ -307,8 +311,10 @@ namespace Ganss.XSS
                         tag.SetAttribute(attribute.Key, url);
                 }
 
+                //sanitize the style attribute
                 SanitizeStyle(tag.Style, baseUrl);
 
+                //sanitize the value of the attributes
                 foreach (var attribute in tag.Attributes.ToList())
                 {
                     // Javascript includes (see https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#.26_JavaScript_includes)
@@ -316,6 +322,7 @@ namespace Ganss.XSS
                         RemoveAttribute(tag, attribute);
                     else
                     {
+                        //escape attribute value
                         var val = attribute.Value.Replace("<", "&lt;").Replace(">", "&gt;");
                         tag.SetAttribute(attribute.Key, val);
                     }
