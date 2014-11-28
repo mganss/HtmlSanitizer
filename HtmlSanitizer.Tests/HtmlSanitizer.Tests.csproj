@@ -6,7 +6,7 @@
     <ProjectGuid>{55D772A0-8D8C-4CF7-A876-E6DAB8ED42C0}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>HtmlSanitizer.Tests</RootNamespace>
+    <RootNamespace>Ganss.XSS.Tests</RootNamespace>
     <AssemblyName>HtmlSanitizer.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
