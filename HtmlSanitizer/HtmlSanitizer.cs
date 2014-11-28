@@ -275,11 +275,6 @@ namespace Ganss.XSS
         public static readonly Regex DefaultDisallowedCssPropertyValue = new Regex(@"[<>]", RegexOptions.Compiled);
 
         /// <summary>
-        /// The regex for Javascript includes (see https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#.26_JavaScript_includes)
-        /// </summary>
-        protected static readonly Regex JSInclude = new Regex(@"\s*&{");
-
-        /// <summary>
         /// Sanitizes the specified HTML.
         /// </summary>
         /// <param name="html">The HTML to sanitize.</param>
@@ -290,7 +285,7 @@ namespace Ganss.XSS
         {
             var dom = CQ.Create(html);
 
-            foreach (var tag in dom["*"].Not(string.Join(",", AllowedTags)).ToList())
+            foreach (var tag in dom["*"].Where(t => !AllowedTags.Contains(t.NodeName)).ToList())
             {
                 var e = new RemovingTagEventArgs { Tag = tag };
                 OnRemovingTag(e);
@@ -308,9 +303,7 @@ namespace Ganss.XSS
                 {
                     var url = SanitizeUrl(attribute.Value, baseUrl);
                     if (url == null)
-                    {
                         RemoveAttribute(tag, attribute);
-                    }
                     else
                         tag.SetAttribute(attribute.Key, url);
                 }
@@ -319,12 +312,14 @@ namespace Ganss.XSS
 
                 foreach (var attribute in tag.Attributes.ToList())
                 {
-                    if (JSInclude.IsMatch(attribute.Value))
+                    // Javascript includes (see https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#.26_JavaScript_includes)
+                    if (attribute.Value.Contains("&{"))
                         RemoveAttribute(tag, attribute);
-
-                    var val = attribute.Value;
-                    if (val.Contains('<')) { val = val.Replace("<", "&lt;"); tag.SetAttribute(attribute.Key, val); }
-                    if (val.Contains('>')) { val = val.Replace(">", "&gt;"); tag.SetAttribute(attribute.Key, val); }
+                    else
+                    {
+                        var val = attribute.Value.Replace("<", "&lt;").Replace(">", "&gt;");
+                        tag.SetAttribute(attribute.Key, val);
+                    }
                 }
             }
 

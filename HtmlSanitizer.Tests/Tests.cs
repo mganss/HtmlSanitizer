@@ -2052,6 +2052,30 @@ rl(javascript:alert(""foo""))'>";
             var html = @"<div style=""background: 0; test: xyz; bad: bad;""></div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""background: 0; test: xyz;""></div>").IgnoreCase);
         }
+
+        [Test]
+        public void ProtocolRelativeTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            var html = @"<a href=""//www.example.com/test"">Test</a>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<a href=""//www.example.com/test"">Test</a>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html, baseUrl: @"https://www.xyz.com/123"), Is.EqualTo(@"<a href=""https://www.example.com/test"">Test</a>").IgnoreCase);
+        }
+
+        [Test]
+        public void JavaScriptIncludeAndAngleBracketsTest()
+        {
+            // Arrange
+            var sanitizer = new HtmlSanitizer();
+
+            // Act
+            string htmlFragment = "<BR SIZE=\"&{alert('XSS&gt;')}\">";
+            string actual = sanitizer.Sanitize(htmlFragment);
+
+            // Assert
+            string expected = "<BR>";
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
     }
 }
 
