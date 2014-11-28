@@ -322,7 +322,8 @@ namespace Ganss.XSS
                 //sanitize the value of the attributes
                 foreach (var attribute in tag.Attributes.ToList())
                 {
-                    // Javascript includes (see https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#.26_JavaScript_includes)
+                    // The '& Javascript include' is a possible method to execute Javascript and can lead to XSS.
+                    // (see https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#.26_JavaScript_includes)
                     if (attribute.Value.Contains("&{"))
                         RemoveAttribute(tag, attribute);
                     else
@@ -415,7 +416,7 @@ namespace Ganss.XSS
             }
         }
 
-       
+
 
         /// <summary>
         /// Decodes CSS unicode escapes and removes comments.
