@@ -1,5 +1,6 @@
 ﻿using CsQuery;
 using CsQuery.ExtensionMethods.Internal;
+using CsQuery.Implementation;
 using CsQuery.Output;
 using System;
 using System.Collections.Generic;
@@ -287,9 +288,7 @@ namespace Ganss.XSS
 
             foreach (var tag in dom["*"].Where(t => !AllowedTags.Contains(t.NodeName)).ToList())
             {
-                var e = new RemovingTagEventArgs { Tag = tag };
-                OnRemovingTag(e);
-                if (!e.Cancel) tag.Remove();
+                RemoveTag(tag);
             }
 
             foreach (var tag in dom["*"])
@@ -329,13 +328,6 @@ namespace Ganss.XSS
             var output = dom.Render(outputFormatter);
 
             return output;
-        }
-
-        private void RemoveAttribute(IDomObject tag, KeyValuePair<string, string> attribute)
-        {
-            var e = new RemovingAttributeEventArgs { Attribute = attribute };
-            OnRemovingAttribute(e);
-            if (!e.Cancel) tag.RemoveAttribute(attribute.Key);
         }
 
         // from http://genshi.edgewall.org/
@@ -387,9 +379,7 @@ namespace Ganss.XSS
 
             foreach (var style in removeStyles)
             {
-                var e = new RemovingStyleEventArgs { Style = style };
-                OnRemovingStyle(e);
-                if (!e.Cancel) styles.RemoveStyle(style.Key);
+                RemoveStyle(styles, style);
             }
 
             foreach (var kvp in setStyles)
@@ -397,6 +387,8 @@ namespace Ganss.XSS
                 styles.SetStyle(kvp.Key, kvp.Value);
             }
         }
+
+       
 
         /// <summary>
         /// Decodes CSS unicode escapes and removes comments.
@@ -468,6 +460,41 @@ namespace Ganss.XSS
             }
 
             return uri.ToString();
+        }
+
+        /// <summary>
+        /// Remove a tag from the document.
+        /// </summary>
+        /// <param name="tag">to be removed</param>
+        private void RemoveTag(IDomObject tag)
+        {
+            var e = new RemovingTagEventArgs { Tag = tag };
+            OnRemovingTag(e);
+            if (!e.Cancel) tag.Remove();
+        }
+
+        /// <summary>
+        /// Remove an attribute from the document.
+        /// </summary>
+        /// <param name="tag">tag where the attribute to belongs</param>
+        /// <param name="attribute">to be removed</param>
+        private void RemoveAttribute(IDomObject tag, KeyValuePair<string, string> attribute)
+        {
+            var e = new RemovingAttributeEventArgs { Attribute = attribute };
+            OnRemovingAttribute(e);
+            if (!e.Cancel) tag.RemoveAttribute(attribute.Key);
+        }
+
+        /// <summary>
+        /// Remove a style from the document.
+        /// </summary>
+        /// <param name="styles">collection where the style to belongs</param>
+        /// <param name="style">to be removed</param>
+        private void RemoveStyle(ICSSStyleDeclaration styles, KeyValuePair<string, string> style)
+        {
+            var e = new RemovingStyleEventArgs { Style = style };
+            OnRemovingStyle(e);
+            if (!e.Cancel) styles.RemoveStyle(style.Key);
         }
     }
 }
