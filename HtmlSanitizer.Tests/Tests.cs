@@ -2,8 +2,6 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using CsQuery;
 
 // Tests based on tests from http://roadkill.codeplex.com/
 
@@ -14,7 +12,7 @@ using CsQuery;
 // disable XML comments warnings
 #pragma warning disable 1591
 
-namespace Ganss.XSS
+namespace Ganss.XSS.Tests
 {
     /// <summary>
     /// Tests for <see cref="HtmlSanitizer"/>.
@@ -2075,6 +2073,33 @@ rl(javascript:alert(""foo""))'>";
             // Assert
             string expected = "<BR>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
+
+        [Test]
+        public void AllowDataAttributesTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowDataAttributes = true;
+            var html = @"<div data-test1=""value x""></div>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(html).IgnoreCase);
+        }
+
+        [Test]
+        public void AllowDataAttributesCaseTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowDataAttributes = true;
+            var html = @"<div DAta-test1=""value x""></div>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(html).IgnoreCase);
+        }
+
+        [Test]
+        public void AllowDataAttributesOffTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowDataAttributes = false;
+            var html = @"<div data-test1=""value x""></div>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div></div>").IgnoreCase);
         }
     }
 }
