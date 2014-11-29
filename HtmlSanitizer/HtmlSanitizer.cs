@@ -290,22 +290,22 @@ namespace Ganss.XSS
         {
             var dom = CQ.Create(html);
 
-            //remove non-whitelisted tags
+            // remove non-whitelisted tags
             foreach (var tag in dom["*"].Where(t => !IsAllowedTag(t)).ToList())
             {
                 RemoveTag(tag);
             }
 
-            //cleanup attributes
+            // cleanup attributes
             foreach (var tag in dom["*"])
             {
-                //remove non-whitelisted attributes
+                // remove non-whitelisted attributes
                 foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
                 {
                     RemoveAttribute(tag, attribute);
                 }
 
-                //sanitize URLs in URL-marked attributes 
+                // sanitize URLs in URL-marked attributes 
                 foreach (var attribute in tag.Attributes.Where(IsUriAttribute).ToList())
                 {
                     var url = SanitizeUrl(attribute.Value, baseUrl);
@@ -315,10 +315,10 @@ namespace Ganss.XSS
                         tag.SetAttribute(attribute.Key, url);
                 }
 
-                //sanitize the style attribute
+                // sanitize the style attribute
                 SanitizeStyle(tag.Style, baseUrl);
 
-                //sanitize the value of the attributes
+                // sanitize the value of the attributes
                 foreach (var attribute in tag.Attributes.ToList())
                 {
                     // The '& Javascript include' is a possible method to execute Javascript and can lead to XSS.
@@ -327,7 +327,7 @@ namespace Ganss.XSS
                         RemoveAttribute(tag, attribute);
                     else
                     {
-                        //escape attribute value
+                        // escape attribute value
                         var val = attribute.Value.Replace("<", "&lt;").Replace(">", "&gt;");
                         tag.SetAttribute(attribute.Key, val);
                     }
@@ -343,36 +343,35 @@ namespace Ganss.XSS
         }
 
         /// <summary>
-        /// Is this an attribute with an URI?
+        /// Determines whether the specified attribute can contain a URI.
         /// </summary>
-        /// <param name="attribute"></param>
-        /// <returns></returns>
+        /// <param name="attribute">The attribute.</param>
+        /// <returns><c>true</c> if the attribute can contain a URI; otherwise, <c>false</c>.</returns>
         private bool IsUriAttribute(KeyValuePair<string, string> attribute)
         {
             return UriAttributes.Contains(attribute.Key);
         }
 
         /// <summary>
-        /// Is this tag allowed?
+        /// Determines whether the specified tag is allowed.
         /// </summary>
+        /// <param name="tag">The tag.</param>
+        /// <returns><c>true</c> if the tag is allowed; otherwise, <c>false</c>.</returns>
         private bool IsAllowedTag(IDomNode tag)
         {
             return AllowedTags.Contains(tag.NodeName);
         }
 
         /// <summary>
-        /// Is this attribute allowed?
+        /// Determines whether the specified attribute is allowed.
         /// </summary>
-        /// <param name="attribute"></param>
-        /// <returns></returns>
+        /// <param name="attribute">The attribute.</param>
+        /// <returns><c>true</c> if the attribute is allowed; otherwise, <c>false</c>.</returns>
         private bool IsAllowedAttribute(KeyValuePair<string, string> attribute)
         {
-            //test html5 data- attributes
-            if (AllowDataAttributes && attribute.Key != null && attribute.Key.StartsWith("data-", StringComparison.OrdinalIgnoreCase))
-            {
-                return true;
-            }
-            return AllowedAttributes.Contains(attribute.Key);
+            return AllowedAttributes.Contains(attribute.Key)
+                // test html5 data- attributes
+                || (AllowDataAttributes && attribute.Key != null && attribute.Key.StartsWith("data-", StringComparison.OrdinalIgnoreCase));
         }
 
         // from http://genshi.edgewall.org/
@@ -432,8 +431,6 @@ namespace Ganss.XSS
                 styles.SetStyle(kvp.Key, kvp.Value);
             }
         }
-
-
 
         /// <summary>
         /// Decodes CSS unicode escapes and removes comments.
