@@ -20,11 +20,21 @@ In order to facilitate different use cases, HtmlSanitizer can be customized at s
 ### Attributes allowed by default
 `abbr, accept, accept-charset, accesskey, action, align, alt, autocomplete, autosave, axis, bgcolor, border, cellpadding, cellspacing, challenge, char, charoff, charset, checked, cite, clear, color, cols, colspan, compact, contenteditable, coords, datetime, dir, disabled, draggable, dropzone, enctype, for, frame, headers, height, high, href, hreflang, hspace, ismap, keytype, label, lang, list, longdesc, low, max, maxlength, media, method, min, multiple, name, nohref, noshade, novalidate, nowrap, open, optimum, pattern, placeholder, prompt, pubdate, radiogroup, readonly, rel, required, rev, reversed, rows, rowspan, rules, scope, selected, shape, size, span, spellcheck, src, start, step, style, summary, tabindex, target, title, type, usemap, valign, value, vspace, width, wrap`
 
+note: to prevent [classjacking](https://html5sec.org/#123), the `class` attribute is not in the whitelist by default. 
+The class attribute can be added as follows:
+```C#
+var sanitizer = new HtmlSanitizer();
+sanitizer.AllowedAttributes.Add("class");
+var sanitized = sanitizer.Sanitize(html);
+```
+
 ### CSS properties allowed by default
 `background, background-attachment, background-color, background-image, background-position, background-repeat, border, border-bottom, border-bottom-color, border-bottom-style, border-bottom-width, border-collapse, border-color, border-left, border-left-color, border-left-style, border-left-width, border-right, border-right-color, border-right-style, border-right-width, border-spacing, border-style, border-top, border-top-color, border-top-style, border-top-width, border-width, bottom, caption-side, clear, clip, color, content, counter-increment, counter-reset, cursor, direction, display, empty-cells, float, font, font-family, font-size, font-style, font-variant, font-weight, height, left, letter-spacing, line-height, list-style, list-style-image, list-style-position, list-style-type, margin, margin-bottom, margin-left, margin-right, margin-top, max-height, max-width, min-height, min-width, opacity, orphans, outline, outline-color, outline-style, outline-width, overflow, padding, padding-bottom, padding-left, padding-right, padding-top, page-break-after, page-break-before, page-break-inside, quotes, right, table-layout, text-align, text-decoration, text-indent, text-transform, top, unicode-bidi, vertical-align, visibility, white-space, widows, width, word-spacing, z-index`
 
 ### URI schemes allowed by default
 ``http, https``
+
+note: the [protocol-relative URL](http://en.wikipedia.org/wiki/Wikipedia:Protocol-relative_URL)  (eg: //github.com) is allowed by default.
 
 ### Default attributes that contain URIs
 `action, background, dynsrc, href, lowsrc, src`
