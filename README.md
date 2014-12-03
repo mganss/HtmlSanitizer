@@ -32,7 +32,7 @@ In order to facilitate different use cases, HtmlSanitizer can be customized at s
 Usage
 -----
 
-Install the HtmlSanitizer NuGet package. Then:
+Install the [HtmlSanitizer NuGet package](https://www.nuget.org/packages/HtmlSanitizer/). Then:
 
 ```C#
 var sanitizer = new HtmlSanitizer();
