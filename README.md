@@ -3,7 +3,7 @@ HtmlSanitizer
 
 [![Version](https://img.shields.io/nuget/v/HtmlSanitizer.svg)](https://www.nuget.org/packages/HtmlSanitizer)
 
-HtmlSanitizer is a class for cleaning HTML fragments from constructs that can lead to [XSS attacks](https://en.wikipedia.org/wiki/Cross-site_scripting).
+HtmlSanitizer is a library for cleaning HTML fragments from constructs that can lead to [XSS attacks](https://en.wikipedia.org/wiki/Cross-site_scripting).
 It uses the excellent C# jQuery port [CsQuery](https://github.com/jamietre/CsQuery) to parse, manipulate, and render HTML and CSS.
 
 In order to facilitate different use cases, HtmlSanitizer can be customized at several levels:
