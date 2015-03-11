@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Michael Ganss")]
 [assembly: AssemblyProduct("HtmlSanitizer")]
-[assembly: AssemblyCopyright("Copyright © 2013-2014 Michael Ganss")]
+[assembly: AssemblyCopyright("Copyright © 2013-2015 Michael Ganss")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
