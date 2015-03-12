@@ -2101,6 +2101,14 @@ rl(javascript:alert(""foo""))'>";
             var html = @"<div data-test1=""value x""></div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div></div>").IgnoreCase);
         }
+
+        [Test]
+        public void SanitizeNonClosedTagTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            var html = @"<div>Hallo <p><b>Bold<br>Ballo</div>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div>Hallo <p><b>Bold<br>Ballo</b></p></div>").IgnoreCase);
+        }
     }
 }
 
