@@ -6,6 +6,9 @@ HtmlSanitizer
 HtmlSanitizer is a .NET library for cleaning HTML fragments from constructs that can lead to [XSS attacks](https://en.wikipedia.org/wiki/Cross-site_scripting).
 It uses the excellent C# jQuery port [CsQuery](https://github.com/jamietre/CsQuery) to parse, manipulate, and render HTML and CSS.
 
+Because HtmlSanitizer is based on a robust HTML parser it can also shield you from deliberate or accidental
+"tag poisoning" where invalid HTML in one fragment can corrupt the whole document leading to broken layout or style.
+
 In order to facilitate different use cases, HtmlSanitizer can be customized at several levels:
    
 - Configure allowed HTML tags through the property `AllowedTags`. All other tags will be stripped.
