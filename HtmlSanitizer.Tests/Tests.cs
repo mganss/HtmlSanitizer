@@ -2106,7 +2106,7 @@ rl(javascript:alert(""foo""))'>";
         public void SanitizeNonClosedTagTest()
         {
             var sanitizer = new HtmlSanitizer();
-            var html = @"<div>Hallo <p><b>Bold<br>Ballo</div>";
+            var html = @"<div>Hallo <p><b>Bold<br>Ballo";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div>Hallo <p><b>Bold<br>Ballo</b></p></div>").IgnoreCase);
         }
     }
