@@ -89,7 +89,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed HTML tag names.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { 
+        public static readonly ISet<string> DefaultAllowedTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
             // https://developer.mozilla.org/en/docs/Web/Guide/HTML/HTML5/HTML5_element_list
             "a", "abbr", "acronym", "address", "area", "b",
             "big", "blockquote", "br", "button", "caption", "center", "cite",
@@ -129,7 +129,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed HTML attributes.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedAttributes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { 
+        public static readonly ISet<string> DefaultAllowedAttributes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
             // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
             "abbr", "accept", "accept-charset", "accesskey",
             "action", "align", "alt", "axis", "bgcolor", "border", "cellpadding",
@@ -193,7 +193,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed CSS properties.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedCssProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { 
+        public static readonly ISet<string> DefaultAllowedCssProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
             // CSS 3 properties <http://www.w3.org/TR/CSS/#properties>
             "background", "background-attachment", "background-color",
             "background-image", "background-position", "background-repeat",
@@ -235,6 +235,10 @@ namespace Ganss.XSS
         }
 
         /// <summary>
+        /// Occurs for every tag after sanitizing.
+        /// </summary>
+        public event EventHandler<PostProcessTagEventArgs> PostProcessTag;
+        /// <summary>
         /// Occurs before a tag is removed.
         /// </summary>
         public event EventHandler<RemovingTagEventArgs> RemovingTag;
@@ -246,6 +250,15 @@ namespace Ganss.XSS
         /// Occurs before a style is removed.
         /// </summary>
         public event EventHandler<RemovingStyleEventArgs> RemovingStyle;
+
+        /// <summary>
+        /// Raises the <see cref="E:PostProcessTag" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="PostProcessTagEventArgs"/> instance containing the event data.</param>
+        protected virtual void OnPostProcessTag(PostProcessTagEventArgs e)
+        {
+            if (PostProcessTag != null) PostProcessTag(this, e);
+        }
 
         /// <summary>
         /// Raises the <see cref="E:RemovingTag" /> event.
@@ -297,7 +310,7 @@ namespace Ganss.XSS
             }
 
             // cleanup attributes
-            foreach (var tag in dom["*"])
+            foreach (var tag in dom["*"].ToList())
             {
                 // remove non-whitelisted attributes
                 foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
@@ -305,7 +318,7 @@ namespace Ganss.XSS
                     RemoveAttribute(tag, attribute);
                 }
 
-                // sanitize URLs in URL-marked attributes 
+                // sanitize URLs in URL-marked attributes
                 foreach (var attribute in tag.Attributes.Where(IsUriAttribute).ToList())
                 {
                     var url = SanitizeUrl(attribute.Value, baseUrl);
@@ -332,6 +345,8 @@ namespace Ganss.XSS
                         tag.SetAttribute(attribute.Key, val);
                     }
                 }
+
+                OnPostProcessTag(new PostProcessTagEventArgs { Tag = tag });
             }
 
             if (outputFormatter == null)

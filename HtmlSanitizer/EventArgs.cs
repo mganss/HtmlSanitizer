@@ -9,9 +9,23 @@ using System.Threading.Tasks;
 namespace Ganss.XSS
 {
     /// <summary>
+    /// Provides data for the <see cref="HtmlSanitizer.PostProcessTag"/> event.
+    /// </summary>
+    public class PostProcessTagEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Gets or sets the tag to be processed.
+        /// </summary>
+        /// <value>
+        /// The tag.
+        /// </value>
+        public IDomObject Tag { get; set; }
+    }
+
+    /// <summary>
     /// Provides data for the <see cref="HtmlSanitizer.RemovingTag"/> event.
     /// </summary>
-    public class RemovingTagEventArgs: CancelEventArgs
+    public class RemovingTagEventArgs : CancelEventArgs
     {
         /// <summary>
         /// Gets or sets the tag to be removed.

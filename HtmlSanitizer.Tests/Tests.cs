@@ -2109,6 +2109,19 @@ rl(javascript:alert(""foo""))'>";
             var html = @"<div>Hallo <p><b>Bold<br>Ballo";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div>Hallo <p><b>Bold<br>Ballo</b></p></div>").IgnoreCase);
         }
+
+        [Test]
+        public void PostProcessTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.PostProcessTag += (s, e) =>
+            {
+                e.Tag.AddClass("test");
+                e.Tag.AppendChild(CsQuery.CQ.Create("<b>Test</b>").FirstElement());
+            };
+            var html = @"<div>Hallo</div>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div class=""test"">Hallo<b>Test</b></div>").IgnoreCase);
+        }
     }
 }
 
