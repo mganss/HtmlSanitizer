@@ -2122,6 +2122,17 @@ rl(javascript:alert(""foo""))'>";
             var html = @"<div>Hallo</div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div class=""test"">Hallo<b>Test</b></div>").IgnoreCase);
         }
+
+        [Test]
+        public void UnwrapNonWhitelistedTagsProcessTest()
+        {
+            const string html = @"<b>some <b>bold </b><i>content</i></b>";
+
+            var allowedTags = new[] { "i" };
+            var sanitizer = new HtmlSanitizer(allowedTags: allowedTags);
+
+            Assert.That(sanitizer.Sanitize(html, removeNonWhitelistedTags: false), Is.EqualTo(@"some bold <i>content</i>").IgnoreCase);
+        }
     }
 }
 

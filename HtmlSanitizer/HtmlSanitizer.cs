@@ -298,15 +298,19 @@ namespace Ganss.XSS
         /// <param name="html">The HTML to sanitize.</param>
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
         /// <param name="outputFormatter">The CsQuery output formatter used to render the DOM. Using the default formatter if null.</param>
+        /// <param name="removeNonWhitelistedTags">Remove non-whitelisted tags. If set to false, the non-whitelisted tags are only unwrapped. Removing the tags by default.</param>
         /// <returns>The sanitized HTML.</returns>
-        public string Sanitize(string html, string baseUrl = "", IOutputFormatter outputFormatter = null)
+        public string Sanitize(string html, string baseUrl = "", IOutputFormatter outputFormatter = null, bool removeNonWhitelistedTags = true)
         {
             var dom = CQ.Create(html);
 
             // remove non-whitelisted tags
             foreach (var tag in dom["*"].Where(t => !IsAllowedTag(t)).ToList())
             {
-                RemoveTag(tag);
+                if (removeNonWhitelistedTags)
+                    RemoveTag(tag);
+                else
+                    UnwrapTag(tag);
             }
 
             // cleanup attributes
@@ -528,6 +532,24 @@ namespace Ganss.XSS
             var e = new RemovingTagEventArgs { Tag = tag };
             OnRemovingTag(e);
             if (!e.Cancel) tag.Remove();
+        }
+
+        /// <summary>
+        /// Remove a tag from the document but keep it's children.
+        /// </summary>
+        /// <param name="tag">to be removed</param>
+        private void UnwrapTag(IDomObject tag)
+        {
+            var e = new RemovingTagEventArgs { Tag = tag };
+            OnRemovingTag(e);
+            if (!e.Cancel)
+            {
+                var tempCq = tag.Cq();
+                if (tempCq.Children().Any())
+                    tempCq.Children().Unwrap();
+                else
+                    tag.OuterHTML = tempCq.Text();
+            }
         }
 
         /// <summary>
