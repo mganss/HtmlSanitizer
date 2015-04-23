@@ -1,3 +1,5 @@
+using CsQuery;
+using Ganss.Text;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -201,7 +203,7 @@ namespace Ganss.XSS.Tests
 
         /// <summary>
         /// A test for Image Xss vector with Long UTF-8 Unicode
-        /// Example <!-- <IMG SRC=&#0000106&#0000097&#0000118&#0000097&#0000115&#0000099&#0000114&#0000105&#0000112&#0000116&#0000058&#0000097&#0000108&#0000101&#0000114&#0000116&#0000040&#0000039&#0000088&#0000083&#0000083&#0000039&#0000041> --> 
+        /// Example <!-- <IMG SRC=&#0000106&#0000097&#0000118&#0000097&#0000115&#0000099&#0000114&#0000105&#0000112&#0000116&#0000058&#0000097&#0000108&#0000101&#0000114&#0000116&#0000040&#0000039&#0000088&#0000083&#0000083&#0000039&#0000041> -->
         /// </summary>
         [Test]
         public void ImageLongUTF8UnicodeXSSTest()
@@ -222,7 +224,7 @@ namespace Ganss.XSS.Tests
         /// <summary>
         /// A test for Image Xss vector with Hex encoding without semicolon
         /// Example <!-- <IMG SRC=&#x6A&#x61&#x76&#x61&#x73&#x63&#x72&#x69&#x70&#x74&#x3A&#x61&#x6C&#x65&#x72&#x74&#x28&#x27&#x58&#x53&#x53&#x27&#x29> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageHexEncodeXSSTest()
         {
@@ -242,7 +244,7 @@ namespace Ganss.XSS.Tests
         /// <summary>
         /// A test for Image Xss vector with embedded tab
         /// Example <!-- <IMG SRC=\"jav	ascript:alert('XSS');\"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageEmbeddedTabXSSTest()
         {
@@ -262,7 +264,7 @@ namespace Ganss.XSS.Tests
         /// <summary>
         /// A test for Image Xss vector with embedded encoded tab
         /// Example <!-- <IMG SRC="jav&#x09;ascript:alert('XSS');"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageEmbeddedEncodedTabXSSTest()
         {
@@ -282,7 +284,7 @@ namespace Ganss.XSS.Tests
         /// <summary>
         /// A test for Image Xss vector with embedded new line
         /// Example <!-- <IMG SRC="jav&#x0A;ascript:alert('XSS');"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageEmbeddedNewLineXSSTest()
         {
@@ -302,7 +304,7 @@ namespace Ganss.XSS.Tests
         /// <summary>
         /// A test for Image Xss vector with embedded carriage return
         /// Example <!-- <IMG SRC=\"jav&#x0D;ascript:alert('XSS');\"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageEmbeddedCarriageReturnXSSTest()
         {
@@ -324,7 +326,7 @@ namespace Ganss.XSS.Tests
         /// Example <!-- <IMG
         /// SRC
         /// =
-        /// " 
+        /// "
         /// j
         /// a
         /// v
@@ -350,7 +352,7 @@ namespace Ganss.XSS.Tests
         /// )
         /// "
         ///> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageMultilineInjectedXSSTest()
         {
@@ -362,7 +364,7 @@ namespace Ganss.XSS.Tests
             string htmlFragment = @"<IMG
 SRC
 =
-"" 
+""
 j
 a
 v
@@ -398,9 +400,9 @@ S
         }
 
         /// <summary>
-        /// A test for Image Xss vector with Null breaks up Javascript directive 
+        /// A test for Image Xss vector with Null breaks up Javascript directive
         /// Example <!-- perl -e 'print "<IMG SRC=java\0script:alert(\"XSS\")>";' > out -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageNullBreaksUpXSSTest1()
         {
@@ -418,7 +420,7 @@ S
         }
 
         /// <summary>
-        /// A test for Image Xss vector with Null breaks up cross site scripting vector 
+        /// A test for Image Xss vector with Null breaks up cross site scripting vector
         /// Example <!-- <image src=" perl -e 'print "<SCR\0IPT>alert(\"XSS\")</SCR\0IPT>";' > out "> -->
         /// </summary>
         [Test]
@@ -438,7 +440,7 @@ S
         }
 
         /// <summary>
-        /// A test for Image Xss vector with spaces and Meta characters 
+        /// A test for Image Xss vector with spaces and Meta characters
         /// Example <!-- <IMG SRC=" &#14;  javascript:alert('XSS');"> -->
         /// </summary>
         [Test]
@@ -460,7 +462,7 @@ S
         /// <summary>
         /// A test for Image Xss vector with half open html
         /// Example <!-- <IMG SRC="javascript:alert('XSS')" -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageHalfOpenHtmlXSSTest()
         {
@@ -480,7 +482,7 @@ S
         /// <summary>
         /// A test for Image Xss vector with double open angle bracket
         /// Example <!-- <image src=http://ha.ckers.org/scriptlet.html < -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageDoubleOpenAngleBracketXSSTest()
         {
@@ -500,7 +502,7 @@ S
         /// <summary>
         /// A test for Dic Xss vector with Javascript escaping
         /// Example <!-- <div style="\";alert('XSS');//"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivJavascriptEscapingXSSTest()
         {
@@ -520,7 +522,7 @@ S
         /// <summary>
         /// A test for Image Xss vector with input image
         /// Example <!-- <INPUT TYPE="IMAGE" SRC="javascript:alert('XSS');"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageInputXSSTest()
         {
@@ -540,7 +542,7 @@ S
         /// <summary>
         /// A test for Image Xss vector with Dynsrc
         /// Example <!-- <IMG DYNSRC="javascript:alert('XSS')"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageDynsrcXSSTest()
         {
@@ -560,7 +562,7 @@ S
         /// <summary>
         /// A test for Image Xss vector with Lowsrc
         /// Example <!-- <IMG LOWSRC="javascript:alert('XSS')"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageLowsrcXSSTest()
         {
@@ -580,7 +582,7 @@ S
         /// <summary>
         /// A test for Xss vector with BGSound
         /// Example <!-- <BGSOUND SRC="javascript:alert('XSS');"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void BGSoundXSSTest()
         {
@@ -600,7 +602,7 @@ S
         /// <summary>
         /// A test for BR with Javascript Include
         /// Example <!-- <BR SIZE="&{alert('XSS')}"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void BRJavascriptIncludeXSSTest()
         {
@@ -620,7 +622,7 @@ S
         /// <summary>
         /// A test for P with url in style
         /// Example <!-- <p STYLE="behavior: url(www.ha.ckers.org);"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void PWithUrlInStyleXSSTest()
         {
@@ -641,7 +643,7 @@ S
         /// <summary>
         /// A test for Image with vbscript
         /// Example <!-- <IMG SRC='vbscript:msgbox("XSS")'> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageWithVBScriptXSSTest()
         {
@@ -661,7 +663,7 @@ S
         /// <summary>
         /// A test for Image with Mocha
         /// Example <!-- <IMG SRC="mocha:[code]"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageWithMochaXSSTest()
         {
@@ -681,7 +683,7 @@ S
         /// <summary>
         /// A test for Image with Livescript
         /// Example <!-- <IMG SRC="Livescript:[code]"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageWithLivescriptXSSTest()
         {
@@ -701,7 +703,7 @@ S
         /// <summary>
         /// A test for Iframe
         /// Example <!-- <IFRAME SRC="javascript:alert('XSS');"></IFRAME> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void IframeXSSTest()
         {
@@ -721,7 +723,7 @@ S
         /// <summary>
         /// A test for Frame
         /// Example <!-- <FRAMESET><FRAME SRC="javascript:alert('XSS');"></FRAMESET> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void FrameXSSTest()
         {
@@ -741,7 +743,7 @@ S
         /// <summary>
         /// A test for Table
         /// Example <!-- <TABLE BACKGROUND="javascript:alert('XSS')"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void TableXSSTest()
         {
@@ -761,7 +763,7 @@ S
         /// <summary>
         /// A test for TD
         /// Example <!-- <TABLE><TD BACKGROUND="javascript:alert('XSS')"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void TDXSSTest()
         {
@@ -781,7 +783,7 @@ S
         /// <summary>
         /// A test for Div Background Image
         /// Example <!-- <DIV STYLE="background-image: url(javascript:alert('XSS'))"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivBackgroundImageXSSTest()
         {
@@ -801,7 +803,7 @@ S
         /// <summary>
         /// A test for Div Background Image  with unicoded XSS
         /// Example <!-- <DIV STYLE="background-image:\0075\0072\006C\0028'\006a\0061\0076\0061\0073\0063\0072\0069\0070\0074\003a\0061\006c\0065\0072\0074\0028.1027\0058.1053\0053\0027\0029'\0029"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivBackgroundImageWithUnicodedXSSTest()
         {
@@ -821,7 +823,7 @@ S
         /// <summary>
         /// A test for Div Background Image  with extra characters
         /// Example <!-- <DIV STYLE="background-image: url(&#1;javascript:alert('XSS'))"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivBackgroundImageWithExtraCharactersXSSTest()
         {
@@ -841,7 +843,7 @@ S
         /// <summary>
         /// A test for DIV expression
         /// Example <!-- <DIV STYLE="width: expression(alert('XSS'));"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivExpressionXSSTest()
         {
@@ -861,7 +863,7 @@ S
         /// <summary>
         /// A test for Image with break up expression
         /// Example <!-- <IMG STYLE="xss:expr/*XSS*/ession(alert('XSS'))"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void ImageStyleExpressionXSSTest()
         {
@@ -881,7 +883,7 @@ S
         /// <summary>
         /// A test for AnchorTag with break up expression
         /// Example <!-- exp/*<A STYLE='no\xss:noxss("*//*");xss:&#101;x&#x2F;*XSS*//*/*/pression(alert("XSS"))'> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void AnchorTagStyleExpressionXSSTest()
         {
@@ -901,7 +903,7 @@ S
         /// <summary>
         /// A test for BaseTag
         /// Example <!-- <BASE HREF="javascript:alert('XSS');//"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void BaseTagXSSTest()
         {
@@ -921,7 +923,7 @@ S
         /// <summary>
         /// A test for EMBEDTag
         /// Example <!-- <EMBED SRC="http://ha.ckers.org/xss.swf" AllowScriptAccess="always"></EMBED> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void EmbedTagXSSTest()
         {
@@ -941,7 +943,7 @@ S
         /// <summary>
         /// A test for EMBEDSVG
         /// Example <!-- <EMBED SRC="data:image/svg+xml;base64,PHN2ZyB4bWxuczpzdmc9Imh0dH A6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcv MjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hs aW5rIiB2ZXJzaW9uPSIxLjAiIHg9IjAiIHk9IjAiIHdpZHRoPSIxOTQiIGhlaWdodD0iMjAw IiBpZD0ieHNzIj48c2NyaXB0IHR5cGU9InRleHQvZWNtYXNjcmlwdCI+YWxlcnQoIlh TUyIpOzwvc2NyaXB0Pjwvc3ZnPg==" type="image/svg+xml" AllowScriptAccess="always"></EMBED> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void EmbedSVGXSSTest()
         {
@@ -961,7 +963,7 @@ S
         /// <summary>
         /// A test for XML namespace
         /// Example <!-- <HTML xmlns:xss>  <?import namespace="xss" implementation="http://ha.ckers.org/xss.htc">  <xss:xss>XSS</xss:xss></HTML> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void XmlNamespaceXSSTest()
         {
@@ -981,7 +983,7 @@ S
         /// <summary>
         /// A test for XML with CData
         /// Example <!-- <XML ID=I><X><C><![CDATA[<IMG SRC="javas]]><![CDATA[cript:alert('XSS');">]]></C></X></xml><SPAN DATASRC=#I DATAFLD=C DATAFORMATAS=HTML></SPAN> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void XmlWithCDataXSSTest()
         {
@@ -1000,7 +1002,7 @@ S
 
         /// <summary>
         /// A test for XML with Comment obfuscation
-        /// </summary>   
+        /// </summary>
         [Test]
         public void XmlWithCommentObfuscationXSSTest()
         {
@@ -1020,7 +1022,7 @@ S
         /// <summary>
         /// A test for XML with Embedded script
         /// Example <!-- <XML SRC="xsstest.xml" ID=I></XML><SPAN DATASRC=#I DATAFLD=C DATAFORMATAS=HTML></SPAN> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void XmlWithEmbeddedScriptXSSTest()
         {
@@ -1040,7 +1042,7 @@ S
         /// <summary>
         /// A test for Html + Time
         /// Example <!-- <HTML><BODY><?xml:namespace prefix="t" ns="urn:schemas-microsoft-com:time"><?import namespace="t" implementation="#default#time2"><t:set attributeName="innerHTML" to="XSS&lt;SCRIPT DEFER&gt;alert(&quot;XSS&quot;)&lt;/SCRIPT&gt;"></BODY></HTML> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void HtmlPlusTimeXSSTest()
         {
@@ -1060,7 +1062,7 @@ S
         /// <summary>
         /// A test for AnchorTag with javascript link location
         /// Example <!-- <A HREF="javascript:document.location='http://www.google.com/'">XSS</A> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void AnchorTagJavascriptLinkLocationXSSTest()
         {
@@ -1080,7 +1082,7 @@ S
         /// <summary>
         /// A test for Div with no filter evasion
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<SCRIPT SRC=http://ha.ckers.org/xss.js></SCRIPT>"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivNoFilterEvasionXSSTest()
         {
@@ -1100,7 +1102,7 @@ S
         /// <summary>
         /// A test for Div with style expression and no filter evasion
         /// Example <!-- <Div style="background-color: expression(<SCRIPT SRC=http://ha.ckers.org/xss.js></SCRIPT>)"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivStyleExpressionNoFilterEvasionXSSTest()
         {
@@ -1120,7 +1122,7 @@ S
         /// <summary>
         /// A test for AnchorTag with non alpha non digit xss
         /// Example <!-- <A HREF="http://www.codeplex.com?url=<SCRIPT/XSS SRC="http://ha.ckers.org/xss.js"></SCRIPT>">XSS</A> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void AnchorTagNonAlphaNonDigitXSSTest()
         {
@@ -1140,7 +1142,7 @@ S
         /// <summary>
         /// A test for Div with non alpha non digit xss
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<SCRIPT/XSS SRC=http://ha.ckers.org/xss.js></SCRIPT>"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivNonAlphaNonDigitXSSTest()
         {
@@ -1160,7 +1162,7 @@ S
         /// <summary>
         /// A test for Div with style expression and non alpha non digit xss
         /// Example <!-- <Div style="background-color: expression(<SCRIPT/XSS SRC="http://ha.ckers.org/xss.js"></SCRIPT>)"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivStyleExpressionNonAlphaNonDigitXSSTest()
         {
@@ -1180,7 +1182,7 @@ S
         /// <summary>
         /// A test for Div with non alpha non digit part 3 xss
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<SCRIPT/SRC=http://ha.ckers.org/xss.js></SCRIPT>"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivNonAlphaNonDigit3XSSTest()
         {
@@ -1200,7 +1202,7 @@ S
         /// <summary>
         /// A test for Div with style expression and non alpha non digit part 3 xss
         /// Example <!-- <Div style="background-color: expression(<SCRIPT/SRC="http://ha.ckers.org/xss.js"></SCRIPT>)"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivStyleExpressionNonAlphaNonDigit3XSSTest()
         {
@@ -1220,7 +1222,7 @@ S
         /// <summary>
         /// A test for AnchorTag with Extraneous open brackets xss
         /// Example <!-- <A HREF="http://www.codeplex.com?url=<<SCRIPT>alert("XSS");//<</SCRIPT>">XSS</A> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void AnchorTagExtraneousOpenBracketsXSSTest()
         {
@@ -1240,7 +1242,7 @@ S
         /// <summary>
         /// A test for Div with Extraneous open brackets xss
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<<SCRIPT>alert("XSS");//<</SCRIPT>"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivExtraneousOpenBracketsXSSTest()
         {
@@ -1260,7 +1262,7 @@ S
         /// <summary>
         /// A test for Div with style expression and Extraneous open brackets xss
         /// Example <!-- <Div style="background-color: expression(<<SCRIPT>alert("XSS");//<</SCRIPT>)"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivStyleExpressionExtraneousOpenBracketsXSSTest()
         {
@@ -1280,7 +1282,7 @@ S
         /// <summary>
         /// A test for Div with No closing script tags xss
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<SCRIPT SRC=http://ha.ckers.org/xss.js?<B>"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivNoClosingScriptTagsXSSTest()
         {
@@ -1300,7 +1302,7 @@ S
         /// <summary>
         /// A test for Div with style expression and No closing script tags xss
         /// Example <!-- <Div style="background-color: expression(<SCRIPT SRC=http://ha.ckers.org/xss.js?<B>)"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivStyleExpressionNoClosingScriptTagsXSSTest()
         {
@@ -1320,7 +1322,7 @@ S
         /// <summary>
         /// A test for AnchorTag with Protocol resolution in script tags xss
         /// Example <!-- <A HREF="http://www.codeplex.com?url=<SCRIPT SRC=//ha.ckers.org/.j>">XSS</A> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void AnchorTagProtocolResolutionScriptXSSTest()
         {
@@ -1340,7 +1342,7 @@ S
         /// <summary>
         /// A test for Div with Protocol resolution in script tags xss
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<SCRIPT SRC=//ha.ckers.org/.j>"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivProtocolResolutionScriptXSSTest()
         {
@@ -1360,7 +1362,7 @@ S
         /// <summary>
         /// A test for Div with style expression and Protocol resolution in script tags xss
         /// Example <!-- <Div style="background-color: expression(<SCRIPT SRC=//ha.ckers.org/.j>)"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivStyleExpressionProtocolResolutionScriptXSSTest()
         {
@@ -1380,7 +1382,7 @@ S
         /// <summary>
         /// A test for AnchorTag with no single quotes or double quotes or semicolons xss
         /// Example <!-- <A HREF="http://www.codeplex.com?url=<SCRIPT>a=/XSS/alert(a.source)</SCRIPT>">XSS</A> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void AnchorTagNoQuotesXSSTest()
         {
@@ -1400,7 +1402,7 @@ S
         /// <summary>
         /// A test for Div with no single quotes or double quotes or semicolons xss
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<SCRIPT>a=/XSS/alert(a.source)</SCRIPT>"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivNoQuotesXSSTest()
         {
@@ -1420,7 +1422,7 @@ S
         /// <summary>
         /// A test for Div with style expression and no single quotes or double quotes or semicolons xss
         /// Example <!-- <Div style="background-color: expression(<SCRIPT>a=/XSS/alert(a.source)</SCRIPT>)"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivStyleExpressionNoQuotesXSSTest()
         {
@@ -1440,7 +1442,7 @@ S
         /// <summary>
         /// A test for AnchorTag with US-ASCII encoding xss
         /// Example <!-- <A HREF="http://www.codeplex.com?url=¼script¾alert(¢XSS¢)¼/script¾">XSS</A> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void AnchorTagUSASCIIEncodingXSSTest()
         {
@@ -1459,7 +1461,7 @@ S
 
         /// <summary>
         /// A test for AnchorTag with Downlevel-Hidden block xss
-        /// </summary>   
+        /// </summary>
         [Test]
         public void AnchorTagDownlevelHiddenBlockXSSTest()
         {
@@ -1478,7 +1480,7 @@ S
 
         /// <summary>
         /// A test for Div with Downlevel-Hidden block xss
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivDownlevelHiddenBlockXSSTest()
         {
@@ -1498,7 +1500,7 @@ S
         /// <summary>
         /// A test for AnchorTag with Html Quotes Encapsulation 1 xss
         /// Example <!-- <A HREF="http://www.codeplex.com?url=<SCRIPT a=">" SRC="http://ha.ckers.org/xss.js"></SCRIPT>">XSS</A> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void AnchorTagHtmlQuotesEncapsulation1XSSTest()
         {
@@ -1518,7 +1520,7 @@ S
         /// <summary>
         /// A test for Div with Html Quotes Encapsulation 1 xss
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<SCRIPT a=">" SRC="http://ha.ckers.org/xss.js"></SCRIPT>"> -->
-        /// </summary>   
+        /// </summary>
         [Test]
         public void DivHtmlQuotesEncapsulation1XSSTest()
         {
@@ -2121,6 +2123,40 @@ rl(javascript:alert(""foo""))'>";
             };
             var html = @"<div>Hallo</div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div class=""test"">Hallo<b>Test</b></div>").IgnoreCase);
+        }
+
+        [Test]
+        public void AutoLinkTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            var autolink = new AutoLink();
+            sanitizer.PostProcessTag += (s, e) =>
+            {
+                var tag = e.Tag;
+                for (int i = 0; i < tag.ChildNodes.Length; i++)
+                {
+                    var text = tag.ChildNodes[i] as IDomText;
+                    if (text != null)
+                    {
+                        var autolinked = autolink.Link(text.NodeValue);
+                        if (autolinked != text.NodeValue)
+                        {
+                            var a = CQ.Create(autolinked);
+
+                            while (a.Document.ChildNodes.Any())
+                            {
+                                tag.ChildNodes.Insert(i, a.Document.ChildNodes.First());
+                                i++;
+                            }
+
+                            tag.ChildNodes.RemoveAt(i);
+                            i--;
+                        }
+                    }
+                }
+            };
+            var html = @"<div>Click here: http://example.com/.</div>";
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div>Click here: <a href=""http://example.com/"">http://example.com/</a>.</div>").IgnoreCase);
         }
     }
 }
