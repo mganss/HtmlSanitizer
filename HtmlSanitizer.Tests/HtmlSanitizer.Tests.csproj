@@ -39,17 +39,17 @@
       <HintPath>..\packages\AhoCorasick.1.1.5577.36525\lib\portable-net40+sl50+win+wpa81+wp80\AhoCorasick.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="AutoLink, Version=1.0.5591.26670, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\AutoLink.1.0.5591.26670\lib\portable-net40+sl50+win+wpa81+wp80\AutoLink.dll</HintPath>
+    <Reference Include="AutoLink, Version=1.0.5595.30240, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\AutoLink.1.0.5595.30240\lib\portable-net40+sl50+win+wpa81+wp80\AutoLink.dll</HintPath>
       <Private>True</Private>
     </Reference>
     <Reference Include="CsQuery, Version=1.3.3.249, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\CsQuery.1.3.4\lib\net40\CsQuery.dll</HintPath>
     </Reference>
-    <Reference Include="nunit.framework, Version=2.6.3.13283, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\NUnit.2.6.3\lib\nunit.framework.dll</HintPath>
+    <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
   </ItemGroup>

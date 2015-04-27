@@ -2116,13 +2116,17 @@ rl(javascript:alert(""foo""))'>";
         public void PostProcessTest()
         {
             var sanitizer = new HtmlSanitizer();
-            sanitizer.PostProcessTag += (s, e) =>
+            sanitizer.PostProcessNode += (s, e) =>
             {
-                e.Tag.AddClass("test");
-                e.Tag.AppendChild(CsQuery.CQ.Create("<b>Test</b>").FirstElement());
+                if (e.Node is IDomElement)
+                {
+                    e.Node.AddClass("test");
+                    e.Node.AppendChild(CsQuery.CQ.Create("<b>Test</b>").FirstElement());
+                }
             };
             var html = @"<div>Hallo</div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div class=""test"">Hallo<b>Test</b></div>").IgnoreCase);
+            var sanitized = sanitizer.Sanitize(html);
+            Assert.That(sanitized, Is.EqualTo(@"<div class=""test"">Hallo<b>Test</b></div>").IgnoreCase);
         }
 
         [Test]
@@ -2130,33 +2134,20 @@ rl(javascript:alert(""foo""))'>";
         {
             var sanitizer = new HtmlSanitizer();
             var autolink = new AutoLink();
-            sanitizer.PostProcessTag += (s, e) =>
+            sanitizer.PostProcessNode += (s, e) =>
             {
-                var tag = e.Tag;
-                for (int i = 0; i < tag.ChildNodes.Length; i++)
+                var text = e.Node as IDomText;
+                if (text != null)
                 {
-                    var text = tag.ChildNodes[i] as IDomText;
-                    if (text != null)
-                    {
-                        var autolinked = autolink.Link(text.NodeValue);
-                        if (autolinked != text.NodeValue)
-                        {
-                            var a = CQ.Create(autolinked);
-
-                            while (a.Document.ChildNodes.Any())
-                            {
-                                tag.ChildNodes.Insert(i, a.Document.ChildNodes.First());
-                                i++;
-                            }
-
-                            tag.ChildNodes.RemoveAt(i);
-                            i--;
-                        }
-                    }
+                    var autolinked = autolink.Link(text.NodeValue);
+                    if (autolinked != text.NodeValue)
+                        foreach (var node in CQ.Create(autolinked))
+                            e.ReplacementNodes.Add(node);
                 }
             };
             var html = @"<div>Click here: http://example.com/.</div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div>Click here: <a href=""http://example.com/"">http://example.com/</a>.</div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize("Check out www.google.com."), Is.EqualTo(@"Check out <a href=""http://www.google.com"">www.google.com</a>.").IgnoreCase);
         }
     }
 }

@@ -9,17 +9,33 @@ using System.Threading.Tasks;
 namespace Ganss.XSS
 {
     /// <summary>
-    /// Provides data for the <see cref="HtmlSanitizer.PostProcessTag"/> event.
+    /// Provides data for the <see cref="HtmlSanitizer.PostProcessNode"/> event.
     /// </summary>
-    public class PostProcessTagEventArgs : EventArgs
+    public class PostProcessNodeEventArgs : EventArgs
     {
         /// <summary>
-        /// Gets or sets the tag to be processed.
+        /// Gets or sets the DOM node to be processed.
         /// </summary>
         /// <value>
-        /// The tag.
+        /// The DOM node.
         /// </value>
-        public IDomObject Tag { get; set; }
+        public IDomObject Node { get; set; }
+
+        /// <summary>
+        /// Gets the replacement nodes. Leave empty if no replacement should occur.
+        /// </summary>
+        /// <value>
+        /// The replacement nodes.
+        /// </value>
+        public IList<IDomObject> ReplacementNodes { get; private set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PostProcessNodeEventArgs"/> class.
+        /// </summary>
+        public PostProcessNodeEventArgs()
+        {
+            ReplacementNodes = new List<IDomObject>();
+        }
     }
 
     /// <summary>

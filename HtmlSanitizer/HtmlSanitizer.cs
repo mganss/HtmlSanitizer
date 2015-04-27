@@ -235,9 +235,9 @@ namespace Ganss.XSS
         }
 
         /// <summary>
-        /// Occurs for every tag after sanitizing.
+        /// Occurs for every node after sanitizing.
         /// </summary>
-        public event EventHandler<PostProcessTagEventArgs> PostProcessTag;
+        public event EventHandler<PostProcessNodeEventArgs> PostProcessNode;
         /// <summary>
         /// Occurs before a tag is removed.
         /// </summary>
@@ -252,12 +252,12 @@ namespace Ganss.XSS
         public event EventHandler<RemovingStyleEventArgs> RemovingStyle;
 
         /// <summary>
-        /// Raises the <see cref="E:PostProcessTag" /> event.
+        /// Raises the <see cref="E:PostProcessNode" /> event.
         /// </summary>
-        /// <param name="e">The <see cref="PostProcessTagEventArgs"/> instance containing the event data.</param>
-        protected virtual void OnPostProcessTag(PostProcessTagEventArgs e)
+        /// <param name="e">The <see cref="PostProcessNodeEventArgs"/> instance containing the event data.</param>
+        protected virtual void OnPostProcessNode(PostProcessNodeEventArgs e)
         {
-            if (PostProcessTag != null) PostProcessTag(this, e);
+            if (PostProcessNode != null) PostProcessNode(this, e);
         }
 
         /// <summary>
@@ -291,6 +291,20 @@ namespace Ganss.XSS
         /// The default regex for disallowed CSS property values.
         /// </summary>
         public static readonly Regex DefaultDisallowedCssPropertyValue = new Regex(@"[<>]", RegexOptions.Compiled);
+
+        private static IEnumerable<IDomObject> GetAllNodes(IEnumerable<IDomObject> dom)
+        {
+            if (dom == null) yield break;
+
+            foreach (var node in dom)
+            {
+                yield return node;
+                foreach (var child in GetAllNodes(node.ChildNodes).Where(c => c != null))
+                {
+                    yield return child;
+                }
+            }
+        }
 
         /// <summary>
         /// Sanitizes the specified HTML.
@@ -345,8 +359,18 @@ namespace Ganss.XSS
                         tag.SetAttribute(attribute.Key, val);
                     }
                 }
+            }
 
-                OnPostProcessTag(new PostProcessTagEventArgs { Tag = tag });
+            if (PostProcessNode != null)
+            {
+                var nodes = GetAllNodes(dom).ToList();
+                foreach (var node in nodes)
+                {
+                    var e = new PostProcessNodeEventArgs { Node = node };
+                    OnPostProcessNode(e);
+                    if (e.ReplacementNodes.Any())
+                        dom[node].ReplaceWith(e.ReplacementNodes);
+                }
             }
 
             if (outputFormatter == null)
