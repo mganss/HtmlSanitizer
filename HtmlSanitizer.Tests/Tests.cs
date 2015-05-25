@@ -1135,7 +1135,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<a>&quot;&gt;XSS</a>";
+            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT/XSS%20SRC="">&quot;&gt;XSS</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1235,7 +1235,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<a>&quot;&gt;XSS</a>";
+            string expected = @"<a href=""http://www.codeplex.com/?url=%3C%3CSCRIPT%3Ealert("">&quot;&gt;XSS</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1335,7 +1335,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<a>XSS</a>";
+            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT%20SRC=//ha.ckers.org/.j%3E"">XSS</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1395,7 +1395,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<a>XSS</a>";
+            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT%3Ea=/XSS/alert(a.source)%3C/SCRIPT%3E"">XSS</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1455,7 +1455,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<a href=\"http://www.codeplex.com/?url=¼script¾alert(¢XSS¢)¼/script¾\">XSS</a>";
+            string expected = @"<a href=""http://www.codeplex.com/?url=%C2%BCscript%C2%BEalert(%C2%A2XSS%C2%A2)%C2%BC/script%C2%BE"">XSS</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1474,7 +1474,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<a>XSS</a>";
+            string expected = @"<a href=""http://www.codeplex.com/?url=%3C!--[if%20gte%20IE%204]%3E%3CSCRIPT%3Ealert('XSS');%3C/SCRIPT%3E%3C![endif]--%3E"">XSS</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1513,7 +1513,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<a>&quot; SRC=&quot;http://ha.ckers.org/xss.js&quot;&gt;&quot;&gt;XSS</a>";
+            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT%20a="">&quot; SRC=&quot;http://ha.ckers.org/xss.js&quot;&gt;&quot;&gt;XSS</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
