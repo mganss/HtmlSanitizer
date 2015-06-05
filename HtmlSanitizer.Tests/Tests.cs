@@ -2149,6 +2149,22 @@ rl(javascript:alert(""foo""))'>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div>Click here: <a href=""http://example.com/"">http://example.com/</a>.</div>").IgnoreCase);
             Assert.That(sanitizer.Sanitize("Check out www.google.com."), Is.EqualTo(@"Check out <a href=""http://www.google.com"">www.google.com</a>.").IgnoreCase);
         }
+
+        [Test]
+        public void RussianTextTest()
+        {
+            // Arrange
+            var s = new HtmlSanitizer();
+
+            // Act
+            var htmlFragment = "Тест";
+            var outputFormatter = new CsQuery.Output.FormatDefault(DomRenderingOptions.RemoveComments | DomRenderingOptions.QuoteAllAttributes, HtmlEncoders.Minimum);
+            var actual = s.Sanitize(htmlFragment, "", outputFormatter);
+
+            // Assert
+            var expected = htmlFragment;
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
     }
 }
 
