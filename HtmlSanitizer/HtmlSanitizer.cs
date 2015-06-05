@@ -500,9 +500,8 @@ namespace Ganss.XSS
         {
             Uri uri;
             if (!Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri)
-                || !uri.IsWellFormedOriginalString() && !IsWellFormedRelativeUri(uri)
-                || uri.IsAbsoluteUri && !AllowedSchemes.Contains(uri.Scheme, StringComparer.OrdinalIgnoreCase)
-                || !uri.IsAbsoluteUri && url.Contains(':'))
+                || !uri.IsAbsoluteUri && !IsWellFormedRelativeUri(uri)
+                || uri.IsAbsoluteUri && !AllowedSchemes.Contains(uri.Scheme, StringComparer.OrdinalIgnoreCase))
                 return null;
 
             return uri;
@@ -514,9 +513,7 @@ namespace Ganss.XSS
             if (uri.IsAbsoluteUri) return false;
 
             Uri absoluteUri;
-            if (!Uri.TryCreate(_exampleUri, uri, out absoluteUri)) return false;
-            var wellFormed = absoluteUri.IsWellFormedOriginalString();
-            return wellFormed;
+            return Uri.TryCreate(_exampleUri, uri, out absoluteUri) && !uri.OriginalString.Contains(":");
         }
 
         /// <summary>
@@ -540,7 +537,7 @@ namespace Ganss.XSS
                 else return null;
             }
 
-            return uri.ToString();
+            return uri.IsAbsoluteUri ? uri.AbsoluteUri : uri.GetComponents(UriComponents.SerializationInfoString, UriFormat.UriEscaped);
         }
 
         /// <summary>
