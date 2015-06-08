@@ -41,6 +41,12 @@ var sanitized = sanitizer.Sanitize(html);
 
 _Note:_ [Protocol-relative URLs](http://en.wikipedia.org/wiki/Wikipedia:Protocol-relative_URL)  (e.g. <a href="//github.com">//github.com</a>) are allowed by default (as are other relative URLs).
 
+to allow `mailto:` links: 
+
+```C#
+sanitizer.AllowedSchemes.Add("mailto");
+```
+
 ### Default attributes that contain URIs
 `action, background, dynsrc, href, lowsrc, src`
 
