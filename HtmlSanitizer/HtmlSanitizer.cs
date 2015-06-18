@@ -1,6 +1,9 @@
-using CsQuery;
-using CsQuery.Implementation;
-using CsQuery.Output;
+using AngleSharp;
+using AngleSharp.Dom;
+using AngleSharp.Dom.Css;
+using AngleSharp.Dom.Html;
+using AngleSharp.Html;
+using AngleSharp.Parser.Html;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -292,14 +295,14 @@ namespace Ganss.XSS
         /// </summary>
         public static readonly Regex DefaultDisallowedCssPropertyValue = new Regex(@"[<>]", RegexOptions.Compiled);
 
-        private static IEnumerable<IDomObject> GetAllNodes(IEnumerable<IDomObject> dom)
+        private static IEnumerable<INode> GetAllNodes(INode dom)
         {
             if (dom == null) yield break;
 
-            foreach (var node in dom)
+            foreach (var node in dom.ChildNodes)
             {
                 yield return node;
-                foreach (var child in GetAllNodes(node.ChildNodes).Where(c => c != null))
+                foreach (var child in GetAllNodes(node).Where(c => c != null))
                 {
                     yield return child;
                 }
@@ -313,18 +316,19 @@ namespace Ganss.XSS
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
         /// <param name="outputFormatter">The CsQuery output formatter used to render the DOM. Using the default formatter if null.</param>
         /// <returns>The sanitized HTML.</returns>
-        public string Sanitize(string html, string baseUrl = "", IOutputFormatter outputFormatter = null)
+        public string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
-            var dom = CQ.Create(html);
+            var parser = new HtmlParser(html, new Configuration().WithCss());
+            var dom = parser.Parse();
 
             // remove non-whitelisted tags
-            foreach (var tag in dom["*"].Where(t => !IsAllowedTag(t)).ToList())
+            foreach (var tag in dom.Body.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList())
             {
                 RemoveTag(tag);
             }
 
             // cleanup attributes
-            foreach (var tag in dom["*"].ToList())
+            foreach (var tag in dom.Body.QuerySelectorAll("*").OfType<IHtmlElement>().ToList())
             {
                 // remove non-whitelisted attributes
                 foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
@@ -339,7 +343,7 @@ namespace Ganss.XSS
                     if (url == null)
                         RemoveAttribute(tag, attribute);
                     else
-                        tag.SetAttribute(attribute.Key, url);
+                        tag.SetAttribute(attribute.Name, url);
                 }
 
                 // sanitize the style attribute
@@ -356,27 +360,24 @@ namespace Ganss.XSS
                     {
                         // escape attribute value
                         var val = attribute.Value.Replace("<", "&lt;").Replace(">", "&gt;");
-                        tag.SetAttribute(attribute.Key, val);
+                        tag.SetAttribute(attribute.Name, val);
                     }
                 }
             }
 
             if (PostProcessNode != null)
             {
-                var nodes = GetAllNodes(dom).ToList();
+                var nodes = GetAllNodes(dom.Body).ToList();
                 foreach (var node in nodes)
                 {
-                    var e = new PostProcessNodeEventArgs { Node = node };
+                    var e = new PostProcessNodeEventArgs { Document = dom, Node = node };
                     OnPostProcessNode(e);
                     if (e.ReplacementNodes.Any())
-                        dom[node].ReplaceWith(e.ReplacementNodes);
+                        ((IChildNode)node).Replace(e.ReplacementNodes.ToArray());
                 }
             }
 
-            if (outputFormatter == null)
-                outputFormatter = new FormatDefault(DomRenderingOptions.RemoveComments | DomRenderingOptions.QuoteAllAttributes, HtmlEncoders.Default);
-
-            var output = dom.Render(outputFormatter);
+            var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? HtmlMarkupFormatter.Instance);
 
             return output;
         }
@@ -386,9 +387,9 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="attribute">The attribute.</param>
         /// <returns><c>true</c> if the attribute can contain a URI; otherwise, <c>false</c>.</returns>
-        private bool IsUriAttribute(KeyValuePair<string, string> attribute)
+        private bool IsUriAttribute(IAttr attribute)
         {
-            return UriAttributes.Contains(attribute.Key);
+            return UriAttributes.Contains(attribute.Name);
         }
 
         /// <summary>
@@ -396,7 +397,7 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="tag">The tag.</param>
         /// <returns><c>true</c> if the tag is allowed; otherwise, <c>false</c>.</returns>
-        private bool IsAllowedTag(IDomNode tag)
+        private bool IsAllowedTag(IElement tag)
         {
             return AllowedTags.Contains(tag.NodeName);
         }
@@ -406,11 +407,11 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="attribute">The attribute.</param>
         /// <returns><c>true</c> if the attribute is allowed; otherwise, <c>false</c>.</returns>
-        private bool IsAllowedAttribute(KeyValuePair<string, string> attribute)
+        private bool IsAllowedAttribute(IAttr attribute)
         {
-            return AllowedAttributes.Contains(attribute.Key)
+            return AllowedAttributes.Contains(attribute.Name)
                 // test html5 data- attributes
-                || (AllowDataAttributes && attribute.Key != null && attribute.Key.StartsWith("data-", StringComparison.OrdinalIgnoreCase));
+                || (AllowDataAttributes && attribute.Name != null && attribute.Name.StartsWith("data-", StringComparison.OrdinalIgnoreCase));
         }
 
         // from http://genshi.edgewall.org/
@@ -418,23 +419,23 @@ namespace Ganss.XSS
         private static readonly Regex CssComments = new Regex(@"/\*.*?\*/", RegexOptions.Compiled);
         // IE6 <http://heideri.ch/jso/#80>
         private static readonly Regex CssExpression = new Regex(@"[eE\uFF25\uFF45][xX\uFF38\uFF58][pP\uFF30\uFF50][rR\u0280\uFF32\uFF52][eE\uFF25\uFF45][sS\uFF33\uFF53]{2}[iI\u026A\uFF29\uFF49][oO\uFF2F\uFF4F][nN\u0274\uFF2E\uFF4E]", RegexOptions.Compiled);
-        private static readonly Regex CssUrl = new Regex(@"[Uu][Rr\u0280][Ll\u029F]\s*\(\s*['""]?\s*([^'"")]+)", RegexOptions.Compiled);
+        private static readonly Regex CssUrl = new Regex(@"[Uu][Rr\u0280][Ll\u029F]\s*\(\s*['""]?\s*([^'"")]+)['""]?", RegexOptions.Compiled);
 
         /// <summary>
         /// Sanitizes the style.
         /// </summary>
         /// <param name="styles">The styles.</param>
         /// <param name="baseUrl">The base URL.</param>
-        protected void SanitizeStyle(CSSStyleDeclaration styles, string baseUrl)
+        protected void SanitizeStyle(ICssStyleDeclaration styles, string baseUrl)
         {
-            if (styles == null || !styles.Any()) return;
+            if (styles == null || styles.Length == 0) return;
 
-            var removeStyles = new List<KeyValuePair<string, string>>();
+            var removeStyles = new List<ICssProperty>();
             var setStyles = new Dictionary<string, string>();
 
             foreach (var style in styles)
             {
-                var key = DecodeCss(style.Key);
+                var key = DecodeCss(style.Name);
                 var val = DecodeCss(style.Value);
 
                 if (!AllowedCssProperties.Contains(key) || CssExpression.IsMatch(val) || DisallowCssPropertyValue.IsMatch(val))
@@ -452,7 +453,7 @@ namespace Ganss.XSS
                             var s = CssUrl.Replace(val, m => "url(" + SanitizeUrl(m.Groups[1].Value, baseUrl));
                             if (s != val)
                             {
-                                if (key != style.Key) removeStyles.Add(style);
+                                if (key != style.Name) removeStyles.Add(style);
                                 setStyles[key] = s;
                             }
                         }
@@ -465,9 +466,9 @@ namespace Ganss.XSS
                 RemoveStyle(styles, style);
             }
 
-            foreach (var kvp in setStyles)
+            foreach (var style in setStyles)
             {
-                styles.SetStyle(kvp.Key, kvp.Value);
+                styles.SetProperty(style.Key, style.Value);
             }
         }
 
@@ -544,7 +545,7 @@ namespace Ganss.XSS
         /// Remove a tag from the document.
         /// </summary>
         /// <param name="tag">to be removed</param>
-        private void RemoveTag(IDomObject tag)
+        private void RemoveTag(IElement tag)
         {
             var e = new RemovingTagEventArgs { Tag = tag };
             OnRemovingTag(e);
@@ -556,11 +557,11 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="tag">tag where the attribute to belongs</param>
         /// <param name="attribute">to be removed</param>
-        private void RemoveAttribute(IDomObject tag, KeyValuePair<string, string> attribute)
+        private void RemoveAttribute(IElement tag, IAttr attribute)
         {
             var e = new RemovingAttributeEventArgs { Attribute = attribute };
             OnRemovingAttribute(e);
-            if (!e.Cancel) tag.RemoveAttribute(attribute.Key);
+            if (!e.Cancel) tag.RemoveAttribute(attribute.Name);
         }
 
         /// <summary>
@@ -568,11 +569,11 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="styles">collection where the style to belongs</param>
         /// <param name="style">to be removed</param>
-        private void RemoveStyle(ICSSStyleDeclaration styles, KeyValuePair<string, string> style)
+        private void RemoveStyle(ICssStyleDeclaration styles, ICssProperty style)
         {
             var e = new RemovingStyleEventArgs { Style = style };
             OnRemovingStyle(e);
-            if (!e.Cancel) styles.RemoveStyle(style.Key);
+            if (!e.Cancel) styles.RemoveProperty(style.Name);
         }
     }
 }

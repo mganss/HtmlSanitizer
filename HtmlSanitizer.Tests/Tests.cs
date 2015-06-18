@@ -1,4 +1,6 @@
-using CsQuery;
+using AngleSharp.Dom;
+using AngleSharp.Dom.Html;
+using AngleSharp.Parser.Html;
 using Ganss.Text;
 using NUnit.Framework;
 using System;
@@ -37,7 +39,7 @@ namespace Ganss.XSS.Tests
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = @"<a href=""'';!--"">=&amp;{()}&quot;&gt;</a>";
+            string expected = @"<a href=""'';!--"">=&amp;{()}""&gt;</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -157,7 +159,7 @@ namespace Ganss.XSS.Tests
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<img>&quot;&gt;";
+            string expected = "<img>\"&gt;";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1135,7 +1137,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT/XSS%20SRC="">&quot;&gt;XSS</a>";
+            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT/XSS%20SRC="">""&gt;XSS</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1235,7 +1237,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = @"<a href=""http://www.codeplex.com/?url=%3C%3CSCRIPT%3Ealert("">&quot;&gt;XSS</a>";
+            string expected = @"<a href=""http://www.codeplex.com/?url=%3C%3CSCRIPT%3Ealert("">""&gt;XSS</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1483,7 +1485,7 @@ S
             catch (Exception)
             {
 
-                //in .net 3.5 there is a bug with URI, and so this test would otherwise fail on .net 3.5 in Appveyor / nunit: 
+                //in .net 3.5 there is a bug with URI, and so this test would otherwise fail on .net 3.5 in Appveyor / nunit:
                 //http://help.appveyor.com/discussions/problems/1625-nunit-not-picking-up-net-framework-version
                 //http://stackoverflow.com/questions/27019061/forcing-nunit-console-runner-to-use-clr-4-5
                 string expectedNet35 = @"<a href=""http://www.codeplex.com/?url=%3C!--%5Bif%20gte%20IE%204%5D%3E%3CSCRIPT%3Ealert('XSS');%3C/SCRIPT%3E%3C!%5Bendif%5D--%3E"">XSS</a>";
@@ -1491,9 +1493,9 @@ S
 
                 Assert.That(actual, Is.EqualTo(expectedNet35).IgnoreCase);
             }
-            
 
-            
+
+
         }
 
         /// <summary>
@@ -1531,7 +1533,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT%20a="">&quot; SRC=&quot;http://ha.ckers.org/xss.js&quot;&gt;&quot;&gt;XSS</a>";
+            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT%20a="">"" SRC=""http://ha.ckers.org/xss.js""&gt;""&gt;XSS</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1752,7 +1754,7 @@ S
 
             var html = @"<div style=""margin: 8px; bla: 1px"">test</div>";
             var actual = sanitizer.Sanitize(html);
-            var expected = @"<div style=""margin: 8px"">test</div>";
+            var expected = @"<div style=""margin: 8px;"">test</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1766,12 +1768,12 @@ S
 
             var html = @"<div style=""padding: 10px; background-image: url(mailto:test@example.com)""></div>";
             var actual = sanitizer.Sanitize(html);
-            var expected = @"<div style=""padding: 10px""></div>";
+            var expected = @"<div style=""padding: 10px;""></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
 
             html = @"<div style=""padding: 10px; background-image: url(folder/file.jpg)""></div>";
             actual = sanitizer.Sanitize(html, @"http://www.example.com");
-            expected = @"<div style=""padding: 10px; background-image: url(http://www.example.com/folder/file.jpg);""></div>";
+            expected = @"<div style=""padding: 10px; background-image: url(&quot;http://www.example.com/folder/file.jpg&quot;);""></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1804,7 +1806,7 @@ S
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<a href=""#"">fo&ouml;</a>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<a href=""#"">fo&#246;</a>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<a href=""#"">foö</a>").IgnoreCase);
         }
 
         [Test]
@@ -1899,10 +1901,10 @@ rl(javascript:alert(""foo""))'>";
             var sanitizer = new HtmlSanitizer();
             // The position property is not allowed
             var html = @"<div style=""position:absolute;top:0""></div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""top: 0""></div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""top: 0;""></div>").IgnoreCase);
             // Normal margins get passed through
             html = @"<div style=""margin:10px 20px""></div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""margin: 10px 20px""></div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""margin:10px 20px""></div>").IgnoreCase);
         }
 
         [Test]
@@ -2057,7 +2059,7 @@ rl(javascript:alert(""foo""))'>";
         public void RemovingAttributeEventTest()
         {
             var sanitizer = new HtmlSanitizer();
-            sanitizer.RemovingAttribute += (s, e) => e.Cancel = e.Attribute.Key == "onclick";
+            sanitizer.RemovingAttribute += (s, e) => e.Cancel = e.Attribute.Name == "onclick";
             var html = @"<div alt=""alt"" onclick=""test"" onload=""test""></div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div alt=""alt"" onclick=""test""></div>").IgnoreCase);
         }
@@ -2066,7 +2068,7 @@ rl(javascript:alert(""foo""))'>";
         public void RemovingStyleEventTest()
         {
             var sanitizer = new HtmlSanitizer();
-            sanitizer.RemovingStyle += (s, e) => e.Cancel = e.Style.Key == "test";
+            sanitizer.RemovingStyle += (s, e) => e.Cancel = e.Style.Name == "test";
             var html = @"<div style=""background: 0; test: xyz; bad: bad;""></div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""background: 0; test: xyz;""></div>").IgnoreCase);
         }
@@ -2136,10 +2138,13 @@ rl(javascript:alert(""foo""))'>";
             var sanitizer = new HtmlSanitizer();
             sanitizer.PostProcessNode += (s, e) =>
             {
-                if (e.Node is IDomElement)
+                var el = e.Node as IHtmlElement;
+                if (el != null)
                 {
-                    e.Node.AddClass("test");
-                    e.Node.AppendChild(CsQuery.CQ.Create("<b>Test</b>").FirstElement());
+                    el.ClassList.Add("test");
+                    var b = e.Document.CreateElement("b");
+                    b.TextContent = "Test";
+                    el.AppendChild(b);
                 }
             };
             var html = @"<div>Hallo</div>";
@@ -2154,13 +2159,16 @@ rl(javascript:alert(""foo""))'>";
             var autolink = new AutoLink();
             sanitizer.PostProcessNode += (s, e) =>
             {
-                var text = e.Node as IDomText;
+                var text = e.Node as IText;
                 if (text != null)
                 {
                     var autolinked = autolink.Link(text.NodeValue);
                     if (autolinked != text.NodeValue)
-                        foreach (var node in CQ.Create(autolinked))
+                    {
+                        var f = new HtmlParser(autolinked).Parse();
+                        foreach (var node in f.Body.ChildNodes)
                             e.ReplacementNodes.Add(node);
+                    }
                 }
             };
             var html = @"<div>Click here: http://example.com/.</div>";
@@ -2176,8 +2184,8 @@ rl(javascript:alert(""foo""))'>";
 
             // Act
             var htmlFragment = "Тест";
-            var outputFormatter = new CsQuery.Output.FormatDefault(DomRenderingOptions.RemoveComments | DomRenderingOptions.QuoteAllAttributes, HtmlEncoders.Minimum);
-            var actual = s.Sanitize(htmlFragment, "", outputFormatter);
+            //var outputFormatter = new CsQuery.Output.FormatDefault(DomRenderingOptions.RemoveComments | DomRenderingOptions.QuoteAllAttributes, HtmlEncoders.Minimum);
+            var actual = s.Sanitize(htmlFragment, ""/*, outputFormatter*/);
 
             // Assert
             var expected = htmlFragment;
