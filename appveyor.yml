@@ -1,9 +1,10 @@
 version: 1.0.{build}
 install:
-  - nuget restore .nuget\packages.config -PackagesDirectory packages
+  - nuget restore
 configuration: Release
 platform: Any CPU
 build:
+  project: HtmlSanitizer.sln
   verbosity: minimal
 environment:
   COVERALLS_REPO_TOKEN:
