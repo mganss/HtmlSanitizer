@@ -3,3 +3,10 @@ configuration: Release
 platform: Any CPU
 build:
   verbosity: minimal
+environment:
+  COVERALLS_REPO_TOKEN:
+    secure: 2D6Q22+GyTngkC0xomWycgK0kXY4FepSad7Ep/R3R8xha+xEPisCKBISSLCq0Sl0
+after_test:
+# generate report for NUnit testing framework:
+  - packages\OpenCover.4.5.3723\OpenCover.Console.exe -register:user -filter:"+[*]*" -target:"packages\NUnit.Runners.2.6.4\tools\nunit-console.exe" -targetargs:"/noshadow /domain:single HtmlSanitizer.Tests\bin\debug\HtmlSanitizer.Tests.dll" -output:coverage.xml
+  - packages\coveralls.io.1.3.4\tools\coveralls.net.exe --opencover coverage.xml
