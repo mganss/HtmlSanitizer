@@ -1,6 +1,6 @@
 version: 1.0.{build}
 install:
-  - nuget restore
+  - nuget restore .nuget\packages.config -PackagesDirectory packages
 configuration: Release
 platform: Any CPU
 build:
