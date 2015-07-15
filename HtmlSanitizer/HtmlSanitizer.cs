@@ -445,7 +445,7 @@ namespace Ganss.XSS
 
                     if (urls.Count > 0)
                     {
-                        if (urls.Cast<Match>().Any(m => GetSafeUri(m.Groups[1].Value) == null))
+                        if (urls.Cast<Match>().Any(m => GetSafeUri(m.Groups[1].Value) == null || SanitizeUrl(m.Groups[1].Value, baseUrl) == null))
                             removeStyles.Add(style);
                         else
                         {

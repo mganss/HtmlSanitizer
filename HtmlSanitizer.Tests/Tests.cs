@@ -4,6 +4,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 // Tests based on tests from http://roadkill.codeplex.com/
 
@@ -1483,7 +1484,7 @@ S
             catch (Exception)
             {
 
-                //in .net 3.5 there is a bug with URI, and so this test would otherwise fail on .net 3.5 in Appveyor / nunit: 
+                //in .net 3.5 there is a bug with URI, and so this test would otherwise fail on .net 3.5 in Appveyor / nunit:
                 //http://help.appveyor.com/discussions/problems/1625-nunit-not-picking-up-net-framework-version
                 //http://stackoverflow.com/questions/27019061/forcing-nunit-console-runner-to-use-clr-4-5
                 string expectedNet35 = @"<a href=""http://www.codeplex.com/?url=%3C!--%5Bif%20gte%20IE%204%5D%3E%3CSCRIPT%3Ealert('XSS');%3C/SCRIPT%3E%3C!%5Bendif%5D--%3E"">XSS</a>";
@@ -1491,9 +1492,9 @@ S
 
                 Assert.That(actual, Is.EqualTo(expectedNet35).IgnoreCase);
             }
-            
 
-            
+
+
         }
 
         /// <summary>
@@ -2181,6 +2182,51 @@ rl(javascript:alert(""foo""))'>";
 
             // Assert
             var expected = htmlFragment;
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
+
+        [Test]
+        public void DisallowCssPropertyValueTest()
+        {
+            // Arrange
+            var s = new HtmlSanitizer { DisallowCssPropertyValue = new Regex("^b.*") };
+
+            // Act
+            var htmlFragment = @"<div style=""color: black; background-color: white"">Test</div>";
+            var actual = s.Sanitize(htmlFragment);
+
+            // Assert
+            var expected = @"<div style=""background-color: white"">Test</div>";
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
+
+        [Test]
+        public void CssKeyTest()
+        {
+            // Arrange
+            var s = new HtmlSanitizer { DisallowCssPropertyValue = new Regex("^b.*") };
+
+            // Act
+            var htmlFragment = @"<div style=""\000062ackground-image: URL(http://www.example.com/bg.jpg)"">Test</div>";
+            var actual = s.Sanitize(htmlFragment);
+
+            // Assert
+            var expected = @"<div style=""background-image: url(http://www.example.com/bg.jpg)"">Test</div>";
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
+
+        [Test]
+        public void InvalidBaseUrlTest()
+        {
+            // Arrange
+            var s = new HtmlSanitizer();
+
+            // Act
+            var htmlFragment = @"<div style=""color: black; background-image: URL(x/y/bg.jpg)"">Test</div>";
+            var actual = s.Sanitize(htmlFragment, "hallo");
+
+            // Assert
+            var expected = @"<div style=""color: black"">Test</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
     }
