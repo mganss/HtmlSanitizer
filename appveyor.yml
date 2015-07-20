@@ -14,7 +14,7 @@ build:
   project: HtmlSanitizer.sln
   verbosity: minimal
 after_build:
-  - ps: -
+  - ps: |
       if ($true)
       {
         cov-build.exe --dir cov-int msbuild /t:Rebuild HtmlSanitizer.sln
