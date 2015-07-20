@@ -15,7 +15,7 @@ build:
   verbosity: minimal
 after_build:
 - ps: >-
-    cov-build.exe --dir cov-int make all
+    cov-build.exe --dir cov-int msbuild /t:Rebuild HtmlSanitizer.sln
     nuget.exe install PublishCoverity -ExcludeVersion
     PublishCoverity\PublishCoverity.exe compress -o coverity.zip -i cov-int
     PublishCoverity\PublishCoverity.exe publish `
