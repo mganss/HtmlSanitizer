@@ -1157,7 +1157,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div>&quot;&gt;</div>";
+            string expected = "<div>\"&gt;</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1177,7 +1177,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div>)&quot;&gt;</div>";
+            string expected = "<div>)\"&gt;</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1197,7 +1197,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div>&quot;&gt;</div>";
+            string expected = "<div>\"&gt;</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1217,7 +1217,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div>)&quot;&gt;</div>";
+            string expected = "<div>)\"&gt;</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1257,7 +1257,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div>&quot;&gt;</div>";
+            string expected = "<div>\"&gt;</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1271,13 +1271,12 @@ S
             // Arrange
             var sanitizer = new HtmlSanitizer();
 
-
             // Act
             string htmlFragment = "<Div style=\"background-color: expression(<<SCRIPT>alert(\"XSS\");//<</SCRIPT>)\">";
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div>)&quot;&gt;</div>";
+            string expected = "<div>)\"&gt;</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1553,7 +1552,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div>&quot; SRC=&quot;http://ha.ckers.org/xss.js&quot;&gt;&quot;&gt;</div>";
+            string expected = "<div>\" SRC=\"http://ha.ckers.org/xss.js\"&gt;\"&gt;</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1571,7 +1570,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div style=\"background-color: test\"></div>";
+            string expected = "<div style=\"background-color: test;\"></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1585,11 +1584,11 @@ S
             var sanitizer = new HtmlSanitizer();
 
             // Act
-            string htmlFragment = "<div style=\"background-color: test\">Test<img src=\"http://www.example.com/test.gif\" style=\"background-image: url(http://www.example.com/bg.jpg); margin: 10px\"></div>";
+            string htmlFragment = "<div style=\"background-color: test;\">Test<img src=\"http://www.example.com/test.gif\" style=\"background-image: url(http://www.example.com/bg.jpg); margin: 10px\"></div>";
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div style=\"background-color: test\">Test<img style=\"background-image: url(http://www.example.com/bg.jpg); margin: 10px;\" src=\"http://www.example.com/test.gif\"></div>";
+            string expected = "<div style=\"background-color: test;\">Test<img src=\"http://www.example.com/test.gif\" style=\"margin: 10px; background-image: url(&quot;http://www.example.com/bg.jpg&quot;);\"></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1608,7 +1607,7 @@ S
 
             html = @"<DIV STYLE=""padding: &#49;px; mar/*xss*/gin: ex/*XSS*/pression(alert('xss')); background-image:\0075\0072\006C\0028\0022\006a\0061\0076\0061\0073\0063\0072\0069\0070\0074\003a\0061\006c\0065\0072\0074\0028\0027\0058\0053\0053\0027\0029\0022\0029"">";
             actual = sanitizer.Sanitize(html);
-            expected = @"<div style=""padding: 1px""></div>";
+            expected = @"<div style=""padding: 1px;""></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
 
             html = @"<!--[if gte IE 4]><SCRIPT>alert('XSS');</SCRIPT><![endif]--><!-- Comment -->";
@@ -1633,12 +1632,12 @@ S
 
             html = "<IMG SRC=javascript:alert(\"XSS\")>\"";
             actual = sanitizer.Sanitize(html);
-            expected = "<img>&quot;";
+            expected = "<img>\"";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
 
             html = "<IMG SRC=java\0script:alert(\"XSS\")>\"";
             actual = sanitizer.Sanitize(html);
-            expected = "<img>&quot;";
+            expected = "<img>\"";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
 
             html = @"<IMG SRC=""jav&#x0D;ascript:alert('XSS');"">";
@@ -1658,7 +1657,7 @@ S
 
             html = @"<div style=""background-color: red""><sCRipt>hallo</scripT></div><a href=""#"">Test</a>";
             actual = sanitizer.Sanitize(html);
-            expected = @"<div style=""background-color: red""></div><a href=""#"">Test</a>";
+            expected = @"<div style=""background-color: red;""></div><a href=""#"">Test</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
 
             html = @"<IMG SRC=""jav	ascript:alert('XSS');"">";
@@ -1688,7 +1687,7 @@ S
 
             html = "<script>alert('xss')</script><div onload=\"alert('xss')\" style=\"background-color: test\">Test<img src=\"test.gif\" style=\"background-image: url(javascript:alert('xss')); margin: 10px\"></div>";
             actual = sanitizer.Sanitize(html, "http://www.example.com");
-            expected = @"<div style=""background-color: test"">Test<img style=""margin: 10px"" src=""http://www.example.com/test.gif""></div>";
+            expected = @"<div style=""background-color: test;"">Test<img src=""http://www.example.com/test.gif"" style=""margin: 10px;""></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1814,7 +1813,7 @@ S
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<div title=""&lt;foo&gt;""></div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div title=""&lt;foo&gt;""></div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div title=""&amp;lt;foo&amp;gt;""></div>").IgnoreCase);
         }
 
         [Test]
@@ -1904,7 +1903,7 @@ rl(javascript:alert(""foo""))'>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""top: 0;""></div>").IgnoreCase);
             // Normal margins get passed through
             html = @"<div style=""margin:10px 20px""></div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""margin:10px 20px""></div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""margin: 10px 20px;""></div>").IgnoreCase);
         }
 
         [Test]
@@ -1983,7 +1982,7 @@ rl(javascript:alert(""foo""))'>";
             var html = @"<div style=""top:e\xp\ression(alert())"">XSS</div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div>XSS</div>").IgnoreCase);
             html = @"<div style=""top:e\\xp\\ression(alert())"">XSS</div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""top: e\\xp\\ression(alert())"">XSS</div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div>XSS</div>").IgnoreCase);
         }
 
         [Test]
@@ -2165,7 +2164,7 @@ rl(javascript:alert(""foo""))'>";
                     var autolinked = autolink.Link(text.NodeValue);
                     if (autolinked != text.NodeValue)
                     {
-                        var f = new HtmlParser(autolinked).Parse();
+                        var f = new HtmlParser().Parse(autolinked);
                         foreach (var node in f.Body.ChildNodes)
                             e.ReplacementNodes.Add(node);
                     }

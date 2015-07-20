@@ -3,6 +3,7 @@ using AngleSharp.Dom;
 using AngleSharp.Dom.Css;
 using AngleSharp.Dom.Html;
 using AngleSharp.Html;
+using AngleSharp.Parser.Css;
 using AngleSharp.Parser.Html;
 using System;
 using System.Collections.Generic;
@@ -318,8 +319,14 @@ namespace Ganss.XSS
         /// <returns>The sanitized HTML.</returns>
         public string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
-            var parser = new HtmlParser(html, new Configuration().WithCss());
-            var dom = parser.Parse();
+            var parser = new HtmlParser(new Configuration().WithCss(e => e.Options = new CssParserOptions
+            {
+                IsIncludingUnknownDeclarations = true,
+                IsIncludingUnknownRules = true,
+                IsToleratingInvalidConstraints = true,
+                IsToleratingInvalidValues = true
+            }));
+            var dom = parser.Parse(html);
 
             // remove non-whitelisted tags
             foreach (var tag in dom.Body.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList())
@@ -347,7 +354,7 @@ namespace Ganss.XSS
                 }
 
                 // sanitize the style attribute
-                SanitizeStyle(tag.Style, baseUrl);
+                SanitizeStyle(tag, baseUrl);
 
                 // sanitize the value of the attributes
                 foreach (var attribute in tag.Attributes.ToList())
@@ -365,9 +372,13 @@ namespace Ganss.XSS
                 }
             }
 
+            var nodes = GetAllNodes(dom.Body).ToList();
+
+            foreach (var comment in nodes.OfType<IComment>())
+                comment.Remove();
+
             if (PostProcessNode != null)
             {
-                var nodes = GetAllNodes(dom.Body).ToList();
                 foreach (var node in nodes)
                 {
                     var e = new PostProcessNodeEventArgs { Document = dom, Node = node };
@@ -424,10 +435,16 @@ namespace Ganss.XSS
         /// <summary>
         /// Sanitizes the style.
         /// </summary>
-        /// <param name="styles">The styles.</param>
+        /// <param name="element">The element.</param>
         /// <param name="baseUrl">The base URL.</param>
-        protected void SanitizeStyle(ICssStyleDeclaration styles, string baseUrl)
+        protected void SanitizeStyle(IHtmlElement element, string baseUrl)
         {
+            // filter out invalid CSS declarations
+            // see https://github.com/FlorianRappl/AngleSharp/issues/101
+            if (element.GetAttribute("style") == null) return;
+            element.SetAttribute("style", element.Style.ToCss());
+
+            var styles = element.Style;
             if (styles == null || styles.Length == 0) return;
 
             var removeStyles = new List<ICssProperty>();
