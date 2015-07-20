@@ -15,19 +15,19 @@ build:
   verbosity: minimal
 after_build:
   - ps: |
-  if ($true)
-  {
-    cov-build.exe --dir cov-int make all
-    nuget.exe install PublishCoverity -ExcludeVersion
-    PublishCoverity\PublishCoverity.exe compress -o coverity.zip -i cov-int
-    PublishCoverity\PublishCoverity.exe publish `
-      -t "$env:CoverityProjectToken" `
-      -e "$env:CoverityNotificationEmail" `
-      -r "$env:APPVEYOR_REPO_NAME" `
-      -z coverity.zip `
-      -d "AppVeyor $env:APPVEYOR_BUILD_VERSION" `
-      --codeVersion "$env:APPVEYOR_REPO_COMMIT"
-  }
+    if ($true)
+    {
+      cov-build.exe --dir cov-int make all
+      nuget.exe install PublishCoverity -ExcludeVersion
+      PublishCoverity\PublishCoverity.exe compress -o coverity.zip -i cov-int
+      PublishCoverity\PublishCoverity.exe publish `
+        -t "$env:CoverityProjectToken" `
+        -e "$env:CoverityNotificationEmail" `
+        -r "$env:APPVEYOR_REPO_NAME" `
+        -z coverity.zip `
+        -d "AppVeyor $env:APPVEYOR_BUILD_VERSION" `
+        --codeVersion "$env:APPVEYOR_REPO_COMMIT"
+    }
 after_test:
 # generate report for NUnit testing framework:
   - packages\OpenCover.4.5.3723\OpenCover.Console.exe -register:user -filter:"+[*]*" -target:"packages\NUnit.Runners.2.6.4\tools\nunit-console.exe" -targetargs:"/noshadow /domain:single HtmlSanitizer.Tests\bin\release\HtmlSanitizer.Tests.dll" -output:coverage.xml
