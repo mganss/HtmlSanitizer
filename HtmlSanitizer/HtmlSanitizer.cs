@@ -47,22 +47,25 @@ namespace Ganss.XSS
     /// </example>
     public class HtmlSanitizer
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class.
-        /// </summary>
-        /// <param name="allowedTags">The allowed tag names such as "a" and "div". When <c>null</c>, uses <see cref="DefaultAllowedTags"/></param>
-        /// <param name="allowedSchemes">The allowed HTTP schemes such as "http" and "https". When <c>null</c>,  uses <see cref="DefaultAllowedSchemes"/></param>
-        /// <param name="allowedAttributes">The allowed HTML attributes such as "href" and "alt". When <c>null</c>, uses <see cref="DefaultAllowedAttributes"/></param>
-        /// <param name="uriAttributes">the HTML attributes that can contain a URI such as "href". When <c>null</c>, uses <see cref="DefaultUriAttributes"/></param>
-        /// <param name="allowedCssProperties">the allowed CSS properties such as "font" and "margin". When <c>null</c>, uses <see cref="DefaultAllowedCssProperties"/></param>
+		/// <summary>
+		/// Initializes a new instance of the <see cref="HtmlSanitizer" /> class.
+		/// </summary>
+		/// <param name="allowedTags">The allowed tag names such as "a" and "div". When <c>null</c>, uses <see cref="DefaultAllowedTags" /></param>
+		/// <param name="allowedSchemes">The allowed HTTP schemes such as "http" and "https". When <c>null</c>,  uses <see cref="DefaultAllowedSchemes" /></param>
+		/// <param name="allowedAttributes">The allowed HTML attributes such as "href" and "alt". When <c>null</c>, uses <see cref="DefaultAllowedAttributes" /></param>
+		/// <param name="uriAttributes">the HTML attributes that can contain a URI such as "href". When <c>null</c>, uses <see cref="DefaultUriAttributes" /></param>
+		/// <param name="allowedCssProperties">the allowed CSS properties such as "font" and "margin". When <c>null</c>, uses <see cref="DefaultAllowedCssProperties" /></param>
+		/// <param name="csQueryFactory">The factory function for the <see cref="CsQuery.CQ"/> with the html string as parameter.</param>
         public HtmlSanitizer(IEnumerable<string> allowedTags = null, IEnumerable<string> allowedSchemes = null,
-            IEnumerable<string> allowedAttributes = null, IEnumerable<string> uriAttributes = null, IEnumerable<string> allowedCssProperties = null)
+            IEnumerable<string> allowedAttributes = null, IEnumerable<string> uriAttributes = null, IEnumerable<string> allowedCssProperties = null,
+			Func<string, CQ> csQueryFactory = null)
         {
             AllowedTags = new HashSet<string>(allowedTags ?? DefaultAllowedTags, StringComparer.OrdinalIgnoreCase);
             AllowedSchemes = new HashSet<string>(allowedSchemes ?? DefaultAllowedSchemes, StringComparer.OrdinalIgnoreCase);
             AllowedAttributes = new HashSet<string>(allowedAttributes ?? DefaultAllowedAttributes, StringComparer.OrdinalIgnoreCase);
             UriAttributes = new HashSet<string>(uriAttributes ?? DefaultUriAttributes, StringComparer.OrdinalIgnoreCase);
             AllowedCssProperties = new HashSet<string>(allowedCssProperties ?? DefaultAllowedCssProperties, StringComparer.OrdinalIgnoreCase);
+			CsQueryFactory = csQueryFactory ?? DefaultCsQueryFactory;
         }
 
         /// <summary>
@@ -306,6 +309,19 @@ namespace Ganss.XSS
             }
         }
 
+		/// <summary>
+		/// Gets the <see cref="CsQuery.CQ"/> factory function.
+		/// </summary>
+		/// <value>
+		/// The <see cref="CsQuery.CQ"/> factory function.
+		/// </value>
+		public Func<string, CQ> CsQueryFactory { get; private set; }
+
+		/// <summary>
+		/// The default <see cref="CsQuery.CQ"/> factory function.
+		/// </summary>
+		public static readonly Func<string, CQ> DefaultCsQueryFactory = html => CQ.Create(html);
+
         /// <summary>
         /// Sanitizes the specified HTML.
         /// </summary>
@@ -313,9 +329,9 @@ namespace Ganss.XSS
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
         /// <param name="outputFormatter">The CsQuery output formatter used to render the DOM. Using the default formatter if null.</param>
         /// <returns>The sanitized HTML.</returns>
-        public string Sanitize(string html, string baseUrl = "", IOutputFormatter outputFormatter = null)
+		public string Sanitize(string html, string baseUrl = "", IOutputFormatter outputFormatter = null)
         {
-            var dom = CQ.Create(html);
+			var dom = CsQueryFactory(html);
 
             // remove non-whitelisted tags
             foreach (var tag in dom["*"].Where(t => !IsAllowedTag(t)).ToList())
