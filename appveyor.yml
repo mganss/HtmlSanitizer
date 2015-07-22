@@ -20,13 +20,7 @@ after_build:
         cov-build.exe --dir cov-int msbuild /t:Rebuild HtmlSanitizer.sln
         nuget.exe install PublishCoverity -ExcludeVersion
         PublishCoverity\PublishCoverity.exe compress -o coverity.zip -i cov-int
-        PublishCoverity\PublishCoverity.exe publish `
-          -t "$env:CoverityProjectToken" `
-          -e "$env:CoverityNotificationEmail" `
-          -r "$env:APPVEYOR_REPO_NAME" `
-          -z coverity.zip `
-          -d "AppVeyor $env:APPVEYOR_BUILD_VERSION" `
-          --codeVersion "$env:APPVEYOR_REPO_COMMIT"
+        PublishCoverity\PublishCoverity.exe publish -t "$env:CoverityProjectToken" -e "$env:CoverityNotificationEmail" -r "$env:APPVEYOR_REPO_NAME" -z coverity.zip -d "AppVeyor $env:APPVEYOR_BUILD_VERSION" --codeVersion "$env:APPVEYOR_REPO_COMMIT"
       }
 after_test:
 # generate report for NUnit testing framework:

@@ -2229,6 +2229,22 @@ rl(javascript:alert(""foo""))'>";
             var expected = @"<div style=""color: black"">Test</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
+
+        [Test]
+        public void XhtmlTest()
+        {
+            // Arrange
+            var s = new HtmlSanitizer();
+
+            // Act
+            var htmlFragment = @"<div><img src=""xyz""><br></div>";
+            CsQuery.Config.DocType = DocType.XHTML;
+            var actual = s.Sanitize(htmlFragment);
+
+            // Assert
+            var expected = @"<div><img src=""xyz"" /><br /></div>";
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
     }
 }
 
