@@ -20,6 +20,11 @@ after_build:
         cov-build.exe --dir cov-int msbuild /t:Rebuild HtmlSanitizer.sln
         nuget.exe install PublishCoverity -ExcludeVersion
         PublishCoverity\PublishCoverity.exe compress -o coverity.zip -i cov-int
+        echo "$env:CoverityProjectToken"
+        echo "$env:CoverityNotificationEmail"
+        echo "$env:APPVEYOR_REPO_NAME"
+        echo "$env:APPVEYOR_REPO_COMMIT"
+        echo "$env:APPVEYOR_BUILD_VERSION"
         PublishCoverity\PublishCoverity.exe publish -t "$env:CoverityProjectToken" -e "$env:CoverityNotificationEmail" -r "$env:APPVEYOR_REPO_NAME" -z coverity.zip -d "AppVeyor $env:APPVEYOR_BUILD_VERSION" --codeVersion "$env:APPVEYOR_BUILD_VERSION"
       }
 after_test:
