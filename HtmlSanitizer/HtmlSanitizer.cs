@@ -45,7 +45,7 @@ namespace Ganss.XSS
     /// ]]>
     /// </code>
     /// </example>
-    public class HtmlSanitizer
+    public class HtmlSanitizer : IHtmlSanitizer
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class.
