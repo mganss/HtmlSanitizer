@@ -2245,6 +2245,24 @@ rl(javascript:alert(""foo""))'>";
             var expected = @"<div><img src=""xyz"" /><br /></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
+
+        [Test]
+        public void MultipleRecipientsTest()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/41
+
+            // Arrange
+            var s = new HtmlSanitizer();
+            s.AllowedSchemes.Add("mailto");
+
+            // Act
+            var htmlFragment = @"<a href=""mailto:bonnie@example.com,clyde@example.com"">Bang Bang</a>";
+            var actual = s.Sanitize(htmlFragment);
+
+            // Assert
+            var expected = @"<a>Bang Bang</a>";
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
     }
 }
 

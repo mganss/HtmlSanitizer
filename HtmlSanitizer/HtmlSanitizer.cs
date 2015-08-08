@@ -537,7 +537,14 @@ namespace Ganss.XSS
                 else return null;
             }
 
-            return uri.IsAbsoluteUri ? uri.AbsoluteUri : uri.GetComponents(UriComponents.SerializationInfoString, UriFormat.UriEscaped);
+            try
+            {
+                return uri.IsAbsoluteUri ? uri.AbsoluteUri : uri.GetComponents(UriComponents.SerializationInfoString, UriFormat.UriEscaped);
+            }
+            catch (UriFormatException)
+            {
+                return null;
+            }
         }
 
         /// <summary>
