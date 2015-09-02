@@ -155,3 +155,5 @@ coverage.xml
 cov-int/
 cov-int.zip
 coverity.zip
+
+.vs/

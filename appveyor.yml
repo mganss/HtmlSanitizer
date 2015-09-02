@@ -13,15 +13,15 @@ environment:
 build:
   project: HtmlSanitizer.sln
   verbosity: minimal
-after_build:
-  - ps: |
-      if ($env:CoverityProjectToken)
-      {
-        cov-build.exe --dir cov-int msbuild /t:Rebuild HtmlSanitizer.sln
-        nuget.exe install PublishCoverity -ExcludeVersion
-        PublishCoverity\tools\PublishCoverity.exe compress -o coverity.zip -i cov-int
-        PublishCoverity\tools\PublishCoverity.exe publish -t "$env:CoverityProjectToken" -e "$env:CoverityNotificationEmail" -r "$env:APPVEYOR_REPO_NAME" -z coverity.zip -d "AppVeyor $env:APPVEYOR_BUILD_VERSION" --codeVersion "$env:APPVEYOR_REPO_COMMIT"
-      }
+#after_build:
+#  - ps: |
+#      if ($env:CoverityProjectToken)
+#      {
+#        cov-build.exe --dir cov-int msbuild /t:Rebuild HtmlSanitizer.sln
+#        nuget.exe install PublishCoverity -ExcludeVersion
+#        PublishCoverity\tools\PublishCoverity.exe compress -o coverity.zip -i cov-int
+#        PublishCoverity\tools\PublishCoverity.exe publish -t "$env:CoverityProjectToken" -e "$env:CoverityNotificationEmail" -r "$env:APPVEYOR_REPO_NAME" -z coverity.zip -d "AppVeyor $env:APPVEYOR_BUILD_VERSION" --codeVersion "$env:APPVEYOR_REPO_COMMIT"
+#      }
 after_test:
   - ps: |
       if ($env:COVERALLS_REPO_TOKEN)
