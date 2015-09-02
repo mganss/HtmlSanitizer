@@ -29,6 +29,6 @@ after_test:
         nuget.exe install OpenCover -ExcludeVersion
         nuget.exe install coveralls.io -ExcludeVersion
         nuget.exe install NUnit.Runners -ExcludeVersion
-        OpenCover\OpenCover.Console.exe -register:user -filter:"+[*]*" -target:"NUnit.Runners\tools\nunit-console.exe" "-targetargs:/noshadow /domain:single HtmlSanitizer.Tests\bin\release\HtmlSanitizer.Tests.dll" -output:coverage.xml
+        OpenCover\tools\OpenCover.Console.exe -register:user -filter:"+[*]*" -target:"NUnit.Runners\tools\nunit-console.exe" "-targetargs:/noshadow /domain:single HtmlSanitizer.Tests\bin\release\HtmlSanitizer.Tests.dll" -output:coverage.xml
         coveralls.io\tools\coveralls.net.exe --opencover coverage.xml
       }
