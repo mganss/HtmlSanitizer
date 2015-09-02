@@ -1,5 +1,8 @@
 version: 1.0.{build}
+install:
+  - nuget restore
 configuration: Release
 platform: Any CPU
 build:
+  project: HtmlSanitizer.sln
   verbosity: minimal
