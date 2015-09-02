@@ -1512,7 +1512,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div></div>";
+            string expected = @"<div></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1570,7 +1570,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div style=\"background-color: test;\"></div>";
+            string expected = "<div style=\"background-color: test\"></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1657,7 +1657,7 @@ S
 
             html = @"<div style=""background-color: red""><sCRipt>hallo</scripT></div><a href=""#"">Test</a>";
             actual = sanitizer.Sanitize(html);
-            expected = @"<div style=""background-color: red;""></div><a href=""#"">Test</a>";
+            expected = @"<div style=""background-color: red""></div><a href=""#"">Test</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
 
             html = @"<IMG SRC=""jav	ascript:alert('XSS');"">";
@@ -1687,7 +1687,7 @@ S
 
             html = "<script>alert('xss')</script><div onload=\"alert('xss')\" style=\"background-color: test\">Test<img src=\"test.gif\" style=\"background-image: url(javascript:alert('xss')); margin: 10px\"></div>";
             actual = sanitizer.Sanitize(html, "http://www.example.com");
-            expected = @"<div style=""background-color: test;"">Test<img src=""http://www.example.com/test.gif"" style=""margin: 10px;""></div>";
+            expected = @"<div style=""background-color: test"">Test<img src=""http://www.example.com/test.gif"" style=""margin: 10px;""></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1877,7 +1877,7 @@ S
             html = @"<DIV STYLE='width: e/**/xpression(alert(""foo""));'>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div></div>").IgnoreCase);
             html = @"<DIV STYLE='background: url(javascript:alert(""foo""));color: #fff'>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""color: #fff""></div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""color: #fff;""></div>").IgnoreCase);
 
             // Inline style with url() using javascript: scheme, using unicode
             // escapes
@@ -1903,7 +1903,7 @@ rl(javascript:alert(""foo""))'>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""top: 0;""></div>").IgnoreCase);
             // Normal margins get passed through
             html = @"<div style=""margin:10px 20px""></div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""margin: 10px 20px;""></div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""margin:10px 20px""></div>").IgnoreCase);
         }
 
         [Test]
