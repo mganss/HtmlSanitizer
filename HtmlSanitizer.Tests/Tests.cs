@@ -2263,6 +2263,23 @@ rl(javascript:alert(""foo""))'>";
             var expected = @"<a>Bang Bang</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
+
+        [Test]
+        public void QuotedBackgroundImageTest()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/44
+
+            // Arrange
+            var s = new HtmlSanitizer();
+
+            // Act
+            var htmlFragment = "<div style=\"background-image: url('some/random/url.img')\"></div>";
+            var actual = s.Sanitize(htmlFragment);
+
+            // Assert
+            var expected = "<div style=\"background-image: url('some/random/url.img')\"></div>";
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
     }
 }
 

@@ -418,7 +418,7 @@ namespace Ganss.XSS
         private static readonly Regex CssComments = new Regex(@"/\*.*?\*/", RegexOptions.Compiled);
         // IE6 <http://heideri.ch/jso/#80>
         private static readonly Regex CssExpression = new Regex(@"[eE\uFF25\uFF45][xX\uFF38\uFF58][pP\uFF30\uFF50][rR\u0280\uFF32\uFF52][eE\uFF25\uFF45][sS\uFF33\uFF53]{2}[iI\u026A\uFF29\uFF49][oO\uFF2F\uFF4F][nN\u0274\uFF2E\uFF4E]", RegexOptions.Compiled);
-        private static readonly Regex CssUrl = new Regex(@"[Uu][Rr\u0280][Ll\u029F]\s*\(\s*['""]?\s*([^'"")]+)", RegexOptions.Compiled);
+        private static readonly Regex CssUrl = new Regex(@"[Uu][Rr\u0280][Ll\u029F]\s*\(([^)]+)", RegexOptions.Compiled);
 
         /// <summary>
         /// Sanitizes the style.
