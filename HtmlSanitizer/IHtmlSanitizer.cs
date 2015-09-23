@@ -1,7 +1,7 @@
+using AngleSharp;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
-using CsQuery.Output;
 
 namespace Ganss.XSS
 {
@@ -123,6 +123,6 @@ namespace Ganss.XSS
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
         /// <param name="outputFormatter">The CsQuery output formatter used to render the DOM. Using the default formatter if null.</param>
         /// <returns>The sanitized HTML.</returns>
-        string Sanitize(string html, string baseUrl = "", IOutputFormatter outputFormatter = null);
+        string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null);
     }
 }

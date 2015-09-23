@@ -430,7 +430,7 @@ namespace Ganss.XSS
         private static readonly Regex CssComments = new Regex(@"/\*.*?\*/", RegexOptions.Compiled);
         // IE6 <http://heideri.ch/jso/#80>
         private static readonly Regex CssExpression = new Regex(@"[eE\uFF25\uFF45][xX\uFF38\uFF58][pP\uFF30\uFF50][rR\u0280\uFF32\uFF52][eE\uFF25\uFF45][sS\uFF33\uFF53]{2}[iI\u026A\uFF29\uFF49][oO\uFF2F\uFF4F][nN\u0274\uFF2E\uFF4E]", RegexOptions.Compiled);
-        private static readonly Regex CssUrl = new Regex(@"[Uu][Rr\u0280][Ll\u029F]\s*\(([^)]+)", RegexOptions.Compiled);
+        private static readonly Regex CssUrl = new Regex(@"[Uu][Rr\u0280][Ll\u029F]\s*\(\s*(['""]?)\s*([^'"")\s]+)\s*(['""]?)\s*", RegexOptions.Compiled);
 
         /// <summary>
         /// Sanitizes the style.
@@ -462,11 +462,11 @@ namespace Ganss.XSS
 
                     if (urls.Count > 0)
                     {
-                        if (urls.Cast<Match>().Any(m => GetSafeUri(m.Groups[1].Value) == null || SanitizeUrl(m.Groups[1].Value, baseUrl) == null))
+                        if (urls.Cast<Match>().Any(m => GetSafeUri(m.Groups[2].Value) == null || SanitizeUrl(m.Groups[2].Value, baseUrl) == null))
                             removeStyles.Add(style);
                         else
                         {
-                            var s = CssUrl.Replace(val, m => "url(" + SanitizeUrl(m.Groups[1].Value, baseUrl));
+                            var s = CssUrl.Replace(val, m => "url(" + m.Groups[1].Value + SanitizeUrl(m.Groups[2].Value, baseUrl) + m.Groups[3].Value);
                             if (s != val)
                             {
                                 if (key != style.Name) removeStyles.Add(style);

@@ -1589,7 +1589,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div style=\"background-color: test;\">Test<img src=\"http://www.example.com/test.gif\" style=\"margin: 10px; background-image: url(&quot;http://www.example.com/bg.jpg&quot;);\"></div>";
+            string expected = "<div style=\"background-color: test;\">Test<img src=\"http://www.example.com/test.gif\" style=\"background-image: url(http://www.example.com/bg.jpg); margin: 10px\"></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -2203,7 +2203,7 @@ rl(javascript:alert(""foo""))'>";
             var actual = s.Sanitize(htmlFragment);
 
             // Assert
-            var expected = @"<div style=""background-color: white"">Test</div>";
+            var expected = @"<div style=""background-color: white;"">Test</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -2211,14 +2211,14 @@ rl(javascript:alert(""foo""))'>";
         public void CssKeyTest()
         {
             // Arrange
-            var s = new HtmlSanitizer { DisallowCssPropertyValue = new Regex("^b.*") };
+            var s = new HtmlSanitizer();
 
             // Act
             var htmlFragment = @"<div style=""\000062ackground-image: URL(http://www.example.com/bg.jpg)"">Test</div>";
             var actual = s.Sanitize(htmlFragment);
 
             // Assert
-            var expected = @"<div style=""background-image: url(http://www.example.com/bg.jpg)"">Test</div>";
+            var expected = @"<div style=""\000062ackground-image: URL(http://www.example.com/bg.jpg)"">Test</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -2233,7 +2233,7 @@ rl(javascript:alert(""foo""))'>";
             var actual = s.Sanitize(htmlFragment, "hallo");
 
             // Assert
-            var expected = @"<div style=""color: black"">Test</div>";
+            var expected = @"<div style=""color: black;"">Test</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -2245,8 +2245,7 @@ rl(javascript:alert(""foo""))'>";
 
             // Act
             var htmlFragment = @"<div><img src=""xyz""><br></div>";
-            CsQuery.Config.DocType = DocType.XHTML;
-            var actual = s.Sanitize(htmlFragment);
+            var actual = s.Sanitize(htmlFragment, "", AngleSharp.Xml.XmlMarkupFormatter.Instance);
 
             // Assert
             var expected = @"<div><img src=""xyz"" /><br /></div>";
