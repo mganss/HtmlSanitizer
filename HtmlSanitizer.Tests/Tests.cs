@@ -6,6 +6,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 // Tests based on tests from http://roadkill.codeplex.com/
 
@@ -2188,6 +2189,102 @@ rl(javascript:alert(""foo""))'>";
 
             // Assert
             var expected = htmlFragment;
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
+
+        [Test]
+        public void DisallowCssPropertyValueTest()
+        {
+            // Arrange
+            var s = new HtmlSanitizer { DisallowCssPropertyValue = new Regex("^b.*") };
+
+            // Act
+            var htmlFragment = @"<div style=""color: black; background-color: white"">Test</div>";
+            var actual = s.Sanitize(htmlFragment);
+
+            // Assert
+            var expected = @"<div style=""background-color: white"">Test</div>";
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
+
+        [Test]
+        public void CssKeyTest()
+        {
+            // Arrange
+            var s = new HtmlSanitizer { DisallowCssPropertyValue = new Regex("^b.*") };
+
+            // Act
+            var htmlFragment = @"<div style=""\000062ackground-image: URL(http://www.example.com/bg.jpg)"">Test</div>";
+            var actual = s.Sanitize(htmlFragment);
+
+            // Assert
+            var expected = @"<div style=""background-image: url(http://www.example.com/bg.jpg)"">Test</div>";
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
+
+        [Test]
+        public void InvalidBaseUrlTest()
+        {
+            // Arrange
+            var s = new HtmlSanitizer();
+
+            // Act
+            var htmlFragment = @"<div style=""color: black; background-image: URL(x/y/bg.jpg)"">Test</div>";
+            var actual = s.Sanitize(htmlFragment, "hallo");
+
+            // Assert
+            var expected = @"<div style=""color: black"">Test</div>";
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
+
+        [Test]
+        public void XhtmlTest()
+        {
+            // Arrange
+            var s = new HtmlSanitizer();
+
+            // Act
+            var htmlFragment = @"<div><img src=""xyz""><br></div>";
+            CsQuery.Config.DocType = DocType.XHTML;
+            var actual = s.Sanitize(htmlFragment);
+
+            // Assert
+            var expected = @"<div><img src=""xyz"" /><br /></div>";
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
+
+        [Test]
+        public void MultipleRecipientsTest()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/41
+
+            // Arrange
+            var s = new HtmlSanitizer();
+            s.AllowedSchemes.Add("mailto");
+
+            // Act
+            var htmlFragment = @"<a href=""mailto:bonnie@example.com,clyde@example.com"">Bang Bang</a>";
+            var actual = s.Sanitize(htmlFragment);
+
+            // Assert
+            var expected = @"<a>Bang Bang</a>";
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
+
+        [Test]
+        public void QuotedBackgroundImageTest()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/44
+
+            // Arrange
+            var s = new HtmlSanitizer();
+
+            // Act
+            var htmlFragment = "<div style=\"background-image: url('some/random/url.img')\"></div>";
+            var actual = s.Sanitize(htmlFragment);
+
+            // Assert
+            var expected = "<div style=\"background-image: url('some/random/url.img')\"></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
     }

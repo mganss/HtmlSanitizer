@@ -149,3 +149,11 @@ $RECYCLE.BIN/
 
 # NuGet packages
 HtmlSanitizer.*.nupkg
+
+TestResult.xml
+coverage.xml
+cov-int/
+cov-int.zip
+coverity.zip
+
+.vs/

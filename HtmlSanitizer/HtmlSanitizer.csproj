@@ -59,6 +59,7 @@
   <ItemGroup>
     <Compile Include="EventArgs.cs" />
     <Compile Include="HtmlSanitizer.cs" />
+    <Compile Include="IHtmlSanitizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

@@ -1,7 +1,9 @@
 HtmlSanitizer
 =============
 
-[![Version](https://img.shields.io/nuget/v/HtmlSanitizer.svg)](https://www.nuget.org/packages/HtmlSanitizer)
+[![NuGet version](https://badge.fury.io/nu/HtmlSanitizer.svg)](http://badge.fury.io/nu/HtmlSanitizer)
+[![Build status](https://ci.appveyor.com/api/projects/status/418bmfx643iae00c/branch/master?svg=true)](https://ci.appveyor.com/project/mganss/htmlsanitizer/branch/master)
+[![Coverage Status](https://coveralls.io/repos/mganss/HtmlSanitizer/badge.svg?branch=master&service=github)](https://coveralls.io/github/mganss/HtmlSanitizer?branch=master)
 
 HtmlSanitizer is a .NET library for cleaning HTML fragments from constructs that can lead to [XSS attacks](https://en.wikipedia.org/wiki/Cross-site_scripting).
 It uses the excellent C# jQuery port [CsQuery](https://github.com/jamietre/CsQuery) to parse, manipulate, and render HTML and CSS.
