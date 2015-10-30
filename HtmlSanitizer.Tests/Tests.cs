@@ -2280,6 +2280,21 @@ rl(javascript:alert(""foo""))'>";
             var expected = "<div style=\"background-image: url('some/random/url.img')\"></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
+
+        [Test]
+        public void QuotedBackgroundImageFromIE9()
+        {
+            // Arrange
+            var s = new HtmlSanitizer();
+
+            // Act
+            var htmlFragment = "<span style='background-image: url(\"/api/users/defaultAvatar\");'></span>";
+            var actual = s.Sanitize(htmlFragment);
+
+            // Assert
+            var expected = "<span style='background-image: url(\"/api/users/defaultAvatar\")'></span>";
+            Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
     }
 }
 
