@@ -2295,6 +2295,21 @@ rl(javascript:alert(""foo""))'>";
             var expected = "<span style='background-image: url(\"/api/users/defaultAvatar\")'></span>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
+
+        [Test]
+        public void DefaultHtmlEncoder_ShouldBeOverridable()
+        {
+            // Arrange
+            var s = new HtmlSanitizer
+            {
+                DefaultHtmlEncoder = HtmlEncoders.Minimum
+            };
+
+            // Act
+
+            Assert.That(s.Sanitize("é"), Is.EqualTo("é"));
+            Assert.That(s.Sanitize("€"), Is.EqualTo("€"));
+        }
     }
 }
 

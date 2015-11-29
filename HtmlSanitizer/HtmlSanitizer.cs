@@ -191,6 +191,14 @@ namespace Ganss.XSS
         public ISet<string> AllowedCssProperties { get; private set; }
 
         /// <summary>
+        /// Gets or sets the default HTML encoder that will be used to encode final output.
+        /// </summary>
+        /// <value>
+        /// The HtmlEncoder implementation.
+        /// </value>
+        public IHtmlEncoder DefaultHtmlEncoder { get; set; }
+
+        /// <summary>
         /// The default allowed CSS properties.
         /// </summary>
         public static readonly ISet<string> DefaultAllowedCssProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
@@ -373,8 +381,11 @@ namespace Ganss.XSS
                 }
             }
 
+            if (DefaultHtmlEncoder == null)
+                DefaultHtmlEncoder = HtmlEncoders.Default;
+
             if (outputFormatter == null)
-                outputFormatter = new FormatDefault(DomRenderingOptions.RemoveComments | DomRenderingOptions.QuoteAllAttributes, HtmlEncoders.Default);
+                outputFormatter = new FormatDefault(DomRenderingOptions.RemoveComments | DomRenderingOptions.QuoteAllAttributes, DefaultHtmlEncoder);
 
             var output = dom.Render(outputFormatter);
 
