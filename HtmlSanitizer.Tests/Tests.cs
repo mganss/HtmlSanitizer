@@ -1,4 +1,4 @@
-using CsQuery;
+﻿using CsQuery;
 using Ganss.Text;
 using NUnit.Framework;
 using System;
@@ -2294,6 +2294,21 @@ rl(javascript:alert(""foo""))'>";
             // Assert
             var expected = "<span style='background-image: url(\"/api/users/defaultAvatar\")'></span>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
+
+        [Test]
+        public void HtmlEncoder_ShouldBeOverridable()
+        {
+            // Arrange
+            var s = new HtmlSanitizer
+            {
+                HtmlEncoder = HtmlEncoders.Minimum
+            };
+
+            // Act
+
+            Assert.That(s.Sanitize("é"), Is.EqualTo("é"));
+            Assert.That(s.Sanitize("€"), Is.EqualTo("€"));
         }
     }
 }
