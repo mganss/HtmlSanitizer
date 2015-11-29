@@ -196,7 +196,7 @@ namespace Ganss.XSS
         /// <value>
         /// The HtmlEncoder implementation.
         /// </value>
-        public IHtmlEncoder DefaultHtmlEncoder { get; set; }
+        public IHtmlEncoder HtmlEncoder { get; set; }
 
         /// <summary>
         /// The default allowed CSS properties.
@@ -381,11 +381,11 @@ namespace Ganss.XSS
                 }
             }
 
-            if (DefaultHtmlEncoder == null)
-                DefaultHtmlEncoder = HtmlEncoders.Default;
+            if (HtmlEncoder == null)
+                HtmlEncoder = HtmlEncoders.Default;
 
             if (outputFormatter == null)
-                outputFormatter = new FormatDefault(DomRenderingOptions.RemoveComments | DomRenderingOptions.QuoteAllAttributes, DefaultHtmlEncoder);
+                outputFormatter = new FormatDefault(DomRenderingOptions.RemoveComments | DomRenderingOptions.QuoteAllAttributes, HtmlEncoder);
 
             var output = dom.Render(outputFormatter);
 

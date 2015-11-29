@@ -1,4 +1,4 @@
-using CsQuery;
+﻿using CsQuery;
 using Ganss.Text;
 using NUnit.Framework;
 using System;
@@ -2297,12 +2297,12 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Test]
-        public void DefaultHtmlEncoder_ShouldBeOverridable()
+        public void HtmlEncoder_ShouldBeOverridable()
         {
             // Arrange
             var s = new HtmlSanitizer
             {
-                DefaultHtmlEncoder = HtmlEncoders.Minimum
+                HtmlEncoder = HtmlEncoders.Minimum
             };
 
             // Act
