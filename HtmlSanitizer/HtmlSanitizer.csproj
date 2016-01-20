@@ -67,6 +67,7 @@
     <Compile Include="HtmlSanitizer.cs" />
     <Compile Include="IHtmlSanitizer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RemoveReason.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="HtmlSanitizer.snk" />

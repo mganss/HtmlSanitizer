@@ -60,6 +60,14 @@ namespace Ganss.XSS
         /// The tag.
         /// </value>
         public IElement Tag { get; set; }
+
+        /// <summary>
+        /// Gets or sets the reason why the tag will be removed
+        /// </summary>
+        /// <value>
+        /// The reason.
+        /// </value>
+        public RemoveReason Reason { get; set; }
     }
 
     /// <summary>
@@ -74,6 +82,14 @@ namespace Ganss.XSS
         /// The attribute.
         /// </value>
         public IAttr Attribute { get; set; }
+
+        /// <summary>
+        /// Gets or sets the reason why the attribute will be removed
+        /// </summary>
+        /// <value>
+        /// The reason.
+        /// </value>
+        public RemoveReason Reason { get; set; }
     }
 
     /// <summary>
@@ -88,6 +104,14 @@ namespace Ganss.XSS
         /// The style.
         /// </value>
         public ICssProperty Style { get; set; }
+
+        /// <summary>
+        /// Gets or sets the reason why the style will be removed
+        /// </summary>
+        /// <value>
+        /// The reason.
+        /// </value>
+        public RemoveReason Reason { get; set; }
     }
 
 }

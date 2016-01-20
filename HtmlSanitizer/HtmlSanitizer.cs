@@ -331,7 +331,7 @@ namespace Ganss.XSS
             // remove non-whitelisted tags
             foreach (var tag in dom.Body.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList())
             {
-                RemoveTag(tag);
+                RemoveTag(tag, RemoveReason.NotAllowedTag);
             }
 
             // cleanup attributes
@@ -340,7 +340,7 @@ namespace Ganss.XSS
                 // remove non-whitelisted attributes
                 foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
                 {
-                    RemoveAttribute(tag, attribute);
+                    RemoveAttribute(tag, attribute, RemoveReason.NotAllowedAttribute);
                 }
 
                 // sanitize URLs in URL-marked attributes
@@ -348,7 +348,7 @@ namespace Ganss.XSS
                 {
                     var url = SanitizeUrl(attribute.Value, baseUrl);
                     if (url == null)
-                        RemoveAttribute(tag, attribute);
+                        RemoveAttribute(tag, attribute, RemoveReason.NotAllowedUrlValue);
                     else
                         tag.SetAttribute(attribute.Name, url);
                 }
@@ -362,7 +362,7 @@ namespace Ganss.XSS
                     // The '& Javascript include' is a possible method to execute Javascript and can lead to XSS.
                     // (see https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#.26_JavaScript_includes)
                     if (attribute.Value.Contains("&{"))
-                        RemoveAttribute(tag, attribute);
+                        RemoveAttribute(tag, attribute, RemoveReason.NotAllowedValue);
                     else
                     {
                         // escape attribute value
@@ -447,7 +447,7 @@ namespace Ganss.XSS
             var styles = element.Style;
             if (styles == null || styles.Length == 0) return;
 
-            var removeStyles = new List<ICssProperty>();
+            var removeStyles = new List<Tuple<ICssProperty, RemoveReason>>();
             var setStyles = new Dictionary<string, string>();
 
             foreach (var style in styles)
@@ -455,24 +455,34 @@ namespace Ganss.XSS
                 var key = DecodeCss(style.Name);
                 var val = DecodeCss(style.Value);
 
-                if (!AllowedCssProperties.Contains(key) || CssExpression.IsMatch(val) || DisallowCssPropertyValue.IsMatch(val))
-                    removeStyles.Add(style);
-                else
+                if (!AllowedCssProperties.Contains(key) || DisallowCssPropertyValue.IsMatch(val))
                 {
-                    var urls = CssUrl.Matches(val);
+                    removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedStyle));
+                    continue;
+                }
 
-                    if (urls.Count > 0)
+                if(CssExpression.IsMatch(val))
+                {
+                    removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedValue));
+                    continue;
+                }
+
+                var urls = CssUrl.Matches(val);
+
+                if (urls.Count > 0)
+                {
+                    if (urls.Cast<Match>().Any(m => GetSafeUri(m.Groups[2].Value) == null || SanitizeUrl(m.Groups[2].Value, baseUrl) == null))
+                        removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedUrlValue));
+                    else
                     {
-                        if (urls.Cast<Match>().Any(m => GetSafeUri(m.Groups[2].Value) == null || SanitizeUrl(m.Groups[2].Value, baseUrl) == null))
-                            removeStyles.Add(style);
-                        else
+                        var s = CssUrl.Replace(val, m => "url(" + m.Groups[1].Value + SanitizeUrl(m.Groups[2].Value, baseUrl) + m.Groups[3].Value);
+                        if (s != val)
                         {
-                            var s = CssUrl.Replace(val, m => "url(" + m.Groups[1].Value + SanitizeUrl(m.Groups[2].Value, baseUrl) + m.Groups[3].Value);
-                            if (s != val)
+                            if (key != style.Name)
                             {
-                                if (key != style.Name) removeStyles.Add(style);
-                                setStyles[key] = s;
+                                removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedUrlValue));
                             }
+                            setStyles[key] = s;
                         }
                     }
                 }
@@ -480,7 +490,7 @@ namespace Ganss.XSS
 
             foreach (var style in removeStyles)
             {
-                RemoveStyle(styles, style);
+                RemoveStyle(styles, style.Item1, style.Item2);
             }
 
             foreach (var style in setStyles)
@@ -569,9 +579,10 @@ namespace Ganss.XSS
         /// Remove a tag from the document.
         /// </summary>
         /// <param name="tag">to be removed</param>
-        private void RemoveTag(IElement tag)
+        /// <param name="reason">reason why to be removed</param>
+        private void RemoveTag(IElement tag, RemoveReason reason)
         {
-            var e = new RemovingTagEventArgs { Tag = tag };
+            var e = new RemovingTagEventArgs { Tag = tag, Reason = reason };
             OnRemovingTag(e);
             if (!e.Cancel) tag.Remove();
         }
@@ -581,9 +592,10 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="tag">tag where the attribute to belongs</param>
         /// <param name="attribute">to be removed</param>
-        private void RemoveAttribute(IElement tag, IAttr attribute)
+        /// <param name="reason">reason why to be removed</param>
+        private void RemoveAttribute(IElement tag, IAttr attribute, RemoveReason reason)
         {
-            var e = new RemovingAttributeEventArgs { Attribute = attribute };
+            var e = new RemovingAttributeEventArgs { Attribute = attribute, Reason = reason };
             OnRemovingAttribute(e);
             if (!e.Cancel) tag.RemoveAttribute(attribute.Name);
         }
@@ -593,9 +605,10 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="styles">collection where the style to belongs</param>
         /// <param name="style">to be removed</param>
-        private void RemoveStyle(ICssStyleDeclaration styles, ICssProperty style)
+        /// <param name="reason">reason why to be removed</param>
+        private void RemoveStyle(ICssStyleDeclaration styles, ICssProperty style, RemoveReason reason)
         {
-            var e = new RemovingStyleEventArgs { Style = style };
+            var e = new RemovingStyleEventArgs { Style = style, Reason = reason };
             OnRemovingStyle(e);
             if (!e.Cancel) styles.RemoveProperty(style.Name);
         }
