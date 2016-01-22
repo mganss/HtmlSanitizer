@@ -334,8 +334,8 @@ namespace Ganss.XSS
 
                 // sanitize URLs in URL-marked attributes
                 foreach (var attribute in tag.Attributes.Where(IsUriAttribute).ToList())
-                {
-                    var url = SanitizeUrl(attribute.Value, baseUrl);
+                {                    
+                    var url = SanitizeUrl(attribute.Value, baseUrl, tag.NodeName == "IMG" && attribute.Key.Equals("SRC", StringComparison.InvariantCultureIgnoreCase));
                     if (url == null)
                         RemoveAttribute(tag, attribute);
                     else
@@ -521,9 +521,12 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="url">The URL.</param>
         /// <param name="baseUrl">The base URL relative URLs are resolved against (empty or null for no resolution).</param>
+        /// <param name="base64LongUriSupported">defaults to false should be true for image src so that the validation bypasses the 1k limit from System.Uri </param>
         /// <returns>The sanitized URL or null if no safe URL can be created.</returns>
-        protected string SanitizeUrl(string url, string baseUrl)
+        protected string SanitizeUrl(string url, string baseUrl, bool base64LongUriSupported= false)
         {
+            if (base64LongUriSupported && IsValidBase64Uri(url))
+                return url;
             var uri = GetSafeUri(url);
 
             if (uri == null) return null;
@@ -545,6 +548,44 @@ namespace Ganss.XSS
             {
                 return null;
             }
+        }
+
+        private const int systemUriLengthLimit = 1024;
+        private const int maxBase64SrcLengthLimit = 4194304; //4MB
+        private const string base64ImageUriPrefix = "data:";
+        private const string base64ImageUriPostfix = ";base64,";
+
+        /// <summary>
+        /// This is an extra validation for Base64 Uris that go beyond the 1024 limit of the System.Uri
+        /// It covers strings that are between 1k and 4MB long
+        /// </summary>
+        /// <param name="url">The URL.</param>
+        /// <returns>true of the url is a valid base64 Uri between 1k and 4MB long </returns>
+        private static bool IsValidBase64Uri(string url)
+        {
+            if (url.Length <= systemUriLengthLimit 
+                || url.Length > maxBase64SrcLengthLimit
+                || !url.StartsWith(base64ImageUriPrefix, StringComparison.InvariantCultureIgnoreCase))
+                return false;
+
+            int base64ExtensionStartIndex = url.IndexOf(base64ImageUriPostfix, base64ImageUriPrefix.Length, StringComparison.InvariantCultureIgnoreCase);
+            if (base64ExtensionStartIndex < 0)
+                return false;
+
+            string[] imgTypeAndCharset = url.Substring(base64ImageUriPrefix.Length, base64ExtensionStartIndex - base64ImageUriPrefix.Length).Split(';');
+            if (imgTypeAndCharset.Length == 0
+                || !imgTypeAndCharset[0].StartsWith("image/", StringComparison.InvariantCultureIgnoreCase))
+                return false;
+
+            try
+            {
+                Convert.FromBase64String(url.Substring(base64ExtensionStartIndex + base64ImageUriPostfix.Length));
+            }
+            catch
+            {
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
