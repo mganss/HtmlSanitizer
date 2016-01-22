@@ -550,11 +550,11 @@ namespace Ganss.XSS
             }
         }
 
-        private const int systemUriLengthLimit = 1024;
-        private const int maxBase64SrcLengthLimit = 4194304; //4MB
+        private const int base64SystemUriLengthLimit = 1024;
+        private const int base64MaxSrcLengthLimit = 4194304; //4MB
         private const string base64ImageUriPrefix = "data:";
         private const string base64ImageUriPostfix = ";base64,";
-
+        private const string base64MediaTypeStart = "image/";
         /// <summary>
         /// This is an extra validation for Base64 Uris that go beyond the 1024 limit of the System.Uri
         /// It covers strings that are between 1k and 4MB long
@@ -563,8 +563,8 @@ namespace Ganss.XSS
         /// <returns>true of the url is a valid base64 Uri between 1k and 4MB long </returns>
         private static bool IsValidBase64Uri(string url)
         {
-            if (url.Length <= systemUriLengthLimit 
-                || url.Length > maxBase64SrcLengthLimit
+            if (url.Length <= base64SystemUriLengthLimit 
+                || url.Length > base64MaxSrcLengthLimit
                 || !url.StartsWith(base64ImageUriPrefix, StringComparison.InvariantCultureIgnoreCase))
                 return false;
 
@@ -572,11 +572,13 @@ namespace Ganss.XSS
             if (base64ExtensionStartIndex < 0)
                 return false;
 
-            string[] imgTypeAndCharset = url.Substring(base64ImageUriPrefix.Length, base64ExtensionStartIndex - base64ImageUriPrefix.Length).Split(';');
-            if (imgTypeAndCharset.Length == 0
-                || !imgTypeAndCharset[0].StartsWith("image/", StringComparison.InvariantCultureIgnoreCase))
+            string imgTypeAndCharset = url.Substring(base64ImageUriPrefix.Length, base64ExtensionStartIndex - base64ImageUriPrefix.Length);
+            if (imgTypeAndCharset.Length == 0 
+                || !imgTypeAndCharset.StartsWith(base64MediaTypeStart, StringComparison.InvariantCultureIgnoreCase))
                 return false;
-
+            foreach (char c in imgTypeAndCharset.Substring(base64MediaTypeStart.Length))
+                if(c != '/' && c!= ';' && !char.IsLetter(c))
+                    return false;
             try
             {
                 Convert.FromBase64String(url.Substring(base64ExtensionStartIndex + base64ImageUriPostfix.Length));
