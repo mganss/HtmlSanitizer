@@ -572,13 +572,18 @@ namespace Ganss.XSS
             if (base64ExtensionStartIndex < 0)
                 return false;
 
-            string imgTypeAndCharset = url.Substring(base64ImageUriPrefix.Length, base64ExtensionStartIndex - base64ImageUriPrefix.Length);
-            if (imgTypeAndCharset.Length == 0 
-                || !imgTypeAndCharset.StartsWith(base64MediaTypeStart, StringComparison.InvariantCultureIgnoreCase))
+            int mediaTypeAndCharsetStringLength = base64ExtensionStartIndex - base64ImageUriPrefix.Length;
+            if (mediaTypeAndCharsetStringLength <= base64MediaTypeStart.Length)
                 return false;
-            foreach (char c in imgTypeAndCharset.Substring(base64MediaTypeStart.Length))
-                if(c != '/' && c!= ';' && !char.IsLetter(c))
+            string imgTypeAndCharset = url.Substring(base64ImageUriPrefix.Length, mediaTypeAndCharsetStringLength);
+            if (!imgTypeAndCharset.StartsWith(base64MediaTypeStart, StringComparison.InvariantCultureIgnoreCase))
+                return false;
+            for (int index = base64MediaTypeStart.Length; index < mediaTypeAndCharsetStringLength; index++)
+            {
+                char c = imgTypeAndCharset[index];
+                if (c != '/' && c != ';' && !char.IsLetter(c))
                     return false;
+            }
             try
             {
                 Convert.FromBase64String(url.Substring(base64ExtensionStartIndex + base64ImageUriPostfix.Length));
