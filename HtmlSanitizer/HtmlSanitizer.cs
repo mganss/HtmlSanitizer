@@ -455,13 +455,13 @@ namespace Ganss.XSS
                 var key = DecodeCss(style.Name);
                 var val = DecodeCss(style.Value);
 
-                if (!AllowedCssProperties.Contains(key) || DisallowCssPropertyValue.IsMatch(val))
+                if (!AllowedCssProperties.Contains(key))
                 {
                     removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedStyle));
                     continue;
                 }
 
-                if(CssExpression.IsMatch(val))
+                if(CssExpression.IsMatch(val) || DisallowCssPropertyValue.IsMatch(val))
                 {
                     removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedValue));
                     continue;
