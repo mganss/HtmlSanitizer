@@ -6,6 +6,7 @@ using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Channels;
 using System.Text.RegularExpressions;
 
 // Tests based on tests from http://roadkill.codeplex.com/
@@ -2285,6 +2286,135 @@ rl(javascript:alert(""foo""))'>";
             // Assert
             var expected = "<div style=\"background-image: url(&quot;some/random/url.img&quot;);\"></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedTag()
+        {
+            var allowedTags = new[] {"a"};
+            RemoveReason? actual = null;
+
+            var s = new HtmlSanitizer(allowedTags);
+            s.RemovingTag += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+
+            s.Sanitize("<span>just any content</span>");
+
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedTag));
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedAttribute()
+        {
+            var allowedTags = new[] { "a" };
+            var allowedAttributes = new[] {"id"};
+            RemoveReason? actual = null;
+
+            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes);
+            s.RemovingAttribute += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+
+            s.Sanitize("<a href=\"http://www.example.com\">just any content</a>");
+
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedAttribute));
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedStyle()
+        {
+            var allowedTags = new[] { "a" };
+            var allowedAttributes = new[] { "style" };
+            var allowedStyles = new[] { "margin" };
+            RemoveReason? actual = null;
+
+            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, allowedCssProperties: allowedStyles);
+            s.RemovingStyle += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+
+            s.Sanitize("<a style=\"padding:5px\">just any content</a>");
+
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedStyle));
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedValueAtAttribute()
+        {
+            var allowedTags = new[] { "a" };
+            var allowedAttributes = new[] { "id" };
+            RemoveReason? actual = null;
+
+            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes);
+            s.RemovingAttribute += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+
+            s.Sanitize("<a id=\"anyId&{\">just any content</a>");
+
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedValue));
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedValueAtStyle()
+        {
+            var allowedTags = new[] { "a" };
+            var allowedAttributes = new[] { "style" };
+            var allowedStyles = new[] { "margin" };
+            RemoveReason? actual = null;
+
+            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, allowedCssProperties: allowedStyles);
+            s.RemovingStyle += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+
+            s.Sanitize("<a style=\"margin:expression(alert('xss'))\">just any content</a>");
+
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedValue));
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedUrlAtUriAttribute()
+        {
+            var allowedTags = new[] { "a" };
+            var allowedAttributes = new[] { "href" };
+            var uriAttributes = new[] { "href" };
+            RemoveReason? actual = null;
+
+            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, uriAttributes: uriAttributes);
+            s.RemovingAttribute += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+
+            s.Sanitize("<a href=\"javascript:(alert('xss'))\">just any content</a>");
+
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedUrlValue));
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedUrlAtStyle()
+        {
+            var allowedTags = new[] { "a" };
+            var allowedAttributes = new[] { "style" };
+            var allowedStyles = new[] { "background" };
+            RemoveReason? actual = null;
+
+            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, allowedCssProperties: allowedStyles);
+            s.RemovingStyle += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+
+            s.Sanitize("<a style=\"background:url(javascript:alert('xss'))\">just any content</a>");
+
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedUrlValue));
         }
     }
 }
