@@ -1,6 +1,10 @@
-using CsQuery;
-using CsQuery.Implementation;
-using CsQuery.Output;
+using AngleSharp;
+using AngleSharp.Dom;
+using AngleSharp.Dom.Css;
+using AngleSharp.Dom.Html;
+using AngleSharp.Html;
+using AngleSharp.Parser.Css;
+using AngleSharp.Parser.Html;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -292,14 +296,14 @@ namespace Ganss.XSS
         /// </summary>
         public static readonly Regex DefaultDisallowedCssPropertyValue = new Regex(@"[<>]", RegexOptions.Compiled);
 
-        private static IEnumerable<IDomObject> GetAllNodes(IEnumerable<IDomObject> dom)
+        private static IEnumerable<INode> GetAllNodes(INode dom)
         {
             if (dom == null) yield break;
 
-            foreach (var node in dom)
+            foreach (var node in dom.ChildNodes)
             {
                 yield return node;
-                foreach (var child in GetAllNodes(node.ChildNodes).Where(c => c != null))
+                foreach (var child in GetAllNodes(node).Where(c => c != null))
                 {
                     yield return child;
                 }
@@ -313,23 +317,30 @@ namespace Ganss.XSS
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
         /// <param name="outputFormatter">The CsQuery output formatter used to render the DOM. Using the default formatter if null.</param>
         /// <returns>The sanitized HTML.</returns>
-        public string Sanitize(string html, string baseUrl = "", IOutputFormatter outputFormatter = null)
+        public string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
-            var dom = CQ.Create(html);
+            var parser = new HtmlParser(new Configuration().WithCss(e => e.Options = new CssParserOptions
+            {
+                IsIncludingUnknownDeclarations = true,
+                IsIncludingUnknownRules = true,
+                IsToleratingInvalidConstraints = true,
+                IsToleratingInvalidValues = true
+            }));
+            var dom = parser.Parse(html);
 
             // remove non-whitelisted tags
-            foreach (var tag in dom["*"].Where(t => !IsAllowedTag(t)).ToList())
+            foreach (var tag in dom.Body.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList())
             {
-                RemoveTag(tag);
+                RemoveTag(tag, RemoveReason.NotAllowedTag);
             }
 
             // cleanup attributes
-            foreach (var tag in dom["*"].ToList())
+            foreach (var tag in dom.Body.QuerySelectorAll("*").OfType<IHtmlElement>().ToList())
             {
                 // remove non-whitelisted attributes
                 foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
                 {
-                    RemoveAttribute(tag, attribute);
+                    RemoveAttribute(tag, attribute, RemoveReason.NotAllowedAttribute);
                 }
 
                 // sanitize URLs in URL-marked attributes
@@ -337,13 +348,13 @@ namespace Ganss.XSS
                 {
                     var url = SanitizeUrl(attribute.Value, baseUrl);
                     if (url == null)
-                        RemoveAttribute(tag, attribute);
+                        RemoveAttribute(tag, attribute, RemoveReason.NotAllowedUrlValue);
                     else
-                        tag.SetAttribute(attribute.Key, url);
+                        tag.SetAttribute(attribute.Name, url);
                 }
 
                 // sanitize the style attribute
-                SanitizeStyle(tag.Style, baseUrl);
+                SanitizeStyle(tag, baseUrl);
 
                 // sanitize the value of the attributes
                 foreach (var attribute in tag.Attributes.ToList())
@@ -351,32 +362,33 @@ namespace Ganss.XSS
                     // The '& Javascript include' is a possible method to execute Javascript and can lead to XSS.
                     // (see https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#.26_JavaScript_includes)
                     if (attribute.Value.Contains("&{"))
-                        RemoveAttribute(tag, attribute);
+                        RemoveAttribute(tag, attribute, RemoveReason.NotAllowedValue);
                     else
                     {
                         // escape attribute value
                         var val = attribute.Value.Replace("<", "&lt;").Replace(">", "&gt;");
-                        tag.SetAttribute(attribute.Key, val);
+                        tag.SetAttribute(attribute.Name, val);
                     }
                 }
             }
 
+            var nodes = GetAllNodes(dom.Body).ToList();
+
+            foreach (var comment in nodes.OfType<IComment>())
+                comment.Remove();
+
             if (PostProcessNode != null)
             {
-                var nodes = GetAllNodes(dom).ToList();
                 foreach (var node in nodes)
                 {
-                    var e = new PostProcessNodeEventArgs { Node = node };
+                    var e = new PostProcessNodeEventArgs { Document = dom, Node = node };
                     OnPostProcessNode(e);
                     if (e.ReplacementNodes.Any())
-                        dom[node].ReplaceWith(e.ReplacementNodes);
+                        ((IChildNode)node).Replace(e.ReplacementNodes.ToArray());
                 }
             }
 
-            if (outputFormatter == null)
-                outputFormatter = new FormatDefault(DomRenderingOptions.RemoveComments | DomRenderingOptions.QuoteAllAttributes, HtmlEncoders.Default);
-
-            var output = dom.Render(outputFormatter);
+            var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? HtmlMarkupFormatter.Instance);
 
             return output;
         }
@@ -386,9 +398,9 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="attribute">The attribute.</param>
         /// <returns><c>true</c> if the attribute can contain a URI; otherwise, <c>false</c>.</returns>
-        private bool IsUriAttribute(KeyValuePair<string, string> attribute)
+        private bool IsUriAttribute(IAttr attribute)
         {
-            return UriAttributes.Contains(attribute.Key);
+            return UriAttributes.Contains(attribute.Name);
         }
 
         /// <summary>
@@ -396,7 +408,7 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="tag">The tag.</param>
         /// <returns><c>true</c> if the tag is allowed; otherwise, <c>false</c>.</returns>
-        private bool IsAllowedTag(IDomNode tag)
+        private bool IsAllowedTag(IElement tag)
         {
             return AllowedTags.Contains(tag.NodeName);
         }
@@ -406,11 +418,11 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="attribute">The attribute.</param>
         /// <returns><c>true</c> if the attribute is allowed; otherwise, <c>false</c>.</returns>
-        private bool IsAllowedAttribute(KeyValuePair<string, string> attribute)
+        private bool IsAllowedAttribute(IAttr attribute)
         {
-            return AllowedAttributes.Contains(attribute.Key)
+            return AllowedAttributes.Contains(attribute.Name)
                 // test html5 data- attributes
-                || (AllowDataAttributes && attribute.Key != null && attribute.Key.StartsWith("data-", StringComparison.OrdinalIgnoreCase));
+                || (AllowDataAttributes && attribute.Name != null && attribute.Name.StartsWith("data-", StringComparison.OrdinalIgnoreCase));
         }
 
         // from http://genshi.edgewall.org/
@@ -423,38 +435,54 @@ namespace Ganss.XSS
         /// <summary>
         /// Sanitizes the style.
         /// </summary>
-        /// <param name="styles">The styles.</param>
+        /// <param name="element">The element.</param>
         /// <param name="baseUrl">The base URL.</param>
-        protected void SanitizeStyle(CSSStyleDeclaration styles, string baseUrl)
+        protected void SanitizeStyle(IHtmlElement element, string baseUrl)
         {
-            if (styles == null || !styles.Any()) return;
+            // filter out invalid CSS declarations
+            // see https://github.com/FlorianRappl/AngleSharp/issues/101
+            if (element.GetAttribute("style") == null) return;
+            element.SetAttribute("style", element.Style.ToCss());
 
-            var removeStyles = new List<KeyValuePair<string, string>>();
+            var styles = element.Style;
+            if (styles == null || styles.Length == 0) return;
+
+            var removeStyles = new List<Tuple<ICssProperty, RemoveReason>>();
             var setStyles = new Dictionary<string, string>();
 
             foreach (var style in styles)
             {
-                var key = DecodeCss(style.Key);
+                var key = DecodeCss(style.Name);
                 var val = DecodeCss(style.Value);
 
-                if (!AllowedCssProperties.Contains(key) || CssExpression.IsMatch(val) || DisallowCssPropertyValue.IsMatch(val))
-                    removeStyles.Add(style);
-                else
+                if (!AllowedCssProperties.Contains(key))
                 {
-                    var urls = CssUrl.Matches(val);
+                    removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedStyle));
+                    continue;
+                }
 
-                    if (urls.Count > 0)
+                if(CssExpression.IsMatch(val) || DisallowCssPropertyValue.IsMatch(val))
+                {
+                    removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedValue));
+                    continue;
+                }
+
+                var urls = CssUrl.Matches(val);
+
+                if (urls.Count > 0)
+                {
+                    if (urls.Cast<Match>().Any(m => GetSafeUri(m.Groups[2].Value) == null || SanitizeUrl(m.Groups[2].Value, baseUrl) == null))
+                        removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedUrlValue));
+                    else
                     {
-                        if (urls.Cast<Match>().Any(m => GetSafeUri(m.Groups[2].Value) == null || SanitizeUrl(m.Groups[2].Value, baseUrl) == null))
-                                removeStyles.Add(style);
-                        else
+                        var s = CssUrl.Replace(val, m => "url(" + m.Groups[1].Value + SanitizeUrl(m.Groups[2].Value, baseUrl) + m.Groups[3].Value);
+                        if (s != val)
                         {
-                            var s = CssUrl.Replace(val, m => "url(" + m.Groups[1].Value + SanitizeUrl(m.Groups[2].Value, baseUrl) + m.Groups[3].Value);
-                            if (s != val)
+                            if (key != style.Name)
                             {
-                                if (key != style.Key) removeStyles.Add(style);
-                                setStyles[key] = s;
+                                removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedUrlValue));
                             }
+                            setStyles[key] = s;
                         }
                     }
                 }
@@ -462,12 +490,12 @@ namespace Ganss.XSS
 
             foreach (var style in removeStyles)
             {
-                RemoveStyle(styles, style);
+                RemoveStyle(styles, style.Item1, style.Item2);
             }
 
-            foreach (var kvp in setStyles)
+            foreach (var style in setStyles)
             {
-                styles.SetStyle(kvp.Key, kvp.Value);
+                styles.SetProperty(style.Key, style.Value);
             }
         }
 
@@ -551,9 +579,10 @@ namespace Ganss.XSS
         /// Remove a tag from the document.
         /// </summary>
         /// <param name="tag">to be removed</param>
-        private void RemoveTag(IDomObject tag)
+        /// <param name="reason">reason why to be removed</param>
+        private void RemoveTag(IElement tag, RemoveReason reason)
         {
-            var e = new RemovingTagEventArgs { Tag = tag };
+            var e = new RemovingTagEventArgs { Tag = tag, Reason = reason };
             OnRemovingTag(e);
             if (!e.Cancel) tag.Remove();
         }
@@ -563,11 +592,12 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="tag">tag where the attribute to belongs</param>
         /// <param name="attribute">to be removed</param>
-        private void RemoveAttribute(IDomObject tag, KeyValuePair<string, string> attribute)
+        /// <param name="reason">reason why to be removed</param>
+        private void RemoveAttribute(IElement tag, IAttr attribute, RemoveReason reason)
         {
-            var e = new RemovingAttributeEventArgs { Attribute = attribute };
+            var e = new RemovingAttributeEventArgs { Attribute = attribute, Reason = reason };
             OnRemovingAttribute(e);
-            if (!e.Cancel) tag.RemoveAttribute(attribute.Key);
+            if (!e.Cancel) tag.RemoveAttribute(attribute.Name);
         }
 
         /// <summary>
@@ -575,11 +605,12 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="styles">collection where the style to belongs</param>
         /// <param name="style">to be removed</param>
-        private void RemoveStyle(ICSSStyleDeclaration styles, KeyValuePair<string, string> style)
+        /// <param name="reason">reason why to be removed</param>
+        private void RemoveStyle(ICssStyleDeclaration styles, ICssProperty style, RemoveReason reason)
         {
-            var e = new RemovingStyleEventArgs { Style = style };
+            var e = new RemovingStyleEventArgs { Style = style, Reason = reason };
             OnRemovingStyle(e);
-            if (!e.Cancel) styles.RemoveStyle(style.Key);
+            if (!e.Cancel) styles.RemoveProperty(style.Name);
         }
     }
 }

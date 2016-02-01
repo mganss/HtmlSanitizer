@@ -1,4 +1,6 @@
-﻿using CsQuery;
+﻿using AngleSharp.Dom;
+using AngleSharp.Dom.Css;
+using AngleSharp.Dom.Html;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,12 +16,20 @@ namespace Ganss.XSS
     public class PostProcessNodeEventArgs : EventArgs
     {
         /// <summary>
+        /// Gets or sets the document.
+        /// </summary>
+        /// <value>
+        /// The document.
+        /// </value>
+        public IHtmlDocument Document { get; set; }
+
+        /// <summary>
         /// Gets or sets the DOM node to be processed.
         /// </summary>
         /// <value>
         /// The DOM node.
         /// </value>
-        public IDomObject Node { get; set; }
+        public INode Node { get; set; }
 
         /// <summary>
         /// Gets the replacement nodes. Leave empty if no replacement should occur.
@@ -27,14 +37,14 @@ namespace Ganss.XSS
         /// <value>
         /// The replacement nodes.
         /// </value>
-        public IList<IDomObject> ReplacementNodes { get; private set; }
+        public IList<INode> ReplacementNodes { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PostProcessNodeEventArgs"/> class.
         /// </summary>
         public PostProcessNodeEventArgs()
         {
-            ReplacementNodes = new List<IDomObject>();
+            ReplacementNodes = new List<INode>();
         }
     }
 
@@ -49,7 +59,15 @@ namespace Ganss.XSS
         /// <value>
         /// The tag.
         /// </value>
-        public IDomObject Tag { get; set; }
+        public IElement Tag { get; set; }
+
+        /// <summary>
+        /// Gets or sets the reason why the tag will be removed
+        /// </summary>
+        /// <value>
+        /// The reason.
+        /// </value>
+        public RemoveReason Reason { get; set; }
     }
 
     /// <summary>
@@ -63,7 +81,15 @@ namespace Ganss.XSS
         /// <value>
         /// The attribute.
         /// </value>
-        public KeyValuePair<string, string> Attribute { get; set; }
+        public IAttr Attribute { get; set; }
+
+        /// <summary>
+        /// Gets or sets the reason why the attribute will be removed
+        /// </summary>
+        /// <value>
+        /// The reason.
+        /// </value>
+        public RemoveReason Reason { get; set; }
     }
 
     /// <summary>
@@ -77,7 +103,15 @@ namespace Ganss.XSS
         /// <value>
         /// The style.
         /// </value>
-        public KeyValuePair<string, string> Style { get; set; }
+        public ICssProperty Style { get; set; }
+
+        /// <summary>
+        /// Gets or sets the reason why the style will be removed
+        /// </summary>
+        /// <value>
+        /// The reason.
+        /// </value>
+        public RemoveReason Reason { get; set; }
     }
 
 }

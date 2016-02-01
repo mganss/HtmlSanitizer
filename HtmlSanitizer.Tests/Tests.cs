@@ -1,9 +1,12 @@
-using CsQuery;
+using AngleSharp.Dom;
+using AngleSharp.Dom.Html;
+using AngleSharp.Parser.Html;
 using Ganss.Text;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Remoting.Channels;
 using System.Text.RegularExpressions;
 
 // Tests based on tests from http://roadkill.codeplex.com/
@@ -38,7 +41,7 @@ namespace Ganss.XSS.Tests
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = @"<a href=""'';!--"">=&amp;{()}&quot;&gt;</a>";
+            string expected = @"<a href=""'';!--"">=&amp;{()}""&gt;</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -158,7 +161,7 @@ namespace Ganss.XSS.Tests
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<img>&quot;&gt;";
+            string expected = "<img>\"&gt;";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1136,7 +1139,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT/XSS%20SRC="">&quot;&gt;XSS</a>";
+            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT/XSS%20SRC="">""&gt;XSS</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1156,7 +1159,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div>&quot;&gt;</div>";
+            string expected = "<div>\"&gt;</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1176,7 +1179,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div>)&quot;&gt;</div>";
+            string expected = "<div>)\"&gt;</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1196,7 +1199,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div>&quot;&gt;</div>";
+            string expected = "<div>\"&gt;</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1216,7 +1219,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div>)&quot;&gt;</div>";
+            string expected = "<div>)\"&gt;</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1236,7 +1239,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = @"<a href=""http://www.codeplex.com/?url=%3C%3CSCRIPT%3Ealert("">&quot;&gt;XSS</a>";
+            string expected = @"<a href=""http://www.codeplex.com/?url=%3C%3CSCRIPT%3Ealert("">""&gt;XSS</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1256,7 +1259,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div>&quot;&gt;</div>";
+            string expected = "<div>\"&gt;</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1270,13 +1273,12 @@ S
             // Arrange
             var sanitizer = new HtmlSanitizer();
 
-
             // Act
             string htmlFragment = "<Div style=\"background-color: expression(<<SCRIPT>alert(\"XSS\");//<</SCRIPT>)\">";
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div>)&quot;&gt;</div>";
+            string expected = "<div>)\"&gt;</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1512,7 +1514,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div></div>";
+            string expected = @"<div></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1532,7 +1534,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT%20a="">&quot; SRC=&quot;http://ha.ckers.org/xss.js&quot;&gt;&quot;&gt;XSS</a>";
+            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT%20a="">"" SRC=""http://ha.ckers.org/xss.js""&gt;""&gt;XSS</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1552,7 +1554,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div>&quot; SRC=&quot;http://ha.ckers.org/xss.js&quot;&gt;&quot;&gt;</div>";
+            string expected = "<div>\" SRC=\"http://ha.ckers.org/xss.js\"&gt;\"&gt;</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1570,7 +1572,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div style=\"background-color: test\"></div>";
+            string expected = "<div style=\"background-color: test;\"></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1584,11 +1586,11 @@ S
             var sanitizer = new HtmlSanitizer();
 
             // Act
-            string htmlFragment = "<div style=\"background-color: test\">Test<img src=\"http://www.example.com/test.gif\" style=\"background-image: url(http://www.example.com/bg.jpg); margin: 10px\"></div>";
+            string htmlFragment = "<div style=\"background-color: test;\">Test<img src=\"http://www.example.com/test.gif\" style=\"background-image: url(http://www.example.com/bg.jpg); margin: 10px\"></div>";
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div style=\"background-color: test\">Test<img style=\"background-image: url(http://www.example.com/bg.jpg); margin: 10px;\" src=\"http://www.example.com/test.gif\"></div>";
+            string expected = "<div style=\"background-color: test;\">Test<img src=\"http://www.example.com/test.gif\" style=\"background-image: url(&quot;http://www.example.com/bg.jpg&quot;); margin: 10px;\"></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1607,7 +1609,7 @@ S
 
             html = @"<DIV STYLE=""padding: &#49;px; mar/*xss*/gin: ex/*XSS*/pression(alert('xss')); background-image:\0075\0072\006C\0028\0022\006a\0061\0076\0061\0073\0063\0072\0069\0070\0074\003a\0061\006c\0065\0072\0074\0028\0027\0058\0053\0053\0027\0029\0022\0029"">";
             actual = sanitizer.Sanitize(html);
-            expected = @"<div style=""padding: 1px""></div>";
+            expected = @"<div style=""padding: 1px;""></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
 
             html = @"<!--[if gte IE 4]><SCRIPT>alert('XSS');</SCRIPT><![endif]--><!-- Comment -->";
@@ -1632,12 +1634,12 @@ S
 
             html = "<IMG SRC=javascript:alert(\"XSS\")>\"";
             actual = sanitizer.Sanitize(html);
-            expected = "<img>&quot;";
+            expected = "<img>\"";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
 
             html = "<IMG SRC=java\0script:alert(\"XSS\")>\"";
             actual = sanitizer.Sanitize(html);
-            expected = "<img>&quot;";
+            expected = "<img>\"";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
 
             html = @"<IMG SRC=""jav&#x0D;ascript:alert('XSS');"">";
@@ -1657,7 +1659,7 @@ S
 
             html = @"<div style=""background-color: red""><sCRipt>hallo</scripT></div><a href=""#"">Test</a>";
             actual = sanitizer.Sanitize(html);
-            expected = @"<div style=""background-color: red""></div><a href=""#"">Test</a>";
+            expected = @"<div style=""background-color: red;""></div><a href=""#"">Test</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
 
             html = @"<IMG SRC=""jav	ascript:alert('XSS');"">";
@@ -1687,7 +1689,7 @@ S
 
             html = "<script>alert('xss')</script><div onload=\"alert('xss')\" style=\"background-color: test\">Test<img src=\"test.gif\" style=\"background-image: url(javascript:alert('xss')); margin: 10px\"></div>";
             actual = sanitizer.Sanitize(html, "http://www.example.com");
-            expected = @"<div style=""background-color: test"">Test<img style=""margin: 10px"" src=""http://www.example.com/test.gif""></div>";
+            expected = @"<div style=""background-color: test;"">Test<img src=""http://www.example.com/test.gif"" style=""margin: 10px;""></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1753,7 +1755,7 @@ S
 
             var html = @"<div style=""margin: 8px; bla: 1px"">test</div>";
             var actual = sanitizer.Sanitize(html);
-            var expected = @"<div style=""margin: 8px"">test</div>";
+            var expected = @"<div style=""margin: 8px;"">test</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1767,12 +1769,12 @@ S
 
             var html = @"<div style=""padding: 10px; background-image: url(mailto:test@example.com)""></div>";
             var actual = sanitizer.Sanitize(html);
-            var expected = @"<div style=""padding: 10px""></div>";
+            var expected = @"<div style=""padding: 10px;""></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
 
             html = @"<div style=""padding: 10px; background-image: url(folder/file.jpg)""></div>";
             actual = sanitizer.Sanitize(html, @"http://www.example.com");
-            expected = @"<div style=""padding: 10px; background-image: url(http://www.example.com/folder/file.jpg);""></div>";
+            expected = @"<div style=""padding: 10px; background-image: url(&quot;http://www.example.com/folder/file.jpg&quot;);""></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1805,7 +1807,7 @@ S
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<a href=""#"">fo&ouml;</a>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<a href=""#"">fo&#246;</a>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<a href=""#"">foö</a>").IgnoreCase);
         }
 
         [Test]
@@ -1813,7 +1815,7 @@ S
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<div title=""&lt;foo&gt;""></div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div title=""&lt;foo&gt;""></div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div title=""&amp;lt;foo&amp;gt;""></div>").IgnoreCase);
         }
 
         [Test]
@@ -1877,7 +1879,7 @@ S
             html = @"<DIV STYLE='width: e/**/xpression(alert(""foo""));'>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div></div>").IgnoreCase);
             html = @"<DIV STYLE='background: url(javascript:alert(""foo""));color: #fff'>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""color: #fff""></div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""color: #fff;""></div>").IgnoreCase);
 
             // Inline style with url() using javascript: scheme, using unicode
             // escapes
@@ -1900,10 +1902,10 @@ rl(javascript:alert(""foo""))'>";
             var sanitizer = new HtmlSanitizer();
             // The position property is not allowed
             var html = @"<div style=""position:absolute;top:0""></div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""top: 0""></div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""top: 0;""></div>").IgnoreCase);
             // Normal margins get passed through
             html = @"<div style=""margin:10px 20px""></div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""margin: 10px 20px""></div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""margin: 10px 20px;""></div>").IgnoreCase);
         }
 
         [Test]
@@ -1982,7 +1984,7 @@ rl(javascript:alert(""foo""))'>";
             var html = @"<div style=""top:e\xp\ression(alert())"">XSS</div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div>XSS</div>").IgnoreCase);
             html = @"<div style=""top:e\\xp\\ression(alert())"">XSS</div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""top: e\\xp\\ression(alert())"">XSS</div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div>XSS</div>").IgnoreCase);
         }
 
         [Test]
@@ -2058,7 +2060,7 @@ rl(javascript:alert(""foo""))'>";
         public void RemovingAttributeEventTest()
         {
             var sanitizer = new HtmlSanitizer();
-            sanitizer.RemovingAttribute += (s, e) => e.Cancel = e.Attribute.Key == "onclick";
+            sanitizer.RemovingAttribute += (s, e) => e.Cancel = e.Attribute.Name == "onclick";
             var html = @"<div alt=""alt"" onclick=""test"" onload=""test""></div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div alt=""alt"" onclick=""test""></div>").IgnoreCase);
         }
@@ -2067,7 +2069,7 @@ rl(javascript:alert(""foo""))'>";
         public void RemovingStyleEventTest()
         {
             var sanitizer = new HtmlSanitizer();
-            sanitizer.RemovingStyle += (s, e) => e.Cancel = e.Style.Key == "test";
+            sanitizer.RemovingStyle += (s, e) => e.Cancel = e.Style.Name == "test";
             var html = @"<div style=""background: 0; test: xyz; bad: bad;""></div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""background: 0; test: xyz;""></div>").IgnoreCase);
         }
@@ -2137,10 +2139,13 @@ rl(javascript:alert(""foo""))'>";
             var sanitizer = new HtmlSanitizer();
             sanitizer.PostProcessNode += (s, e) =>
             {
-                if (e.Node is IDomElement)
+                var el = e.Node as IHtmlElement;
+                if (el != null)
                 {
-                    e.Node.AddClass("test");
-                    e.Node.AppendChild(CsQuery.CQ.Create("<b>Test</b>").FirstElement());
+                    el.ClassList.Add("test");
+                    var b = e.Document.CreateElement("b");
+                    b.TextContent = "Test";
+                    el.AppendChild(b);
                 }
             };
             var html = @"<div>Hallo</div>";
@@ -2155,13 +2160,16 @@ rl(javascript:alert(""foo""))'>";
             var autolink = new AutoLink();
             sanitizer.PostProcessNode += (s, e) =>
             {
-                var text = e.Node as IDomText;
+                var text = e.Node as IText;
                 if (text != null)
                 {
                     var autolinked = autolink.Link(text.NodeValue);
                     if (autolinked != text.NodeValue)
-                        foreach (var node in CQ.Create(autolinked))
+                    {
+                        var f = new HtmlParser().Parse(autolinked);
+                        foreach (var node in f.Body.ChildNodes)
                             e.ReplacementNodes.Add(node);
+                    }
                 }
             };
             var html = @"<div>Click here: http://example.com/.</div>";
@@ -2177,8 +2185,8 @@ rl(javascript:alert(""foo""))'>";
 
             // Act
             var htmlFragment = "Тест";
-            var outputFormatter = new CsQuery.Output.FormatDefault(DomRenderingOptions.RemoveComments | DomRenderingOptions.QuoteAllAttributes, HtmlEncoders.Minimum);
-            var actual = s.Sanitize(htmlFragment, "", outputFormatter);
+            //var outputFormatter = new CsQuery.Output.FormatDefault(DomRenderingOptions.RemoveComments | DomRenderingOptions.QuoteAllAttributes, HtmlEncoders.Minimum);
+            var actual = s.Sanitize(htmlFragment, ""/*, outputFormatter*/);
 
             // Assert
             var expected = htmlFragment;
@@ -2196,7 +2204,7 @@ rl(javascript:alert(""foo""))'>";
             var actual = s.Sanitize(htmlFragment);
 
             // Assert
-            var expected = @"<div style=""background-color: white"">Test</div>";
+            var expected = @"<div style=""background-color: white;"">Test</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -2204,14 +2212,14 @@ rl(javascript:alert(""foo""))'>";
         public void CssKeyTest()
         {
             // Arrange
-            var s = new HtmlSanitizer { DisallowCssPropertyValue = new Regex("^b.*") };
+            var s = new HtmlSanitizer();
 
             // Act
             var htmlFragment = @"<div style=""\000062ackground-image: URL(http://www.example.com/bg.jpg)"">Test</div>";
             var actual = s.Sanitize(htmlFragment);
 
             // Assert
-            var expected = @"<div style=""background-image: url(http://www.example.com/bg.jpg)"">Test</div>";
+            var expected = @"<div style=""background-image: url(&quot;http://www.example.com/bg.jpg&quot;);"">Test</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -2226,7 +2234,7 @@ rl(javascript:alert(""foo""))'>";
             var actual = s.Sanitize(htmlFragment, "hallo");
 
             // Assert
-            var expected = @"<div style=""color: black"">Test</div>";
+            var expected = @"<div style=""color: black;"">Test</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -2238,8 +2246,7 @@ rl(javascript:alert(""foo""))'>";
 
             // Act
             var htmlFragment = @"<div><img src=""xyz""><br></div>";
-            CsQuery.Config.DocType = DocType.XHTML;
-            var actual = s.Sanitize(htmlFragment);
+            var actual = s.Sanitize(htmlFragment, "", AngleSharp.Xml.XmlMarkupFormatter.Instance);
 
             // Assert
             var expected = @"<div><img src=""xyz"" /><br /></div>";
@@ -2277,7 +2284,7 @@ rl(javascript:alert(""foo""))'>";
             var actual = s.Sanitize(htmlFragment);
 
             // Assert
-            var expected = "<div style=\"background-image: url('some/random/url.img')\"></div>";
+            var expected = "<div style=\"background-image: url(&quot;some/random/url.img&quot;);\"></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -2292,8 +2299,137 @@ rl(javascript:alert(""foo""))'>";
             var actual = s.Sanitize(htmlFragment);
 
             // Assert
-            var expected = "<span style='background-image: url(\"/api/users/defaultAvatar\")'></span>";
+            var expected = "<span style=\"background-image: url(&quot;/api/users/defaultAvatar&quot;);\"></span>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedTag()
+        {
+            var allowedTags = new[] {"a"};
+            RemoveReason? actual = null;
+
+            var s = new HtmlSanitizer(allowedTags);
+            s.RemovingTag += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+
+            s.Sanitize("<span>just any content</span>");
+
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedTag));
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedAttribute()
+        {
+            var allowedTags = new[] { "a" };
+            var allowedAttributes = new[] {"id"};
+            RemoveReason? actual = null;
+
+            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes);
+            s.RemovingAttribute += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+
+            s.Sanitize("<a href=\"http://www.example.com\">just any content</a>");
+
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedAttribute));
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedStyle()
+        {
+            var allowedTags = new[] { "a" };
+            var allowedAttributes = new[] { "style" };
+            var allowedStyles = new[] { "margin" };
+            RemoveReason? actual = null;
+
+            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, allowedCssProperties: allowedStyles);
+            s.RemovingStyle += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+
+            s.Sanitize("<a style=\"padding:5px\">just any content</a>");
+
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedStyle));
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedValueAtAttribute()
+        {
+            var allowedTags = new[] { "a" };
+            var allowedAttributes = new[] { "id" };
+            RemoveReason? actual = null;
+
+            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes);
+            s.RemovingAttribute += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+
+            s.Sanitize("<a id=\"anyId&{\">just any content</a>");
+
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedValue));
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedValueAtStyle()
+        {
+            var allowedTags = new[] { "a" };
+            var allowedAttributes = new[] { "style" };
+            var allowedStyles = new[] { "margin" };
+            RemoveReason? actual = null;
+
+            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, allowedCssProperties: allowedStyles);
+            s.RemovingStyle += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+
+            s.Sanitize("<a style=\"margin:expression(alert('xss'))\">just any content</a>");
+
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedValue));
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedUrlAtUriAttribute()
+        {
+            var allowedTags = new[] { "a" };
+            var allowedAttributes = new[] { "href" };
+            var uriAttributes = new[] { "href" };
+            RemoveReason? actual = null;
+
+            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, uriAttributes: uriAttributes);
+            s.RemovingAttribute += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+
+            s.Sanitize("<a href=\"javascript:(alert('xss'))\">just any content</a>");
+
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedUrlValue));
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedUrlAtStyle()
+        {
+            var allowedTags = new[] { "a" };
+            var allowedAttributes = new[] { "style" };
+            var allowedStyles = new[] { "background" };
+            RemoveReason? actual = null;
+
+            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, allowedCssProperties: allowedStyles);
+            s.RemovingStyle += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+
+            s.Sanitize("<a style=\"background:url(javascript:alert('xss'))\">just any content</a>");
+
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedUrlValue));
         }
     }
 }

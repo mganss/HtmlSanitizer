@@ -1,8 +1,14 @@
-version: 1.0.{build}
+version: 3.1.{build}
 install:
   - nuget restore
 configuration: Release
 platform: Any CPU
+assembly_info:
+  patch: true
+  file: '**\AssemblyInfo.*'
+  assembly_version: "3.0.0"
+  assembly_file_version: "{version}"
+  assembly_informational_version: "{version}"
 environment:
   COVERALLS_REPO_TOKEN:
     secure: 2D6Q22+GyTngkC0xomWycgK0kXY4FepSad7Ep/R3R8xha+xEPisCKBISSLCq0Sl0
@@ -13,6 +19,8 @@ environment:
 build:
   project: HtmlSanitizer.sln
   verbosity: minimal
+  publish_nuget: true
+  publish_nuget_symbols: true
 #after_build:
 #  - ps: |
 #      if ($env:CoverityProjectToken)
