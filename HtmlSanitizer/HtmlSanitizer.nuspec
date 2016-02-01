@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>$id$</id>
-    <version>$version$-beta</version>
+    <version>$version$</version>
     <title>$title$</title>
     <authors>$author$</authors>
     <owners>$author$</owners>
@@ -10,7 +10,7 @@
     <projectUrl>https://github.com/mganss/HtmlSanitizer</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>$description$</description>
-    <copyright>Copyright 2013-2015 Michael Ganss</copyright>
+    <copyright>Copyright 2013-2016 Michael Ganss</copyright>
     <tags>xss anti antixss html security</tags>
   </metadata>
 </package>
