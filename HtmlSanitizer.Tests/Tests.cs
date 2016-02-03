@@ -1572,7 +1572,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div style=\"background-color: test;\"></div>";
+            string expected = "<div style=\"background-color: test\"></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1590,7 +1590,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div style=\"background-color: test;\">Test<img src=\"http://www.example.com/test.gif\" style=\"background-image: url(&quot;http://www.example.com/bg.jpg&quot;); margin: 10px;\"></div>";
+            string expected = "<div style=\"background-color: test\">Test<img src=\"http://www.example.com/test.gif\" style=\"background-image: url(&quot;http://www.example.com/bg.jpg&quot;); margin: 10px\"></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1609,7 +1609,7 @@ S
 
             html = @"<DIV STYLE=""padding: &#49;px; mar/*xss*/gin: ex/*XSS*/pression(alert('xss')); background-image:\0075\0072\006C\0028\0022\006a\0061\0076\0061\0073\0063\0072\0069\0070\0074\003a\0061\006c\0065\0072\0074\0028\0027\0058\0053\0053\0027\0029\0022\0029"">";
             actual = sanitizer.Sanitize(html);
-            expected = @"<div style=""padding: 1px;""></div>";
+            expected = @"<div style=""padding: 1px""></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
 
             html = @"<!--[if gte IE 4]><SCRIPT>alert('XSS');</SCRIPT><![endif]--><!-- Comment -->";
@@ -1659,7 +1659,7 @@ S
 
             html = @"<div style=""background-color: red""><sCRipt>hallo</scripT></div><a href=""#"">Test</a>";
             actual = sanitizer.Sanitize(html);
-            expected = @"<div style=""background-color: red;""></div><a href=""#"">Test</a>";
+            expected = @"<div style=""background-color: red""></div><a href=""#"">Test</a>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
 
             html = @"<IMG SRC=""jav	ascript:alert('XSS');"">";
@@ -1689,7 +1689,7 @@ S
 
             html = "<script>alert('xss')</script><div onload=\"alert('xss')\" style=\"background-color: test\">Test<img src=\"test.gif\" style=\"background-image: url(javascript:alert('xss')); margin: 10px\"></div>";
             actual = sanitizer.Sanitize(html, "http://www.example.com");
-            expected = @"<div style=""background-color: test;"">Test<img src=""http://www.example.com/test.gif"" style=""margin: 10px;""></div>";
+            expected = @"<div style=""background-color: test"">Test<img src=""http://www.example.com/test.gif"" style=""margin: 10px""></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1755,7 +1755,7 @@ S
 
             var html = @"<div style=""margin: 8px; bla: 1px"">test</div>";
             var actual = sanitizer.Sanitize(html);
-            var expected = @"<div style=""margin: 8px;"">test</div>";
+            var expected = @"<div style=""margin: 8px"">test</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1769,12 +1769,12 @@ S
 
             var html = @"<div style=""padding: 10px; background-image: url(mailto:test@example.com)""></div>";
             var actual = sanitizer.Sanitize(html);
-            var expected = @"<div style=""padding: 10px;""></div>";
+            var expected = @"<div style=""padding: 10px""></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
 
             html = @"<div style=""padding: 10px; background-image: url(folder/file.jpg)""></div>";
             actual = sanitizer.Sanitize(html, @"http://www.example.com");
-            expected = @"<div style=""padding: 10px; background-image: url(&quot;http://www.example.com/folder/file.jpg&quot;);""></div>";
+            expected = @"<div style=""padding: 10px; background-image: url(&quot;http://www.example.com/folder/file.jpg&quot;)""></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -1879,7 +1879,7 @@ S
             html = @"<DIV STYLE='width: e/**/xpression(alert(""foo""));'>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div></div>").IgnoreCase);
             html = @"<DIV STYLE='background: url(javascript:alert(""foo""));color: #fff'>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""color: #fff;""></div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""color: #fff""></div>").IgnoreCase);
 
             // Inline style with url() using javascript: scheme, using unicode
             // escapes
@@ -1902,10 +1902,10 @@ rl(javascript:alert(""foo""))'>";
             var sanitizer = new HtmlSanitizer();
             // The position property is not allowed
             var html = @"<div style=""position:absolute;top:0""></div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""top: 0;""></div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""top: 0""></div>").IgnoreCase);
             // Normal margins get passed through
             html = @"<div style=""margin:10px 20px""></div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""margin: 10px 20px;""></div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""margin: 10px 20px""></div>").IgnoreCase);
         }
 
         [Test]
@@ -2020,7 +2020,7 @@ rl(javascript:alert(""foo""))'>";
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<div style=""display:none;border-left-color:red;userDefined:1;-moz-user-selct:-moz-all"">prop</div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""display: none; border-left-color: red;"">prop</div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""display: none; border-left-color: red"">prop</div>").IgnoreCase);
         }
 
         [Test]
@@ -2071,7 +2071,7 @@ rl(javascript:alert(""foo""))'>";
             var sanitizer = new HtmlSanitizer();
             sanitizer.RemovingStyle += (s, e) => e.Cancel = e.Style.Name == "test";
             var html = @"<div style=""background: 0; test: xyz; bad: bad;""></div>";
-            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""background: 0; test: xyz;""></div>").IgnoreCase);
+            Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""background: 0; test: xyz""></div>").IgnoreCase);
         }
 
         [Test]
@@ -2204,7 +2204,7 @@ rl(javascript:alert(""foo""))'>";
             var actual = s.Sanitize(htmlFragment);
 
             // Assert
-            var expected = @"<div style=""background-color: white;"">Test</div>";
+            var expected = @"<div style=""background-color: white"">Test</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -2219,7 +2219,7 @@ rl(javascript:alert(""foo""))'>";
             var actual = s.Sanitize(htmlFragment);
 
             // Assert
-            var expected = @"<div style=""background-image: url(&quot;http://www.example.com/bg.jpg&quot;);"">Test</div>";
+            var expected = @"<div style=""background-image: url(&quot;http://www.example.com/bg.jpg&quot;)"">Test</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -2234,7 +2234,7 @@ rl(javascript:alert(""foo""))'>";
             var actual = s.Sanitize(htmlFragment, "hallo");
 
             // Assert
-            var expected = @"<div style=""color: black;"">Test</div>";
+            var expected = @"<div style=""color: black"">Test</div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -2284,7 +2284,7 @@ rl(javascript:alert(""foo""))'>";
             var actual = s.Sanitize(htmlFragment);
 
             // Assert
-            var expected = "<div style=\"background-image: url(&quot;some/random/url.img&quot;);\"></div>";
+            var expected = "<div style=\"background-image: url(&quot;some/random/url.img&quot;)\"></div>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -2299,7 +2299,7 @@ rl(javascript:alert(""foo""))'>";
             var actual = s.Sanitize(htmlFragment);
 
             // Assert
-            var expected = "<span style=\"background-image: url(&quot;/api/users/defaultAvatar&quot;);\"></span>";
+            var expected = "<span style=\"background-image: url(&quot;/api/users/defaultAvatar&quot;)\"></span>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
