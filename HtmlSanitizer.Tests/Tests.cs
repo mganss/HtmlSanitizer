@@ -2066,12 +2066,30 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Test]
+        public void RemovingAttributeEventTagTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.RemovingAttribute += (s, e) => Assert.That(e.Tag, Is.InstanceOf<IHtmlDivElement>());
+            var html = @"<div alt=""alt"" onclick=""test"" onload=""test""></div>";
+            sanitizer.Sanitize(html);
+        }
+
+        [Test]
         public void RemovingStyleEventTest()
         {
             var sanitizer = new HtmlSanitizer();
             sanitizer.RemovingStyle += (s, e) => e.Cancel = e.Style.Name == "test";
             var html = @"<div style=""background: 0; test: xyz; bad: bad;""></div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div style=""background: 0; test: xyz""></div>").IgnoreCase);
+        }
+
+        [Test]
+        public void RemovingStyleEventTagTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.RemovingStyle += (s, e) => Assert.That(e.Tag, Is.InstanceOf<IHtmlDivElement>());
+            var html = @"<div style=""background: 0; test: xyz; bad: bad;""></div>";
+            sanitizer.Sanitize(html);
         }
 
         [Test]
