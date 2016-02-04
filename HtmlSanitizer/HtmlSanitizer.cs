@@ -490,7 +490,7 @@ namespace Ganss.XSS
 
             foreach (var style in removeStyles)
             {
-                RemoveStyle(styles, style.Item1, style.Item2);
+                RemoveStyle(element, styles, style.Item1, style.Item2);
             }
 
             foreach (var style in setStyles)
@@ -595,7 +595,7 @@ namespace Ganss.XSS
         /// <param name="reason">reason why to be removed</param>
         private void RemoveAttribute(IElement tag, IAttr attribute, RemoveReason reason)
         {
-            var e = new RemovingAttributeEventArgs { Attribute = attribute, Reason = reason };
+            var e = new RemovingAttributeEventArgs { Tag = tag, Attribute = attribute, Reason = reason };
             OnRemovingAttribute(e);
             if (!e.Cancel) tag.RemoveAttribute(attribute.Name);
         }
@@ -603,12 +603,13 @@ namespace Ganss.XSS
         /// <summary>
         /// Remove a style from the document.
         /// </summary>
+        /// <param name="tag">tag where the style belongs</param>
         /// <param name="styles">collection where the style to belongs</param>
         /// <param name="style">to be removed</param>
         /// <param name="reason">reason why to be removed</param>
-        private void RemoveStyle(ICssStyleDeclaration styles, ICssProperty style, RemoveReason reason)
+        private void RemoveStyle(IElement tag, ICssStyleDeclaration styles, ICssProperty style, RemoveReason reason)
         {
-            var e = new RemovingStyleEventArgs { Style = style, Reason = reason };
+            var e = new RemovingStyleEventArgs { Tag = tag, Style = style, Reason = reason };
             OnRemovingStyle(e);
             if (!e.Cancel) styles.RemoveProperty(style.Name);
         }

@@ -76,6 +76,14 @@ namespace Ganss.XSS
     public class RemovingAttributeEventArgs : CancelEventArgs
     {
         /// <summary>
+        /// The tag containing the attribute to be removed.
+        /// </summary>
+        /// <value>
+        /// The tag.
+        /// </value>
+        public IElement Tag { get; set; }
+
+        /// <summary>
         /// Gets or sets the attribute to be removed.
         /// </summary>
         /// <value>
@@ -97,6 +105,14 @@ namespace Ganss.XSS
     /// </summary>
     public class RemovingStyleEventArgs : CancelEventArgs
     {
+        /// <summary>
+        /// The tag containing the style to be removed.
+        /// </summary>
+        /// <value>
+        /// The tag.
+        /// </value>
+        public IElement Tag { get; set; }
+
         /// <summary>
         /// Gets or sets the style to be removed.
         /// </summary>
