@@ -10,8 +10,6 @@ assembly_info:
   assembly_file_version: "{version}"
   assembly_informational_version: "{version}"
 environment:
-  COVERALLS_REPO_TOKEN:
-    secure: 2D6Q22+GyTngkC0xomWycgK0kXY4FepSad7Ep/R3R8xha+xEPisCKBISSLCq0Sl0
   CoverityProjectToken:
     secure: pUUrynbyxCRpsAgGdKBVYDZCilwBmaWQ1Jg+rg5znr0=
   CoverityNotificationEmail:
@@ -30,13 +28,10 @@ build:
 #        PublishCoverity\tools\PublishCoverity.exe compress -o coverity.zip -i cov-int
 #        PublishCoverity\tools\PublishCoverity.exe publish -t "$env:CoverityProjectToken" -e "$env:CoverityNotificationEmail" -r "$env:APPVEYOR_REPO_NAME" -z coverity.zip -d "AppVeyor $env:APPVEYOR_BUILD_VERSION" --codeVersion "$env:APPVEYOR_REPO_COMMIT"
 #      }
-after_test:
-  - ps: |
-      if ($env:COVERALLS_REPO_TOKEN)
-      {
-        nuget.exe install OpenCover -ExcludeVersion
-        nuget.exe install coveralls.io -ExcludeVersion
-        nuget.exe install NUnit.Runners -ExcludeVersion
-        OpenCover\tools\OpenCover.Console.exe -register:user -filter:"+[*]*" -target:"NUnit.Runners\tools\nunit-console.exe" "-targetargs:/noshadow /domain:single HtmlSanitizer.Tests\bin\release\HtmlSanitizer.Tests.dll" -output:coverage.xml
-        coveralls.io\tools\coveralls.net.exe --opencover coverage.xml
-      }
+test_script:
+  - nuget.exe install OpenCover -ExcludeVersion
+  - nuget.exe install NUnit.Runners -ExcludeVersion
+  - OpenCover\tools\OpenCover.Console.exe -register:user -filter:"+[*]*" -target:"NUnit.Runners\tools\nunit-console.exe" "-targetargs:/noshadow /domain:single HtmlSanitizer.Tests\bin\release\HtmlSanitizer.Tests.dll" -returntargetcode -hideskipped:All -output:coverage.xml
+  - "SET PATH=C:\\Python34;C:\\Python34\\Scripts;%PATH%"
+  - pip install codecov
+  - codecov -f "coverage.xml"
