@@ -326,7 +326,7 @@ namespace Ganss.XSS
                 IsToleratingInvalidConstraints = true,
                 IsToleratingInvalidValues = true
             }));
-            var dom = parser.Parse(html);
+            var dom = parser.Parse("<body>" + html + "</body>");
 
             // remove non-whitelisted tags
             foreach (var tag in dom.Body.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList())

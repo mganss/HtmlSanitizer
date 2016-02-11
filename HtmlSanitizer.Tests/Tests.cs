@@ -479,7 +479,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "";
+            string expected = "<img>";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -493,13 +493,12 @@ S
             // Arrange
             var sanitizer = new HtmlSanitizer();
 
-
             // Act
             string htmlFragment = "<image src=http://ha.ckers.org/scriptlet.html <";
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "";
+            string expected = "<img src=\"http://ha.ckers.org/scriptlet.html\">";
             Assert.That(actual, Is.EqualTo(expected).IgnoreCase);
         }
 
@@ -976,7 +975,7 @@ S
 
 
             // Act
-            string htmlFragment = "<HTML xmlns:xss>  <?import namespace=\"xss\" implementation=\"http://ha.ckers.org/xss.htc\">  <xss:xss>XSS</xss:xss></HTML>";
+            string htmlFragment = "<HTML xmlns:xss><?import namespace=\"xss\" implementation=\"http://ha.ckers.org/xss.htc\"><xss:xss>XSS</xss:xss></HTML>";
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
@@ -2448,6 +2447,45 @@ rl(javascript:alert(""foo""))'>";
             s.Sanitize("<a style=\"background:url(javascript:alert('xss'))\">just any content</a>");
 
             Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedUrlValue));
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedTag_ScriptTag()
+        {
+            RemoveReason? actual = null;
+            var s = new HtmlSanitizer();
+            s.RemovingTag += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+            s.Sanitize("<script>alert('Hello world!')</script>");
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedTag));
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedTag_StyleTag()
+        {
+            RemoveReason? actual = null;
+            var s = new HtmlSanitizer();
+            s.RemovingTag += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+            s.Sanitize("<style> body {background-color:lightgrey;}</style>");
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedTag));
+        }
+
+        [Test]
+        public void RemoveEventForNotAllowedTag_ScriptTagAndSpan()
+        {
+            RemoveReason? actual = null;
+            var s = new HtmlSanitizer();
+            s.RemovingTag += (sender, args) =>
+            {
+                actual = args.Reason;
+            };
+            s.Sanitize("<span>Hi</span><script>alert('Hello world!')</script>");
+            Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedTag));
         }
     }
 }
