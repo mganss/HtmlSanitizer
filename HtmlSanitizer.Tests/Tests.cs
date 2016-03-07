@@ -2487,6 +2487,40 @@ rl(javascript:alert(""foo""))'>";
             s.Sanitize("<span>Hi</span><script>alert('Hello world!')</script>");
             Assert.That(actual, Is.EqualTo(RemoveReason.NotAllowedTag));
         }
+
+        [Test]
+        public void DocumentTest()
+        {
+            var s = new HtmlSanitizer();
+            s.AllowedTags.Add("title");
+            var html = "<html><head><title>Test</title></head><body><div>Test</div></body></html>";
+
+            var actual = s.SanitizeDocument(html);
+
+            Assert.That(actual, Is.EqualTo(html));
+        }
+
+        [Test]
+        public void DocumentFromFragmentTest()
+        {
+            var s = new HtmlSanitizer();
+            var html = "<div>Test</div>";
+
+            var actual = s.SanitizeDocument(html);
+
+            Assert.That(actual, Is.EqualTo("<html><head></head><body><div>Test</div></body></html>"));
+        }
+
+        [Test]
+        public void FragmentFromDocumentTest()
+        {
+            var s = new HtmlSanitizer();
+            var html = "<html><head><title>Test</title></head><body><div>Test</div></body></html>";
+
+            var actual = s.Sanitize(html);
+
+            Assert.That(actual, Is.EqualTo("<div>Test</div>"));
+        }
     }
 }
 
