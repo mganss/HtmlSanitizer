@@ -2202,8 +2202,7 @@ rl(javascript:alert(""foo""))'>";
 
             // Act
             var htmlFragment = "Тест";
-            //var outputFormatter = new CsQuery.Output.FormatDefault(DomRenderingOptions.RemoveComments | DomRenderingOptions.QuoteAllAttributes, HtmlEncoders.Minimum);
-            var actual = s.Sanitize(htmlFragment, ""/*, outputFormatter*/);
+            var actual = s.Sanitize(htmlFragment, "");
 
             // Assert
             var expected = htmlFragment;

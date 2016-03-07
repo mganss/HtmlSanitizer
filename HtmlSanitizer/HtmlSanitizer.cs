@@ -14,10 +14,10 @@ using System.Text.RegularExpressions;
 namespace Ganss.XSS
 {
     /// <summary>
-    /// Cleans HTML fragments from constructs that can lead to <a href="https://en.wikipedia.org/wiki/Cross-site_scripting">XSS attacks</a>.
+    /// Cleans HTML documents and fragments from constructs that can lead to <a href="https://en.wikipedia.org/wiki/Cross-site_scripting">XSS attacks</a>.
     /// </summary>
     /// <remarks>
-    /// XSS attacks can occur at several levels within an HTML fragment:
+    /// XSS attacks can occur at several levels within an HTML document or fragment:
     /// <list type="bullet">
     /// <item>HTML Tags (e.g. the &lt;script&gt; tag)</item>
     /// <item>HTML attributes (e.g. the "onload" attribute)</item>
@@ -25,8 +25,7 @@ namespace Ganss.XSS
     /// <item>malformed HTML or HTML that exploits parser bugs in specific browsers</item>
     /// </list>
     /// <para>
-    /// The HtmlSanitizer class addresses all of these possible attack vectors by using an HTML parser that is based on the one used
-    /// in the Gecko browser engine (see <a href="https://github.com/jamietre/CsQuery">CsQuery</a>).
+    /// The HtmlSanitizer class addresses all of these possible attack vectors by using a sophisticated HTML parser (<a href="https://github.com/AngleSharp/AngleSharp">AngleSharp</a>).
     /// </para>
     /// <para>
     /// In order to facilitate different use cases, HtmlSanitizer can be customized at the levels mentioned above:
