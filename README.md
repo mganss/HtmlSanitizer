@@ -5,7 +5,7 @@ HtmlSanitizer
 [![Build status](https://ci.appveyor.com/api/projects/status/418bmfx643iae00c/branch/master?svg=true)](https://ci.appveyor.com/project/mganss/htmlsanitizer/branch/master)
 [![codecov.io](https://codecov.io/github/mganss/HtmlSanitizer/coverage.svg?branch=master)](https://codecov.io/github/mganss/HtmlSanitizer?branch=master)
 
-HtmlSanitizer is a .NET library for cleaning HTML fragments from constructs that can lead to [XSS attacks](https://en.wikipedia.org/wiki/Cross-site_scripting).
+HtmlSanitizer is a .NET library for cleaning HTML fragments and documents from constructs that can lead to [XSS attacks](https://en.wikipedia.org/wiki/Cross-site_scripting).
 It uses [AngleSharp](https://github.com/AngleSharp/AngleSharp) to parse, manipulate, and render HTML and CSS.
 
 Because HtmlSanitizer is based on a robust HTML parser it can also shield you from deliberate or accidental

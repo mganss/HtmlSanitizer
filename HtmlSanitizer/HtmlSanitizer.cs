@@ -15,10 +15,10 @@ using System.Text.RegularExpressions;
 namespace Ganss.XSS
 {
     /// <summary>
-    /// Cleans HTML fragments from constructs that can lead to <a href="https://en.wikipedia.org/wiki/Cross-site_scripting">XSS attacks</a>.
+    /// Cleans HTML documents and fragments from constructs that can lead to <a href="https://en.wikipedia.org/wiki/Cross-site_scripting">XSS attacks</a>.
     /// </summary>
     /// <remarks>
-    /// XSS attacks can occur at several levels within an HTML fragment:
+    /// XSS attacks can occur at several levels within an HTML document or fragment:
     /// <list type="bullet">
     /// <item>HTML Tags (e.g. the &lt;script&gt; tag)</item>
     /// <item>HTML attributes (e.g. the "onload" attribute)</item>
@@ -26,8 +26,7 @@ namespace Ganss.XSS
     /// <item>malformed HTML or HTML that exploits parser bugs in specific browsers</item>
     /// </list>
     /// <para>
-    /// The HtmlSanitizer class addresses all of these possible attack vectors by using an HTML parser that is based on the one used
-    /// in the Gecko browser engine (see <a href="https://github.com/jamietre/CsQuery">CsQuery</a>).
+    /// The HtmlSanitizer class addresses all of these possible attack vectors by using a sophisticated HTML parser (<a href="https://github.com/AngleSharp/AngleSharp">AngleSharp</a>).
     /// </para>
     /// <para>
     /// In order to facilitate different use cases, HtmlSanitizer can be customized at the levels mentioned above:
@@ -115,7 +114,9 @@ namespace Ganss.XSS
             // Forms
             "datalist", "keygen", "output", "progress", "meter",
             // Interactive elements
-            "details", "summary", "menuitem"
+            "details", "summary", "menuitem",
+            // document elements
+            "html", "head", "body"
         };
 
         /// <summary>
@@ -297,6 +298,11 @@ namespace Ganss.XSS
         /// </summary>
         public static readonly Regex DefaultDisallowedCssPropertyValue = new Regex(@"[<>]", RegexOptions.Compiled);
 
+        /// <summary>
+        /// Return all nested subnodes of a node.
+        /// </summary>
+        /// <param name="dom">The root node.</param>
+        /// <returns>All nested subnodes.</returns>
         private static IEnumerable<INode> GetAllNodes(INode dom)
         {
             if (dom == null) yield break;
@@ -312,31 +318,78 @@ namespace Ganss.XSS
         }
 
         /// <summary>
-        /// Sanitizes the specified HTML.
+        /// Sanitizes the specified HTML body fragment. If a document is given, only the body part will be returned.
         /// </summary>
-        /// <param name="html">The HTML to sanitize.</param>
+        /// <param name="html">The HTML body fragment to sanitize.</param>
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
-        /// <param name="outputFormatter">The CsQuery output formatter used to render the DOM. Using the default formatter if null.</param>
-        /// <returns>The sanitized HTML.</returns>
+        /// <param name="outputFormatter">The formatter used to render the DOM. Using the default formatter if null.</param>
+        /// <returns>The sanitized HTML body fragment.</returns>
         public string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
-            var parser = new HtmlParser(new Configuration().WithCss(e => e.Options = new CssParserOptions
+            var parser = CreateParser();
+            var dom = parser.Parse("<body>" + html + "</body>");
+
+            DoSanitize(dom, dom.Body, baseUrl, outputFormatter);
+
+            var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? HtmlMarkupFormatter.Instance);
+
+            return output;
+        }
+
+        /// <summary>
+        /// Sanitizes the specified HTML document. Even if only a fragment is given, a whole document will be returned.
+        /// </summary>
+        /// <param name="html">The HTML document to sanitize.</param>
+        /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
+        /// <param name="outputFormatter">The formatter used to render the DOM. Using the default formatter if null.</param>
+        /// <returns>The sanitized HTML document.</returns>
+        public string SanitizeDocument(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
+        {
+            var parser = CreateParser();
+            var dom = parser.Parse(html);
+
+            DoSanitize(dom, dom.DocumentElement, baseUrl, outputFormatter);
+
+            var output = dom.ToHtml(outputFormatter ?? HtmlMarkupFormatter.Instance);
+
+            return output;
+        }
+
+        /// <summary>
+        /// Creeates an instance of <see cref="HtmlParser"/>.
+        /// </summary>
+        /// <returns>An instance of <see cref="HtmlParser"/>.</returns>
+        private static HtmlParser CreateParser()
+        {
+            return new HtmlParser(new Configuration().WithCss(e => e.Options = new CssParserOptions
             {
                 IsIncludingUnknownDeclarations = true,
                 IsIncludingUnknownRules = true,
                 IsToleratingInvalidConstraints = true,
                 IsToleratingInvalidValues = true
             }));
-            var dom = parser.Parse("<body>" + html + "</body>");
+        }
 
+        /// <summary>
+        /// Removes all comment nodes from a list of nodes.
+        /// </summary>
+        /// <param name="nodes">The list of nodes.</param>
+        private static void RemoveComments(List<INode> nodes)
+        {
+            foreach (var comment in nodes.OfType<IComment>())
+                comment.Remove();
+        }
+
+        private void DoSanitize(IHtmlDocument dom, IElement context, string baseUrl = "", IMarkupFormatter outputFormatter = null)
+        {
             // remove non-whitelisted tags
-            foreach (var tag in dom.Body.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList())
+            foreach (var tag in context.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList())
             {
                 RemoveTag(tag, RemoveReason.NotAllowedTag);
             }
 
             // cleanup attributes
-            foreach (var tag in dom.Body.QuerySelectorAll("*").OfType<IHtmlElement>().ToList())
+            foreach (var tag in context.QuerySelectorAll("*").OfType<IHtmlElement>().ToList())
             {
                 // remove non-whitelisted attributes
                 foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
@@ -373,11 +426,20 @@ namespace Ganss.XSS
                 }
             }
 
-            var nodes = GetAllNodes(dom.Body).ToList();
+            var nodes = GetAllNodes(context).ToList();
 
-            foreach (var comment in nodes.OfType<IComment>())
-                comment.Remove();
+            RemoveComments(nodes);
 
+            DoPostProcess(dom, nodes);
+        }
+
+        /// <summary>
+        /// Performs post processing on all nodes in the document.
+        /// </summary>
+        /// <param name="dom">The HTML document.</param>
+        /// <param name="nodes">The list of nodes in the document.</param>
+        private void DoPostProcess(IHtmlDocument dom, List<INode> nodes)
+        {
             if (PostProcessNode != null)
             {
                 foreach (var node in nodes)
@@ -388,10 +450,6 @@ namespace Ganss.XSS
                         ((IChildNode)node).Replace(e.ReplacementNodes.ToArray());
                 }
             }
-
-            var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? HtmlMarkupFormatter.Instance);
-
-            return output;
         }
 
         /// <summary>
