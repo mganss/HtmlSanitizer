@@ -24,7 +24,7 @@ namespace Ganss.XSS
         /// </summary>
         NotAllowedStyle,
         /// <summary>
-        /// Value is a not allowed or harmful url
+        /// Value is a non-allowed or harmful url
         /// </summary>
         NotAllowedUrlValue,
         /// <summary>

@@ -67,7 +67,21 @@ namespace Ganss.XSS
             AllowedAttributes = new HashSet<string>(allowedAttributes ?? DefaultAllowedAttributes, StringComparer.OrdinalIgnoreCase);
             UriAttributes = new HashSet<string>(uriAttributes ?? DefaultUriAttributes, StringComparer.OrdinalIgnoreCase);
             AllowedCssProperties = new HashSet<string>(allowedCssProperties ?? DefaultAllowedCssProperties, StringComparer.OrdinalIgnoreCase);
+            AllowedAtRules = new HashSet<CssRuleType>(DefaultAllowedAtRules);
         }
+
+        /// <summary>
+        /// Gets or sets the allowed CSS at-rules such as "@media" and "@font-face".
+        /// </summary>
+        /// <value>
+        /// The allowed CSS at-rules.
+        /// </value>
+        public ISet<CssRuleType> AllowedAtRules { get; private set; }
+
+        /// <summary>
+        /// The default allowed CSS at-rules.
+        /// </summary>
+        public static readonly ISet<CssRuleType> DefaultAllowedAtRules = new HashSet<CssRuleType>() { CssRuleType.Style, CssRuleType.Namespace };
 
         /// <summary>
         /// Gets or sets the allowed HTTP schemes such as "http" and "https".
@@ -256,6 +270,10 @@ namespace Ganss.XSS
         /// Occurs before a style is removed.
         /// </summary>
         public event EventHandler<RemovingStyleEventArgs> RemovingStyle;
+        /// <summary>
+        /// Occurs before an at-rule is removed.
+        /// </summary>
+        public event EventHandler<RemovingAtRuleEventArgs> RemovingAtRule;
 
         /// <summary>
         /// Raises the <see cref="E:PostProcessNode" /> event.
@@ -291,6 +309,15 @@ namespace Ganss.XSS
         protected virtual void OnRemovingStyle(RemovingStyleEventArgs e)
         {
             if (RemovingStyle != null) RemovingStyle(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="E:RemovingAtRule" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="RemovingAtRuleEventArgs"/> instance containing the event data.</param>
+        protected virtual void OnRemovingAtRule(RemovingAtRuleEventArgs e)
+        {
+            if (RemovingAtRule != null) RemovingAtRule(this, e);
         }
 
         /// <summary>
@@ -388,6 +415,8 @@ namespace Ganss.XSS
                 RemoveTag(tag, RemoveReason.NotAllowedTag);
             }
 
+            SanitizeStyleSheets(dom, baseUrl);
+
             // cleanup attributes
             foreach (var tag in context.QuerySelectorAll("*").OfType<IHtmlElement>().ToList())
             {
@@ -431,6 +460,72 @@ namespace Ganss.XSS
             RemoveComments(nodes);
 
             DoPostProcess(dom, nodes);
+        }
+
+        private void SanitizeStyleSheets(IHtmlDocument dom, string baseUrl)
+        {
+            foreach (var styleSheet in dom.StyleSheets.OfType<ICssStyleSheet>())
+            {
+                var styleTag = styleSheet.OwnerNode;
+
+                for (int i = 0; i < styleSheet.Rules.Length;)
+                {
+                    var rule = styleSheet.Rules[i];
+                    if (!SanitizeStyleRule(rule, styleTag, baseUrl) && RemoveAtRule(styleTag, rule))
+                        styleSheet.RemoveAt(i);
+                    else i++;
+                }
+
+                styleTag.InnerHtml = styleSheet.ToCss();
+            }
+        }
+
+        private bool SanitizeStyleRule(ICssRule rule, IElement styleTag, string baseUrl)
+        {
+            if (!AllowedAtRules.Contains(rule.Type)) return false;
+
+            var styleRule = rule as ICssStyleRule;
+
+            if (styleRule != null)
+            {
+                SanitizeStyleDeclaration(styleTag, styleRule.Style, baseUrl);
+            }
+            else
+            {
+                var groupingRule = rule as ICssGroupingRule;
+
+                if (groupingRule != null)
+                {
+                    for (int i = 0; i < groupingRule.Rules.Length;)
+                    {
+                        var childRule = groupingRule.Rules[i];
+                        if (!SanitizeStyleRule(childRule, styleTag, baseUrl) && RemoveAtRule(styleTag, childRule))
+                            groupingRule.RemoveAt(i);
+                        else i++;
+                    }
+                }
+                else if (rule is ICssPageRule)
+                {
+                    var pageRule = (ICssPageRule)rule;
+                    SanitizeStyleDeclaration(styleTag, pageRule.Style, baseUrl);
+                }
+                else if (rule is ICssKeyframesRule)
+                {
+                    var keyFramesRule = (ICssKeyframesRule)rule;
+                    foreach (var childRule in keyFramesRule.Rules.OfType<ICssKeyframeRule>().ToList())
+                    {
+                        if (!SanitizeStyleRule(childRule, styleTag, baseUrl) && RemoveAtRule(styleTag, childRule))
+                            keyFramesRule.Remove(childRule.KeyText);
+                    }
+                }
+                else if (rule is ICssKeyframeRule)
+                {
+                    var keyFrameRule = (ICssKeyframeRule)rule;
+                    SanitizeStyleDeclaration(styleTag, keyFrameRule.Style, baseUrl);
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -499,13 +594,18 @@ namespace Ganss.XSS
         protected void SanitizeStyle(IHtmlElement element, string baseUrl)
         {
             // filter out invalid CSS declarations
-            // see https://github.com/FlorianRappl/AngleSharp/issues/101
+            // see https://github.com/AngleSharp/AngleSharp/issues/101
             if (element.GetAttribute("style") == null) return;
             element.SetAttribute("style", element.Style.ToCss());
 
             var styles = element.Style;
             if (styles == null || styles.Length == 0) return;
 
+            SanitizeStyleDeclaration(element, styles, baseUrl);
+        }
+
+        private void SanitizeStyleDeclaration(IElement element, ICssStyleDeclaration styles, string baseUrl)
+        {
             var removeStyles = new List<Tuple<ICssProperty, RemoveReason>>();
             var setStyles = new Dictionary<string, string>();
 
@@ -520,7 +620,7 @@ namespace Ganss.XSS
                     continue;
                 }
 
-                if(CssExpression.IsMatch(val) || DisallowCssPropertyValue.IsMatch(val))
+                if (CssExpression.IsMatch(val) || DisallowCssPropertyValue.IsMatch(val))
                 {
                     removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedValue));
                     continue;
@@ -547,14 +647,14 @@ namespace Ganss.XSS
                 }
             }
 
-            foreach (var style in removeStyles)
-            {
-                RemoveStyle(element, styles, style.Item1, style.Item2);
-            }
-
             foreach (var style in setStyles)
             {
                 styles.SetProperty(style.Key, style.Value);
+            }
+
+            foreach (var style in removeStyles)
+            {
+                RemoveStyle(element, styles, style.Item1, style.Item2);
             }
         }
 
@@ -635,10 +735,10 @@ namespace Ganss.XSS
         }
 
         /// <summary>
-        /// Remove a tag from the document.
+        /// Removes a tag from the document.
         /// </summary>
-        /// <param name="tag">to be removed</param>
-        /// <param name="reason">reason why to be removed</param>
+        /// <param name="tag">Tag to be removed</param>
+        /// <param name="reason">Reason for removal</param>
         private void RemoveTag(IElement tag, RemoveReason reason)
         {
             var e = new RemovingTagEventArgs { Tag = tag, Reason = reason };
@@ -647,11 +747,11 @@ namespace Ganss.XSS
         }
 
         /// <summary>
-        /// Remove an attribute from the document.
+        /// Removes an attribute from the document.
         /// </summary>
-        /// <param name="tag">tag where the attribute to belongs</param>
-        /// <param name="attribute">to be removed</param>
-        /// <param name="reason">reason why to be removed</param>
+        /// <param name="tag">Tag the attribute belongs to</param>
+        /// <param name="attribute">Attribute to be removed</param>
+        /// <param name="reason">Reason for removal</param>
         private void RemoveAttribute(IElement tag, IAttr attribute, RemoveReason reason)
         {
             var e = new RemovingAttributeEventArgs { Tag = tag, Attribute = attribute, Reason = reason };
@@ -660,17 +760,30 @@ namespace Ganss.XSS
         }
 
         /// <summary>
-        /// Remove a style from the document.
+        /// Removes a style from the document.
         /// </summary>
-        /// <param name="tag">tag where the style belongs</param>
-        /// <param name="styles">collection where the style to belongs</param>
-        /// <param name="style">to be removed</param>
-        /// <param name="reason">reason why to be removed</param>
+        /// <param name="tag">Tag the style belongs to</param>
+        /// <param name="styles">Style rule that contains the style to be removed</param>
+        /// <param name="style">Style to be removed</param>
+        /// <param name="reason">Reason for removal</param>
         private void RemoveStyle(IElement tag, ICssStyleDeclaration styles, ICssProperty style, RemoveReason reason)
         {
             var e = new RemovingStyleEventArgs { Tag = tag, Style = style, Reason = reason };
             OnRemovingStyle(e);
             if (!e.Cancel) styles.RemoveProperty(style.Name);
+        }
+
+        /// <summary>
+        /// Removes an at-rule from the document.
+        /// </summary>
+        /// <param name="tag">Tag the style belongs to</param>
+        /// <param name="rule">Rule to be removed</param>
+        /// <returns>true, if the rule can be removed; false, otherwise.</returns>
+        private bool RemoveAtRule(IElement tag, ICssRule rule)
+        {
+            var e = new RemovingAtRuleEventArgs { Tag = tag, Rule = rule };
+            OnRemovingAtRule(e);
+            return !e.Cancel;
         }
     }
 }

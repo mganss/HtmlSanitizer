@@ -130,4 +130,25 @@ namespace Ganss.XSS
         public RemoveReason Reason { get; set; }
     }
 
+    /// <summary>
+    /// Provides data for the <see cref="HtmlSanitizer.RemovingAtRule"/> event.
+    /// </summary>
+    public class RemovingAtRuleEventArgs : CancelEventArgs
+    {
+        /// <summary>
+        /// The tag containing the at-rule to be removed.
+        /// </summary>
+        /// <value>
+        /// The tag.
+        /// </value>
+        public IElement Tag { get; set; }
+
+        /// <summary>
+        /// Gets or sets the rule to be removed.
+        /// </summary>
+        /// <value>
+        /// The rule.
+        /// </value>
+        public ICssRule Rule { get; set; }
+    }
 }

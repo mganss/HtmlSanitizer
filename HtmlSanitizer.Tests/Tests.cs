@@ -2520,6 +2520,91 @@ rl(javascript:alert(""foo""))'>";
 
             Assert.That(actual, Is.EqualTo("<div>Test</div>"));
         }
+
+        [Test]
+        public void StyleTagTest()
+        {
+            var s = new HtmlSanitizer();
+            s.AllowedTags.Add("style");
+            var html = "<html><head><style>body { background-color: white; hallo-ballo: xyz }</style></head><body><div>Test</div></body></html>";
+
+            var actual = s.SanitizeDocument(html);
+
+            Assert.That(actual, Is.EqualTo("<html><head><style>body { background-color: white }</style></head><body><div>Test</div></body></html>"));
+        }
+
+        [Test]
+        public void StyleAtTest()
+        {
+            var s = new HtmlSanitizer();
+            s.AllowedTags.Add("style");
+            s.AllowedAtRules.Add(AngleSharp.Dom.Css.CssRuleType.Media);
+            s.AllowedAtRules.Add(AngleSharp.Dom.Css.CssRuleType.Keyframes);
+            s.AllowedAtRules.Add(AngleSharp.Dom.Css.CssRuleType.Keyframe);
+            s.AllowedAtRules.Add(AngleSharp.Dom.Css.CssRuleType.Page);
+            var html = @"<html><head><style>
+@charset ""UTF-8"";
+@import url(evil.css);
+@namespace url(http://www.w3.org/1999/xhtml);
+@namespace svg url(http://www.w3.org/2000/svg);
+@media (min-width: 100px) {
+    div { color: black; }
+    @font-face { font-family: test }
+}
+@supports (--foo: green) {
+  body {
+    color: green;
+  }
+  @media (min-width: 200px) {
+    body { color: red; }
+  }
+}
+@document url(http://www.w3.org/),
+               url-prefix(http://www.w3.org/Style/),
+               domain(mozilla.org),
+               regexp(""https:.* "")
+{
+    body {
+        color: purple;
+        background: yellow;
+    }
+}
+@page { size:8.5in 11in; margin: 2cm }
+@font-face {
+      font-family: ""Bitstream Vera Serif Bold""
+      src: url(""https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf"");
+      color: black;
+}
+@keyframes identifier {
+  0% { top: 0; }
+  50% { top: 30px; left: 20px; }
+  50% { top: 10px; }
+  100% { top: 0; background: url('javascript:alert(xss)') }
+}
+@viewport {
+  min-width: 640px;
+  max-width: 800px;
+}
+@counter-style winners-list {
+  system: fixed;
+  symbols: url(gold-medal.svg) url(silver-medal.svg) url(bronze-medal.svg);
+  suffix: "" "";
+}
+@font-feature-values Font One { /* How to activate nice-style in Font One */
+  @styleset {
+    nice-style: 12;
+  }
+}
+</style></head></html>";
+
+            var actual = s.SanitizeDocument(html);
+
+            Assert.That(actual, Is.EqualTo(@"<html><head><style>@namespace url(""http://www.w3.org/1999/xhtml"");
+@namespace svg url(""http://www.w3.org/2000/svg"");
+@media (min-width: 100px) { div { color: black } }
+@page * { margin: 2cm }
+@keyframes identifier { 0% { top: 0 } 50% { top: 30px; left: 20px } 50% { top: 10px } 100% { top: 0 } }</style></head><body></body></html>".Replace("\r\n", "\n")));
+        }
     }
 }
 

@@ -16,6 +16,7 @@ In order to facilitate different use cases, HtmlSanitizer can be customized at s
 - Configure allowed HTML tags through the property `AllowedTags`. All other tags will be stripped.
 - Configure allowed HTML attributes through the property `AllowedAttributes`. All other attributes will be stripped.
 - Configure allowed CSS property names through the property `AllowedCssProperties`. All other styles will be stripped.
+- Configure allowed CSS [at-rules](https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule) through the property `AllowedAtRules`. All other at-rules will be stripped.
 - Configure allowed URI schemes through the property `AllowedSchemes`. All other URIs will be stripped.
 - Configure HTML attributes that contain URIs (such as "src", "href" etc.) through the property `UriAttributes`.
 - Provide a base URI that will be used to resolve relative URIs against.
@@ -37,6 +38,14 @@ var sanitized = sanitizer.Sanitize(html);
 
 ### CSS properties allowed by default
 `background, background-attachment, background-color, background-image, background-position, background-repeat, border, border-bottom, border-bottom-color, border-bottom-style, border-bottom-width, border-collapse, border-color, border-left, border-left-color, border-left-style, border-left-width, border-right, border-right-color, border-right-style, border-right-width, border-spacing, border-style, border-top, border-top-color, border-top-style, border-top-width, border-width, bottom, caption-side, clear, clip, color, content, counter-increment, counter-reset, cursor, direction, display, empty-cells, float, font, font-family, font-size, font-style, font-variant, font-weight, height, left, letter-spacing, line-height, list-style, list-style-image, list-style-position, list-style-type, margin, margin-bottom, margin-left, margin-right, margin-top, max-height, max-width, min-height, min-width, opacity, orphans, outline, outline-color, outline-style, outline-width, overflow, padding, padding-bottom, padding-left, padding-right, padding-top, page-break-after, page-break-before, page-break-inside, quotes, right, table-layout, text-align, text-decoration, text-indent, text-transform, top, unicode-bidi, vertical-align, visibility, white-space, widows, width, word-spacing, z-index`
+
+### CSS at-rules allowed by default
+`namespace, style`
+
+`style` refers to style declarations within other at-rules such as `@media`. Disallowing `@namespace` while allowing other types of at-rules can lead to errors.
+Property declarations in `@font-face` and `@viewport` are not sanitized.
+
+_Note:_ the `style` tag is disallowed by default.
 
 ### URI schemes allowed by default
 ``http, https``
