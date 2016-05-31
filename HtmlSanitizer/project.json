@@ -1,0 +1,48 @@
+{
+  "version": "3.3",
+  "title": "HtmlSanitizer",
+  "description": "Cleans HTML from constructs that can be used for cross site scripting (XSS)",
+  "authors": [ "Michael Ganss" ],
+  "copyright": "Copyright 2013-2016 Michael Ganss",
+  "packOptions": {
+    "projectUrl": "https://github.com/mganss/HtmlSanitizer",
+    "tags": [ "xss", "anti", "antixss", "html", "security" ],
+    "licenseUrl": "https://raw.github.com/mganss/HtmlSanitizer/master/LICENSE.md",
+    "repository": {
+      "type": "git",
+      "url": "git://github.com/mganss/HtmlSanitizer"
+    }
+  },
+  "dependencies": {
+    "AngleSharp": "0.9.6"
+  },
+  "frameworks": {
+    "net45": {
+      "frameworkAssemblies": {
+        "System.Globalization": "",
+        "System.IO": "",
+        "System.Runtime": ""
+      }
+    },
+    "netstandard1.3": {
+      "imports": [ "dotnet" ],
+      "buildOptions": {
+        "define": [
+          "NETSTANDARD"
+        ]
+      },
+      "dependencies": {
+        "System.Collections": "4.0.11-rc3-23909",
+        "System.ComponentModel": "4.0.1-rc2-24027",
+        "System.Diagnostics.Debug": "4.0.11-rc3-23909",
+        "System.Globalization": "4.0.11-rc3-23909",
+        "System.IO": "4.1.0-rc3-23909",
+        "System.Linq": "4.1.0-rc3-23909",
+        "System.Runtime": "4.1.0-rc3-23909",
+        "System.Runtime.Extensions": "4.1.0-rc3-23909",
+        "System.Text.RegularExpressions": "4.0.12-rc3-23909",
+        "System.Threading": "4.0.11-rc3-23909"
+      }
+    }
+  }
+}

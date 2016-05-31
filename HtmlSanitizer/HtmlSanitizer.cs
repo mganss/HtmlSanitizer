@@ -728,7 +728,11 @@ namespace Ganss.XSS
             {
                 return uri.IsAbsoluteUri ? uri.AbsoluteUri : uri.GetComponents(UriComponents.SerializationInfoString, UriFormat.UriEscaped);
             }
+#if NETSTANDARD
+            catch (Exception)
+#else
             catch (UriFormatException)
+#endif
             {
                 return null;
             }

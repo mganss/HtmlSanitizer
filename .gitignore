@@ -157,3 +157,6 @@ cov-int.zip
 coverity.zip
 
 .vs/
+
+# dotnet
+*.lock.json
