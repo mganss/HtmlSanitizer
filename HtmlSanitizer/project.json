@@ -1,5 +1,5 @@
 {
-  "version": "3.3",
+  "version": "3.3.0-*",
   "title": "HtmlSanitizer",
   "description": "Cleans HTML from constructs that can be used for cross site scripting (XSS)",
   "authors": [ "Michael Ganss" ],
