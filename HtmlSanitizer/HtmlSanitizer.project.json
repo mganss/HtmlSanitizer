@@ -1,0 +1,11 @@
+{
+  "dependencies": {
+    "AngleSharp": "0.9.6"
+  },
+  "frameworks": {
+    "net45": { }
+  },
+  "runtimes": {
+    "win": { }
+  }
+}

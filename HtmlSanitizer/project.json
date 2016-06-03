@@ -13,6 +13,10 @@
       "url": "git://github.com/mganss/HtmlSanitizer"
     }
   },
+  "buildOptions": {
+    "keyFile": "HtmlSanitizer.snk",
+    "publicSign": true
+  },
   "dependencies": {
     "AngleSharp": "0.9.6"
   },
@@ -25,23 +29,22 @@
       }
     },
     "netstandard1.3": {
-      "imports": [ "dotnet" ],
+      "imports": "dotnet",
       "buildOptions": {
         "define": [
           "NETSTANDARD"
         ]
       },
       "dependencies": {
-        "System.Collections": "4.0.11-rc3-23909",
+        "System.Collections": "4.0.11-rc2-24027",
         "System.ComponentModel": "4.0.1-rc2-24027",
-        "System.Diagnostics.Debug": "4.0.11-rc3-23909",
-        "System.Globalization": "4.0.11-rc3-23909",
-        "System.IO": "4.1.0-rc3-23909",
-        "System.Linq": "4.1.0-rc3-23909",
-        "System.Runtime": "4.1.0-rc3-23909",
-        "System.Runtime.Extensions": "4.1.0-rc3-23909",
-        "System.Text.RegularExpressions": "4.0.12-rc3-23909",
-        "System.Threading": "4.0.11-rc3-23909"
+        "System.Diagnostics.Debug": "4.0.11-rc2-24027",
+        "System.Globalization": "4.0.11-rc2-24027",
+        "System.Linq": "4.1.0-rc2-24027",
+        "System.Runtime": "4.1.0-rc2-24027",
+        "System.Runtime.Extensions": "4.1.0-rc2-24027",
+        "System.Text.RegularExpressions": "4.0.12-rc2-24027",
+        "System.Threading": "4.0.11-rc2-24027"
       }
     }
   }

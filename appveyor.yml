@@ -1,4 +1,4 @@
-version: 3.2.{build}
+version: 3.3.{build}
 install:
   - nuget restore
 configuration: Release
@@ -14,20 +14,9 @@ environment:
     secure: pUUrynbyxCRpsAgGdKBVYDZCilwBmaWQ1Jg+rg5znr0=
   CoverityNotificationEmail:
     secure: m/ox72HU97EeJExWEFWx+0M9uov0cydn6E8mSaQzsQE=
-build:
-  project: HtmlSanitizer.sln
-  verbosity: minimal
-  publish_nuget: true
-  publish_nuget_symbols: true
-#after_build:
-#  - ps: |
-#      if ($env:CoverityProjectToken)
-#      {
-#        cov-build.exe --dir cov-int msbuild /t:Rebuild HtmlSanitizer.sln
-#        nuget.exe install PublishCoverity -ExcludeVersion
-#        PublishCoverity\tools\PublishCoverity.exe compress -o coverity.zip -i cov-int
-#        PublishCoverity\tools\PublishCoverity.exe publish -t "$env:CoverityProjectToken" -e "$env:CoverityNotificationEmail" -r "$env:APPVEYOR_REPO_NAME" -z coverity.zip -d "AppVeyor $env:APPVEYOR_BUILD_VERSION" --codeVersion "$env:APPVEYOR_REPO_COMMIT"
-#      }
+build_script:
+  - dotnet restore
+  - dotnet pack --version-suffix %APPVEYOR_BUILD_VERSION%
 test_script:
   - nuget.exe install OpenCover -ExcludeVersion
   - nuget.exe install NUnit.Runners -ExcludeVersion
@@ -35,3 +24,5 @@ test_script:
   - "SET PATH=C:\\Python34;C:\\Python34\\Scripts;%PATH%"
   - pip install codecov
   - codecov -f "coverage.xml"
+artifacts:
+  - path: '**\*.nupkg'

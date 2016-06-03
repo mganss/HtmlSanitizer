@@ -2,10 +2,10 @@ using AngleSharp;
 using AngleSharp.Dom;
 using AngleSharp.Dom.Css;
 using AngleSharp.Dom.Html;
+using AngleSharp.Extensions;
 using AngleSharp.Html;
 using AngleSharp.Parser.Css;
 using AngleSharp.Parser.Html;
-using AngleSharp.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -728,11 +728,7 @@ namespace Ganss.XSS
             {
                 return uri.IsAbsoluteUri ? uri.AbsoluteUri : uri.GetComponents(UriComponents.SerializationInfoString, UriFormat.UriEscaped);
             }
-#if NETSTANDARD
-            catch (Exception)
-#else
             catch (UriFormatException)
-#endif
             {
                 return null;
             }

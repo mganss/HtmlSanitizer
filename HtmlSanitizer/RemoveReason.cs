@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Ganss.XSS
+﻿namespace Ganss.XSS
 {
     /// <summary>
     /// List of reasons why something was identified to get removed from the HTML
