@@ -12,7 +12,7 @@ environment:
     secure: m/ox72HU97EeJExWEFWx+0M9uov0cydn6E8mSaQzsQE=
 build_script:
   - dotnet restore
-  - dotnet pack --version-suffix %APPVEYOR_BUILD_VERSION% HtmlSanitizer
+  - dotnet pack --version-suffix %APPVEYOR_BUILD_NUMBER% HtmlSanitizer
 #test_script:
 #  - nuget.exe install OpenCover -ExcludeVersion
 #  - nuget.exe install NUnit.Runners -ExcludeVersion
