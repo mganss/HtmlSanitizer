@@ -11,8 +11,9 @@ environment:
   CoverityNotificationEmail:
     secure: m/ox72HU97EeJExWEFWx+0M9uov0cydn6E8mSaQzsQE=
 build_script:
+  - ps: (Get-Content HtmlSanitizer\project.json).Replace("APPVEYOR_BUILD_VERSION", $env:APPVEYOR_BUILD_VERSION) | Set-Content HtmlSanitizer\project.json
   - dotnet restore
-  - dotnet pack --version-suffix %APPVEYOR_BUILD_NUMBER% HtmlSanitizer
+  - dotnet pack -c Release HtmlSanitizer
 #test_script:
 #  - nuget.exe install OpenCover -ExcludeVersion
 #  - nuget.exe install NUnit.Runners -ExcludeVersion
