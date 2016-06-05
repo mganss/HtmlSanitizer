@@ -160,3 +160,5 @@ coverity.zip
 
 # dotnet
 *.lock.json
+*.nuget.props
+*.nuget.targets
