@@ -1,7 +1,6 @@
 using AngleSharp.Dom;
 using AngleSharp.Dom.Html;
 using AngleSharp.Parser.Html;
-using Ganss.Text;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
@@ -2174,13 +2173,12 @@ rl(javascript:alert(""foo""))'>";
         public void AutoLinkTest()
         {
             var sanitizer = new HtmlSanitizer();
-            var autolink = new AutoLink();
             sanitizer.PostProcessNode += (s, e) =>
             {
                 var text = e.Node as IText;
                 if (text != null)
                 {
-                    var autolinked = autolink.Link(text.NodeValue);
+                    var autolinked = Regex.Replace(text.NodeValue, @"https?://[^\s]+[^\s!?.:;,]+", m => $@"<a href=""{m.Value}"">{m.Value}</a>", RegexOptions.IgnoreCase);
                     if (autolinked != text.NodeValue)
                     {
                         var f = new HtmlParser().Parse(autolinked);
@@ -2191,7 +2189,7 @@ rl(javascript:alert(""foo""))'>";
             };
             var html = @"<div>Click here: http://example.com/.</div>";
             Assert.That(sanitizer.Sanitize(html), Is.EqualTo(@"<div>Click here: <a href=""http://example.com/"">http://example.com/</a>.</div>").IgnoreCase);
-            Assert.That(sanitizer.Sanitize("Check out www.google.com."), Is.EqualTo(@"Check out <a href=""http://www.google.com"">www.google.com</a>.").IgnoreCase);
+            Assert.That(sanitizer.Sanitize("Check out https://www.google.com."), Is.EqualTo(@"Check out <a href=""https://www.google.com"">https://www.google.com</a>.").IgnoreCase);
         }
 
         [Test]
