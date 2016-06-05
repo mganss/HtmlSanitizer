@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.23107.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HtmlSanitizer", "HtmlSanitizer\HtmlSanitizer.csproj", "{CCDB0C26-D683-4943-B5D8-AC07116461E5}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HtmlSanitizer", "src\HtmlSanitizer\HtmlSanitizer.csproj", "{CCDB0C26-D683-4943-B5D8-AC07116461E5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HtmlSanitizer.Tests", "HtmlSanitizer.Tests\HtmlSanitizer.Tests.csproj", "{55D772A0-8D8C-4CF7-A876-E6DAB8ED42C0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HtmlSanitizer.Tests", "test\HtmlSanitizer.Tests\HtmlSanitizer.Tests.csproj", "{55D772A0-8D8C-4CF7-A876-E6DAB8ED42C0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

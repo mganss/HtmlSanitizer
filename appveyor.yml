@@ -5,10 +5,11 @@ environment:
   CoverityNotificationEmail:
     secure: m/ox72HU97EeJExWEFWx+0M9uov0cydn6E8mSaQzsQE=
 build_script:
-  - ps: (Get-Content HtmlSanitizer\project.json).Replace("1.0.0-VERSION", $env:APPVEYOR_BUILD_VERSION) | Set-Content HtmlSanitizer\project.json
+  - ps: (Get-Content src\HtmlSanitizer\project.json).Replace("1.0.0-VERSION", $env:APPVEYOR_BUILD_VERSION) | Set-Content src\HtmlSanitizer\project.json
   - dotnet restore
-  - dotnet pack -c Release HtmlSanitizer
-#test_script:
+  - dotnet pack -c Release src\HtmlSanitizer
+test_script:
+  - dotnet test test\HtmlSanitizer.Tests
 #  - nuget.exe install OpenCover -ExcludeVersion
 #  - nuget.exe install NUnit.Runners -ExcludeVersion
 #  - OpenCover\tools\OpenCover.Console.exe -register:user -filter:"+[HtmlSanitizer]*" -target:"NUnit.ConsoleRunner\tools\nunit3-console.exe" "-targetargs:/domain:single HtmlSanitizer.Tests\bin\release\HtmlSanitizer.Tests.dll" -returntargetcode -hideskipped:All -output:coverage.xml
