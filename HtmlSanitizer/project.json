@@ -14,7 +14,7 @@
     }
   },
   "buildOptions": {
-    "keyFile": "HtmlSanitizer.snk",
+    "keyFile": "HtmlSanitizer.snk"
   },
   "dependencies": {
     "AngleSharp": "0.9.6"
