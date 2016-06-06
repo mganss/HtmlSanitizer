@@ -16,4 +16,4 @@ test_script:
   - pip install codecov
   - codecov -f "coverage.xml"
 artifacts:
-  - path: '**\*.nupkg'
+  - path: 'src\**\*.nupkg'
