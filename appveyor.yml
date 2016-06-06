@@ -1,4 +1,5 @@
 version: 3.3.{build}-beta
+skip_tags: true
 environment:
   CoverityProjectToken:
     secure: pUUrynbyxCRpsAgGdKBVYDZCilwBmaWQ1Jg+rg5znr0=
