@@ -475,7 +475,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<img>";
+            string expected = "";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -494,7 +494,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<img src=\"http://ha.ckers.org/scriptlet.html\">";
+            string expected = "";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -2692,6 +2692,30 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var actual = s.Sanitize(html);
 
             Assert.Equal(html, actual);
+        }
+
+        [Fact]
+        public void FragmentTest()
+        {
+            var s = new HtmlSanitizer();
+            var html = @"<script>alert('test');</script><p>Test</p>";
+
+            var actual = s.Sanitize(html);
+
+            Assert.Equal("<p>Test</p>", actual);
+        }
+
+        [Fact]
+        public void OpenTagFragmentTest()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/75
+
+            var s = new HtmlSanitizer();
+            var html = "<p>abc<script>xyz</p>";
+
+            var actual = s.Sanitize(html);
+
+            Assert.Equal("<p>abc</p>", actual);
         }
     }
 }

@@ -354,7 +354,8 @@ namespace Ganss.XSS
         public string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
             var parser = CreateParser();
-            var dom = parser.Parse("<body>" + html + "</body>");
+            var dom = parser.Parse("<html><body></body></html>");
+            dom.Body.InnerHtml = html;
 
             DoSanitize(dom, dom.Body, baseUrl, outputFormatter);
 
