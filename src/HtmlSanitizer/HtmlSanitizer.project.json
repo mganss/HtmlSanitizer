@@ -1,6 +1,6 @@
 ﻿{
   "dependencies": {
-    "AngleSharp": "0.9.7"
+    "AngleSharp": "[0.9.7]"
   },
   "frameworks": {
     "net45": {}
