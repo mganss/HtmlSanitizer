@@ -22,9 +22,9 @@
   "frameworks": {
     "net45": {
       "frameworkAssemblies": {
-        "System.Globalization": "",
-        "System.IO": "",
-        "System.Runtime": ""
+        "System.Globalization": { "type": "build" },
+        "System.IO": { "type": "build" },
+        "System.Runtime": { "type": "build" }
       }
     },
     "netstandard1.3": {
