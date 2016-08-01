@@ -71,6 +71,16 @@ namespace Ganss.XSS
         }
 
         /// <summary>
+        /// Gets or sets the default <see cref="IMarkupFormatter"/> object used for generating output. Default is <see cref="HtmlMarkupFormatter.Instance"/>.
+        /// </summary>
+        public static IMarkupFormatter DefaultOutputFormatter { get; set; } = HtmlMarkupFormatter.Instance;
+
+        /// <summary>
+        /// Gets or sets the <see cref="IMarkupFormatter"/> object used for generating output. Default is <see cref="DefaultOutputFormatter"/>.
+        /// </summary>
+        public IMarkupFormatter OutputFormatter { get; set; } = DefaultOutputFormatter;
+
+        /// <summary>
         /// Gets or sets the allowed CSS at-rules such as "@media" and "@font-face".
         /// </summary>
         /// <value>
@@ -349,7 +359,7 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="html">The HTML body fragment to sanitize.</param>
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
-        /// <param name="outputFormatter">The formatter used to render the DOM. Using the default formatter if null.</param>
+        /// <param name="outputFormatter">The formatter used to render the DOM. Using the <see cref="OutputFormatter"/> if null.</param>
         /// <returns>The sanitized HTML body fragment.</returns>
         public string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
@@ -357,9 +367,9 @@ namespace Ganss.XSS
             var dom = parser.Parse("<html><body></body></html>");
             dom.Body.InnerHtml = html;
 
-            DoSanitize(dom, dom.Body, baseUrl, outputFormatter);
+            DoSanitize(dom, dom.Body, baseUrl);
 
-            var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? HtmlMarkupFormatter.Instance);
+            var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
 
             return output;
         }
@@ -369,16 +379,16 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="html">The HTML document to sanitize.</param>
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
-        /// <param name="outputFormatter">The formatter used to render the DOM. Using the default formatter if null.</param>
+        /// <param name="outputFormatter">The formatter used to render the DOM. Using the <see cref="OutputFormatter"/> if null.</param>
         /// <returns>The sanitized HTML document.</returns>
         public string SanitizeDocument(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
             var parser = CreateParser();
             var dom = parser.Parse(html);
 
-            DoSanitize(dom, dom.DocumentElement, baseUrl, outputFormatter);
+            DoSanitize(dom, dom.DocumentElement, baseUrl);
 
-            var output = dom.ToHtml(outputFormatter ?? HtmlMarkupFormatter.Instance);
+            var output = dom.ToHtml(outputFormatter ?? OutputFormatter);
 
             return output;
         }
@@ -408,7 +418,7 @@ namespace Ganss.XSS
                 comment.Remove();
         }
 
-        private void DoSanitize(IHtmlDocument dom, IElement context, string baseUrl = "", IMarkupFormatter outputFormatter = null)
+        private void DoSanitize(IHtmlDocument dom, IElement context, string baseUrl = "")
         {
             // remove non-whitelisted tags
             foreach (var tag in context.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList())
