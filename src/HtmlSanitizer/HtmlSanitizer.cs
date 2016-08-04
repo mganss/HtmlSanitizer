@@ -71,6 +71,16 @@ namespace Ganss.XSS
         }
 
         /// <summary>
+        /// Gets or sets the default <see cref="Func{HtmlParser}"/> object that creates the parser used for parsing the input.
+        /// </summary>
+        public static Func<HtmlParser> DefaultHtmlParserFactory { get; set; } = CreateParser;
+
+        /// <summary>
+        /// Gets or sets the <see cref="Func{HtmlParser}"/> object the creates the parser used for parsing the input.
+        /// </summary>
+        public Func<HtmlParser> HtmlParserFactory { get; set; } = DefaultHtmlParserFactory;
+
+        /// <summary>
         /// Gets or sets the default <see cref="IMarkupFormatter"/> object used for generating output. Default is <see cref="HtmlMarkupFormatter.Instance"/>.
         /// </summary>
         public static IMarkupFormatter DefaultOutputFormatter { get; set; } = HtmlMarkupFormatter.Instance;
@@ -363,7 +373,7 @@ namespace Ganss.XSS
         /// <returns>The sanitized HTML body fragment.</returns>
         public string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
-            var parser = CreateParser();
+            var parser = HtmlParserFactory();
             var dom = parser.Parse("<html><body></body></html>");
             dom.Body.InnerHtml = html;
 
@@ -383,7 +393,7 @@ namespace Ganss.XSS
         /// <returns>The sanitized HTML document.</returns>
         public string SanitizeDocument(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
-            var parser = CreateParser();
+            var parser = HtmlParserFactory();
             var dom = parser.Parse(html);
 
             DoSanitize(dom, dom.DocumentElement, baseUrl);
