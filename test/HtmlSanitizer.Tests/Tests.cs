@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using AngleSharp;
 
 // Tests based on tests from http://roadkill.codeplex.com/
 
@@ -2716,6 +2717,19 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var actual = s.Sanitize(html);
 
             Assert.Equal("<p>abc</p>", actual);
+        }
+
+        [Fact]
+        public void NullStyleTest()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/81
+
+            var s = new HtmlSanitizer { HtmlParserFactory = () => new HtmlParser(new Configuration()) };
+            var html = @"<p style=""t"">xyz</p>";
+
+            var actual = s.Sanitize(html);
+
+            Assert.Equal("<p>xyz</p>", actual);
         }
     }
 }

@@ -617,6 +617,11 @@ namespace Ganss.XSS
             // filter out invalid CSS declarations
             // see https://github.com/AngleSharp/AngleSharp/issues/101
             if (element.GetAttribute("style") == null) return;
+            if (element.Style == null)
+            {
+                element.RemoveAttribute("style");
+                return;
+            }
             element.SetAttribute("style", element.Style.ToCss());
 
             var styles = element.Style;
