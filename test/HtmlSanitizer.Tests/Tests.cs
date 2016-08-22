@@ -1808,7 +1808,7 @@ S
         {
             var sanitizer = new HtmlSanitizer();
             var html = @"<div title=""&lt;foo&gt;""></div>";
-            Assert.Equal(@"<div title=""&amp;lt;foo&amp;gt;""></div>", sanitizer.Sanitize(html), ignoreCase: true);
+            Assert.Equal(@"<div title=""&lt;foo&gt;""></div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
 
         [Fact]
@@ -2730,6 +2730,19 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var actual = s.Sanitize(html);
 
             Assert.Equal("<p>xyz</p>", actual);
+        }
+
+        [Fact]
+        public void EscapeEntityInAttributeValueTest()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/84
+
+            var s = new HtmlSanitizer { HtmlParserFactory = () => new HtmlParser(new Configuration()) };
+            var html = @"<input type=""text"" name=""my_name"" value=""<insert name>"">";
+
+            var actual = s.Sanitize(html);
+
+            Assert.Equal(@"<input type=""text"" name=""my_name"" value=""&lt;insert name&gt;"">", actual);
         }
     }
 }

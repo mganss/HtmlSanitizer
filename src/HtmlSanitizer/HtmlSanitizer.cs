@@ -81,9 +81,9 @@ namespace Ganss.XSS
         public Func<HtmlParser> HtmlParserFactory { get; set; } = DefaultHtmlParserFactory;
 
         /// <summary>
-        /// Gets or sets the default <see cref="IMarkupFormatter"/> object used for generating output. Default is <see cref="HtmlMarkupFormatter.Instance"/>.
+        /// Gets or sets the default <see cref="IMarkupFormatter"/> object used for generating output. Default is <see cref="HtmlFormatter.Instance"/>.
         /// </summary>
-        public static IMarkupFormatter DefaultOutputFormatter { get; set; } = HtmlMarkupFormatter.Instance;
+        public static IMarkupFormatter DefaultOutputFormatter { get; set; } = HtmlFormatter.Instance;
 
         /// <summary>
         /// Gets or sets the <see cref="IMarkupFormatter"/> object used for generating output. Default is <see cref="DefaultOutputFormatter"/>.
@@ -468,11 +468,7 @@ namespace Ganss.XSS
                     if (attribute.Value.Contains("&{"))
                         RemoveAttribute(tag, attribute, RemoveReason.NotAllowedValue);
                     else
-                    {
-                        // escape attribute value
-                        var val = attribute.Value.Replace("<", "&lt;").Replace(">", "&gt;");
-                        tag.SetAttribute(attribute.Name, val);
-                    }
+                        tag.SetAttribute(attribute.Name, attribute.Value);
                 }
             }
 
