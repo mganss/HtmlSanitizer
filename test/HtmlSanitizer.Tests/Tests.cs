@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using AngleSharp;
+using AngleSharp.Dom.Css;
 
 // Tests based on tests from http://roadkill.codeplex.com/
 
@@ -876,7 +877,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<IMG>";
+            string expected = "<IMG style=\"\">";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -896,7 +897,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "exp/*<a></a>";
+            string expected = "exp/*<a style=\"\"></a>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -2743,6 +2744,27 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var actual = s.Sanitize(html);
 
             Assert.Equal(@"<input type=""text"" name=""my_name"" value=""&lt;insert name&gt;"">", actual);
+        }
+
+        [Fact]
+        public void FontFaceTest()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/80
+
+            var s = new HtmlSanitizer();
+
+            s.AllowDataAttributes = true;
+            s.AllowedAtRules.Add(CssRuleType.FontFace);
+
+            s.AllowedTags.Add("style");
+
+            s.AllowedCssProperties.Add("src");
+            s.AllowedCssProperties.Add("font-family");
+
+            var html = @"<html><head><style>@font-face { font-family: FrutigerLTStd; src: url(""https://example.com/FrutigerLTStd-Light.otf"") format(""opentype"") }</style></head><body></body></html>";
+            var actual = s.SanitizeDocument(html);
+
+            Assert.Equal(html, actual);
         }
     }
 }
