@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using AngleSharp;
 using AngleSharp.Dom.Css;
+using System.Threading;
 
 // Tests based on tests from http://roadkill.codeplex.com/
 
@@ -20,11 +21,23 @@ using AngleSharp.Dom.Css;
 
 namespace Ganss.XSS.Tests
 {
+    public class HtmlSanitizerFixture
+    {
+        public HtmlSanitizer Sanitizer { get; set; } = new HtmlSanitizer();
+    }
+
     /// <summary>
     /// Tests for <see cref="HtmlSanitizer"/>.
     /// </summary>
-    public class HtmlSanitizerTests
+    public class HtmlSanitizerTests: IClassFixture<HtmlSanitizerFixture>
     {
+        public HtmlSanitizer Sanitizer { get; set; }
+
+        public HtmlSanitizerTests(HtmlSanitizerFixture fixture)
+        {
+            Sanitizer = fixture.Sanitizer;
+        }
+
         /// <summary>
         /// A test for Xss locator
         /// </summary>
@@ -32,7 +45,7 @@ namespace Ganss.XSS.Tests
         public void XSSLocatorTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
             // Act
             string htmlFragment = "<a href=\"'';!--\"<XSS>=&{()}\">";
@@ -51,7 +64,7 @@ namespace Ganss.XSS.Tests
         public void ImageXSS1Test()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Action
@@ -71,7 +84,7 @@ namespace Ganss.XSS.Tests
         public void ImageXSS2Test()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -91,7 +104,7 @@ namespace Ganss.XSS.Tests
         public void ImageCaseInsensitiveXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -111,7 +124,7 @@ namespace Ganss.XSS.Tests
         public void ImageHtmlEntitiesXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -131,7 +144,7 @@ namespace Ganss.XSS.Tests
         public void ImageGraveAccentXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -151,7 +164,7 @@ namespace Ganss.XSS.Tests
         public void ImageMalformedXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -171,7 +184,7 @@ namespace Ganss.XSS.Tests
         public void ImageFromCharCodeXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -191,7 +204,7 @@ namespace Ganss.XSS.Tests
         public void ImageUTF8UnicodeXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -211,7 +224,7 @@ namespace Ganss.XSS.Tests
         public void ImageLongUTF8UnicodeXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -231,7 +244,7 @@ namespace Ganss.XSS.Tests
         public void ImageHexEncodeXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -251,7 +264,7 @@ namespace Ganss.XSS.Tests
         public void ImageEmbeddedTabXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -271,7 +284,7 @@ namespace Ganss.XSS.Tests
         public void ImageEmbeddedEncodedTabXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -291,7 +304,7 @@ namespace Ganss.XSS.Tests
         public void ImageEmbeddedNewLineXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -311,7 +324,7 @@ namespace Ganss.XSS.Tests
         public void ImageEmbeddedCarriageReturnXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -359,7 +372,7 @@ namespace Ganss.XSS.Tests
         public void ImageMultilineInjectedXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -409,7 +422,7 @@ S
         public void ImageNullBreaksUpXSSTest1()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -429,7 +442,7 @@ S
         public void ImageNullBreaksUpXSSTest2()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -449,7 +462,7 @@ S
         public void ImageSpaceAndMetaCharXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -469,7 +482,7 @@ S
         public void ImageHalfOpenHtmlXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -489,7 +502,7 @@ S
         public void ImageDoubleOpenAngleBracketXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
             // Act
             string htmlFragment = "<image src=http://ha.ckers.org/scriptlet.html <";
@@ -508,7 +521,7 @@ S
         public void DivJavascriptEscapingXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -528,7 +541,7 @@ S
         public void ImageInputXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -548,7 +561,7 @@ S
         public void ImageDynsrcXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -568,7 +581,7 @@ S
         public void ImageLowsrcXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -588,7 +601,7 @@ S
         public void BGSoundXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -608,7 +621,7 @@ S
         public void BRJavascriptIncludeXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -628,7 +641,7 @@ S
         public void PWithUrlInStyleXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -649,7 +662,7 @@ S
         public void ImageWithVBScriptXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -669,7 +682,7 @@ S
         public void ImageWithMochaXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -689,7 +702,7 @@ S
         public void ImageWithLivescriptXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -709,7 +722,7 @@ S
         public void IframeXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -729,7 +742,7 @@ S
         public void FrameXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -749,7 +762,7 @@ S
         public void TableXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -769,7 +782,7 @@ S
         public void TDXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -789,7 +802,7 @@ S
         public void DivBackgroundImageXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -809,7 +822,7 @@ S
         public void DivBackgroundImageWithUnicodedXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -829,7 +842,7 @@ S
         public void DivBackgroundImageWithExtraCharactersXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -849,7 +862,7 @@ S
         public void DivExpressionXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -869,7 +882,7 @@ S
         public void ImageStyleExpressionXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -889,7 +902,7 @@ S
         public void AnchorTagStyleExpressionXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -909,7 +922,7 @@ S
         public void BaseTagXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -929,7 +942,7 @@ S
         public void EmbedTagXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -949,7 +962,7 @@ S
         public void EmbedSVGXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -969,7 +982,7 @@ S
         public void XmlNamespaceXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -989,7 +1002,7 @@ S
         public void XmlWithCDataXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1008,7 +1021,7 @@ S
         public void XmlWithCommentObfuscationXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1028,7 +1041,7 @@ S
         public void XmlWithEmbeddedScriptXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1048,7 +1061,7 @@ S
         public void HtmlPlusTimeXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1068,7 +1081,7 @@ S
         public void AnchorTagJavascriptLinkLocationXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1088,7 +1101,7 @@ S
         public void DivNoFilterEvasionXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1108,7 +1121,7 @@ S
         public void DivStyleExpressionNoFilterEvasionXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1128,7 +1141,7 @@ S
         public void AnchorTagNonAlphaNonDigitXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1148,7 +1161,7 @@ S
         public void DivNonAlphaNonDigitXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1168,7 +1181,7 @@ S
         public void DivStyleExpressionNonAlphaNonDigitXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1188,7 +1201,7 @@ S
         public void DivNonAlphaNonDigit3XSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1208,7 +1221,7 @@ S
         public void DivStyleExpressionNonAlphaNonDigit3XSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1228,7 +1241,7 @@ S
         public void AnchorTagExtraneousOpenBracketsXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1248,7 +1261,7 @@ S
         public void DivExtraneousOpenBracketsXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1268,7 +1281,7 @@ S
         public void DivStyleExpressionExtraneousOpenBracketsXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
             // Act
             string htmlFragment = "<Div style=\"background-color: expression(<<SCRIPT>alert(\"XSS\");//<</SCRIPT>)\">";
@@ -1287,7 +1300,7 @@ S
         public void DivNoClosingScriptTagsXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1307,7 +1320,7 @@ S
         public void DivStyleExpressionNoClosingScriptTagsXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1327,7 +1340,7 @@ S
         public void AnchorTagProtocolResolutionScriptXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1347,7 +1360,7 @@ S
         public void DivProtocolResolutionScriptXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1367,7 +1380,7 @@ S
         public void DivStyleExpressionProtocolResolutionScriptXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1387,7 +1400,7 @@ S
         public void AnchorTagNoQuotesXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1407,7 +1420,7 @@ S
         public void DivNoQuotesXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1427,7 +1440,7 @@ S
         public void DivStyleExpressionNoQuotesXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1447,7 +1460,7 @@ S
         public void AnchorTagUSASCIIEncodingXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1466,7 +1479,7 @@ S
         public void AnchorTagDownlevelHiddenBlockXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1500,7 +1513,7 @@ S
         public void DivDownlevelHiddenBlockXSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1520,7 +1533,7 @@ S
         public void AnchorTagHtmlQuotesEncapsulation1XSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1540,7 +1553,7 @@ S
         public void DivHtmlQuotesEncapsulation1XSSTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
 
             // Act
@@ -1559,7 +1572,7 @@ S
         public void LegalTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
             // Act
             string htmlFragment = "<div style=\"background-color: test\">";
@@ -1577,7 +1590,7 @@ S
         public void MoreLegalTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
             // Act
             string htmlFragment = "<div style=\"background-color: test;\">Test<img src=\"http://www.example.com/test.gif\" style=\"background-image: url(http://www.example.com/bg.jpg); margin: 10px\"></div>";
@@ -1594,7 +1607,7 @@ S
         [Fact]
         public void MiscTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
             var html = @"<SCRIPT/SRC=""http://ha.ckers.org/xss.js""></SCRIPT>";
             var actual = sanitizer.Sanitize(html);
@@ -1693,7 +1706,7 @@ S
         [Fact]
         public void DisallowedTagTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
             var html = @"<bla>Hallo</bla>";
             var actual = sanitizer.Sanitize(html);
@@ -1707,7 +1720,7 @@ S
         [Fact]
         public void DisallowedAttributeTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
             var html = @"<div bla=""test"">Test</div>";
             var actual = sanitizer.Sanitize(html);
@@ -1721,7 +1734,7 @@ S
         [Fact]
         public void UrlAttributeTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
             var html = @"<a href=""mailto:test@example.com"">test</a>";
             var actual = sanitizer.Sanitize(html);
@@ -1745,7 +1758,7 @@ S
         [Fact]
         public void DisallowedStyleTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
             var html = @"<div style=""margin: 8px; bla: 1px"">test</div>";
             var actual = sanitizer.Sanitize(html);
@@ -1759,7 +1772,7 @@ S
         [Fact]
         public void UrlStyleTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
             var html = @"<div style=""padding: 10px; background-image: url(mailto:test@example.com)""></div>";
             var actual = sanitizer.Sanitize(html);
@@ -1777,7 +1790,7 @@ S
         [Fact]
         public void SanitizeUnchangedTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<a href=""#"">fo<br />o</a>";
             Assert.Equal(@"<a href=""#"">fo<br>o</a>", sanitizer.Sanitize(html), ignoreCase: true);
 
@@ -1788,7 +1801,7 @@ S
         [Fact]
         public void SanitizeEscapeTextTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<a href=""#"">fo&amp;</a>";
             Assert.Equal(@"<a href=""#"">fo&amp;</a>", sanitizer.Sanitize(html), ignoreCase: true);
 
@@ -1799,7 +1812,7 @@ S
         [Fact]
         public void SanitizeEntityrefTextTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<a href=""#"">fo&ouml;</a>";
             Assert.Equal(@"<a href=""#"">foö</a>", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -1807,7 +1820,7 @@ S
         [Fact]
         public void SanitizeEscapeAttrTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<div title=""&lt;foo&gt;""></div>";
             Assert.Equal(@"<div title=""&lt;foo&gt;""></div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -1815,7 +1828,7 @@ S
         [Fact]
         public void SanitizeCloseEmptyTagTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<a href=""#"">fo<br>o</a>";
             Assert.Equal(@"<a href=""#"">fo<br>o</a>", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -1823,7 +1836,7 @@ S
         [Fact]
         public void SanitizeInvalidEntityTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"&junk;";
             Assert.Equal(@"&amp;junk;", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -1831,7 +1844,7 @@ S
         [Fact]
         public void SanitizeRemoveScriptElemTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<script>alert(""Foo"")</script>";
             Assert.Equal(@"", sanitizer.Sanitize(html), ignoreCase: true);
             html = @"<SCRIPT SRC=""http://example.com/""></SCRIPT>";
@@ -1841,7 +1854,7 @@ S
         [Fact]
         public void SanitizeRemoveOnclickAttrTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<div onclick=\'alert(""foo"")\' />";
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -1849,7 +1862,7 @@ S
         [Fact]
         public void SanitizeRemoveCommentsTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<div><!-- conditional comment crap --></div>";
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -1857,7 +1870,7 @@ S
         [Fact]
         public void SanitizeRemoveStyleScriptsTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             // Inline style with url() using javascript: scheme
             var html = @"<DIV STYLE='background: url(javascript:alert(""foo""))'>";
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
@@ -1893,7 +1906,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void SanitizeRemoveStylePhishingTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             // The position property is not allowed
             var html = @"<div style=""position:absolute;top:0""></div>";
             Assert.Equal(@"<div style=""top: 0""></div>", sanitizer.Sanitize(html), ignoreCase: true);
@@ -1905,7 +1918,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void SanitizeRemoveSrcJavascriptTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<img src=\'javascript:alert(""foo"")\'>";
             Assert.Equal(@"<img>", sanitizer.Sanitize(html), ignoreCase: true);
             // Case-insensitive protocol matching
@@ -1934,7 +1947,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void SanitizeExpressionTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<div style=""top:expression(alert())"">XSS</div>";
             Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -1942,7 +1955,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void capitalExpressionTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<div style=""top:EXPRESSION(alert())"">XSS</div>";
             Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -1950,7 +1963,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void SanitizeUrlWithJavascriptTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<div style=""background-image:url(javascript:alert())"">XSS</div>";
             Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -1958,7 +1971,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void SanitizeCapitalUrlWithJavascriptTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<div style=""background-image:URL(javascript:alert())"">XSS</div>";
             Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -1966,7 +1979,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void SanitizeUnicodeEscapesTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<div style=""top:exp\72 ess\000069 on(alert())"">XSS</div>";
             Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -1974,7 +1987,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void SanitizeBackslashWithoutHexTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<div style=""top:e\xp\ression(alert())"">XSS</div>";
             Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
             html = @"<div style=""top:e\\xp\\ression(alert())"">XSS</div>";
@@ -1984,7 +1997,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void SanitizeUnsafePropsTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<div style=""POSITION:RELATIVE"">XSS</div>";
             Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
 
@@ -2004,7 +2017,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void SanitizeCssHackTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<div style=""*position:static"">XSS</div>";
             Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -2012,7 +2025,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void SanitizePropertyNameTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<div style=""display:none;border-left-color:red;userDefined:1;-moz-user-selct:-moz-all"">prop</div>";
             Assert.Equal(@"<div style=""display: none; border-left-color: red"">prop</div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -2020,7 +2033,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void SanitizeUnicodeExpressionTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             // Fullwidth small letters
             var html = @"<div style=""top:ｅｘｐｒｅｓｓｉｏｎ(alert())"">XSS</div>";
             Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
@@ -2035,7 +2048,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void SanitizeUnicodeUrlTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             // IPA extensions
             var html = @"<div style=""background-image:uʀʟ(javascript:alert())"">XSS</div>";
             Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
@@ -2089,7 +2102,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void ProtocolRelativeTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<a href=""//www.example.com/test"">Test</a>";
             Assert.Equal(@"<a href=""//www.example.com/test"">Test</a>", sanitizer.Sanitize(html), ignoreCase: true);
             Assert.Equal(@"<a href=""https://www.example.com/test"">Test</a>", sanitizer.Sanitize(html, baseUrl: @"https://www.xyz.com/123"), ignoreCase: true);
@@ -2099,7 +2112,7 @@ rl(javascript:alert(""foo""))'>";
         public void JavaScriptIncludeAndAngleBracketsTest()
         {
             // Arrange
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
 
             // Act
             string htmlFragment = "<BR SIZE=\"&{alert('XSS&gt;')}\">";
@@ -2140,7 +2153,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void SanitizeNonClosedTagTest()
         {
-            var sanitizer = new HtmlSanitizer();
+            var sanitizer = Sanitizer;
             var html = @"<div>Hallo <p><b>Bold<br>Ballo";
             Assert.Equal(@"<div>Hallo <p><b>Bold<br>Ballo</b></p></div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -2192,7 +2205,7 @@ rl(javascript:alert(""foo""))'>";
         public void RussianTextTest()
         {
             // Arrange
-            var s = new HtmlSanitizer();
+            var s = Sanitizer;
 
             // Act
             var htmlFragment = "Тест";
@@ -2222,7 +2235,7 @@ rl(javascript:alert(""foo""))'>";
         public void CssKeyTest()
         {
             // Arrange
-            var s = new HtmlSanitizer();
+            var s = Sanitizer;
 
             // Act
             var htmlFragment = @"<div style=""\000062ackground-image: URL(http://www.example.com/bg.jpg)"">Test</div>";
@@ -2237,7 +2250,7 @@ rl(javascript:alert(""foo""))'>";
         public void InvalidBaseUrlTest()
         {
             // Arrange
-            var s = new HtmlSanitizer();
+            var s = Sanitizer;
 
             // Act
             var htmlFragment = @"<div style=""color: black; background-image: URL(x/y/bg.jpg)"">Test</div>";
@@ -2252,7 +2265,7 @@ rl(javascript:alert(""foo""))'>";
         public void XhtmlTest()
         {
             // Arrange
-            var s = new HtmlSanitizer();
+            var s = Sanitizer;
 
             // Act
             var htmlFragment = @"<div><img src=""xyz""><br></div>";
@@ -2287,7 +2300,7 @@ rl(javascript:alert(""foo""))'>";
             // https://github.com/mganss/HtmlSanitizer/issues/44
 
             // Arrange
-            var s = new HtmlSanitizer();
+            var s = Sanitizer;
 
             // Act
             var htmlFragment = "<div style=\"background-image: url('some/random/url.img')\"></div>";
@@ -2302,7 +2315,7 @@ rl(javascript:alert(""foo""))'>";
         public void QuotedBackgroundImageFromIE9()
         {
             // Arrange
-            var s = new HtmlSanitizer();
+            var s = Sanitizer;
 
             // Act
             var htmlFragment = "<span style='background-image: url(\"/api/users/defaultAvatar\");'></span>";
@@ -2496,7 +2509,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void DocumentFromFragmentTest()
         {
-            var s = new HtmlSanitizer();
+            var s = Sanitizer;
             var html = "<div>Test</div>";
 
             var actual = s.SanitizeDocument(html);
@@ -2507,7 +2520,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void FragmentFromDocumentTest()
         {
-            var s = new HtmlSanitizer();
+            var s = Sanitizer;
             var html = "<html><head><title>Test</title></head><body><div>Test</div></body></html>";
 
             var actual = s.Sanitize(html);
@@ -2688,7 +2701,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         [Fact]
         public void UriHashTest()
         {
-            var s = new HtmlSanitizer();
+            var s = Sanitizer;
             var html = @"<a href=""http://domain.com/index.html?test=#value#"">test</a>";
 
             var actual = s.Sanitize(html);
@@ -2699,7 +2712,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         [Fact]
         public void FragmentTest()
         {
-            var s = new HtmlSanitizer();
+            var s = Sanitizer;
             var html = @"<script>alert('test');</script><p>Test</p>";
 
             var actual = s.Sanitize(html);
@@ -2712,7 +2725,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             // https://github.com/mganss/HtmlSanitizer/issues/75
 
-            var s = new HtmlSanitizer();
+            var s = Sanitizer;
             var html = "<p>abc<script>xyz</p>";
 
             var actual = s.Sanitize(html);
@@ -2765,6 +2778,64 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var actual = s.SanitizeDocument(html);
 
             Assert.Equal(html, actual);
+        }
+
+        public static IEnumerable<T> Shuffle<T>(IEnumerable<T> source, Random rng)
+        {
+            T[] elements = source.ToArray();
+            for (int i = elements.Length - 1; i >= 0; i--)
+            {
+                // Swap element "i" with a random earlier element it (or itself)
+                // ... except we don't really need to swap it fully, as we can
+                // return it immediately, and afterwards it's irrelevant.
+                int swapIndex = rng.Next(i + 1);
+                yield return elements[swapIndex];
+                elements[swapIndex] = elements[i];
+            }
+        }
+
+        [Fact]
+        public void ThreadTest()
+        {
+            const int numThreads = 16;
+            const int numRuns = 1000;
+            var random = new Random(615322944);
+
+            for (int i = 0; i < numRuns; i++)
+            {
+                var allGo = new ManualResetEvent(false);
+                Exception firstException = null;
+                var failures = 0;
+                var fixture = new HtmlSanitizerFixture();
+                var tests = new HtmlSanitizerTests(fixture);
+                var waiting = numThreads;
+                var methods = typeof(HtmlSanitizerTests).GetMethods()
+                    .Where(m => m.GetCustomAttributes(typeof(Xunit.FactAttribute), false).Any())
+                    .Where(m => m.Name != "ThreadTest");
+                var threads = Shuffle(methods, random)
+                    .Take(numThreads)
+                    .Select(m => new Thread(() =>
+                    {
+                        try
+                        {
+                            if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
+                            m.Invoke(tests, null);
+                        }
+                        catch (Exception ex)
+                        {
+                            Interlocked.CompareExchange(ref firstException, ex, null);
+                            Interlocked.Increment(ref failures);
+                        }
+                    })).ToList();
+
+                foreach (var thread in threads)
+                    thread.Start();
+                foreach (var thread in threads)
+                    thread.Join();
+
+                Assert.Null(firstException);
+                Assert.Equal(0, failures);
+            }
         }
     }
 }
