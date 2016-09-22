@@ -61,6 +61,10 @@ sanitizer.AllowedSchemes.Add("mailto");
 ### Default attributes that contain URIs
 `action, background, dynsrc, href, lowsrc, src`
 
+### Thread safety
+
+The `Sanitize()` and `SanitizeDocument()` methods are thread-safe, i.e. you can use these methods on a single shared instance from different threads provided you do not simultaneously set instance or static properties. A typical use case is that you prepare an `HtmlSanitizer` instance once (i.e. set desired properties such as `AllowedTags` etc.) from a single thread, then call `Sanitize()`/`SanitizeDocument()` from multiple threads.
+
 Usage
 -----
 
