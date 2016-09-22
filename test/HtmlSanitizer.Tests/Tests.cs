@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using AngleSharp;
 using AngleSharp.Dom.Css;
 using System.Threading;
+using System.Reflection;
 
 // Tests based on tests from http://roadkill.codeplex.com/
 
@@ -2809,7 +2810,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
                 var fixture = new HtmlSanitizerFixture();
                 var tests = new HtmlSanitizerTests(fixture);
                 var waiting = numThreads;
-                var methods = typeof(HtmlSanitizerTests).GetMethods()
+                var methods = typeof(HtmlSanitizerTests).GetTypeInfo().GetMethods()
                     .Where(m => m.GetCustomAttributes(typeof(Xunit.FactAttribute), false).Any())
                     .Where(m => m.Name != "ThreadTest");
                 var threads = Shuffle(methods, random)
