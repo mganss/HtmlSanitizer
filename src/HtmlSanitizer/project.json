@@ -20,7 +20,7 @@
     "AngleSharp": "[0.9.8.1]"
   },
   "frameworks": {
-    "net45": {
+    "net4": {
       "frameworkAssemblies": {
         "System.Globalization": { "type": "build" },
         "System.IO": { "type": "build" },
