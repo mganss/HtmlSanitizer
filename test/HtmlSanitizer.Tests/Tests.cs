@@ -2838,6 +2838,25 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
                 Assert.Equal(0, failures);
             }
         }
+
+        [Fact]
+        public void AllowClassesTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.RemovingAttribute += (s, e) =>
+            {
+                if (e.Attribute.Name == "class")
+                {
+                    e.Tag.ClassList.Remove(e.Tag.ClassList.Except(new[] { "good", "oktoo" }, StringComparer.OrdinalIgnoreCase).ToArray());
+                    e.Cancel = e.Tag.ClassList.Any();
+                }
+            };
+
+            var html = @"<div class=""good bad"">Test</div>";
+            var actual = sanitizer.Sanitize(html);
+
+            Assert.Equal(@"<div class=""good"">Test</div>", actual);
+        }
     }
 }
 
