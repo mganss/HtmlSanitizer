@@ -71,6 +71,16 @@ namespace Ganss.XSS
         }
 
         /// <summary>
+        /// Gets or sets the default value indicating whether to keep child nodes of elements that are removed. Default is false.
+        /// </summary>
+        public static bool DefaultKeepChildNodes { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether to keep child nodes of elements that are removed. Default is <see cref="DefaultKeepChildNodes"/>.
+        /// </summary>
+        public bool KeepChildNodes { get; set; } = DefaultKeepChildNodes;
+
+        /// <summary>
         /// Gets or sets the default <see cref="Func{HtmlParser}"/> object that creates the parser used for parsing the input.
         /// </summary>
         public static Func<HtmlParser> DefaultHtmlParserFactory { get; set; } = CreateParser;
@@ -765,7 +775,13 @@ namespace Ganss.XSS
         {
             var e = new RemovingTagEventArgs { Tag = tag, Reason = reason };
             OnRemovingTag(e);
-            if (!e.Cancel) tag.Remove();
+            if (!e.Cancel)
+            {
+                if (KeepChildNodes && tag.HasChildNodes)
+                    tag.Replace(tag.ChildNodes.ToArray());
+                else
+                    tag.Remove();
+            }
         }
 
         /// <summary>

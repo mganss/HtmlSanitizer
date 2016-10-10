@@ -2877,6 +2877,18 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             Assert.Equal("Test1 Test2 Test3 <b>Test4</b>", actual);
         }
+
+        [Fact]
+        public void KeepChildNodesTest()
+        {
+            var sanitizer = new HtmlSanitizer { KeepChildNodes = true };
+            sanitizer.AllowedTags.Remove("div");
+
+            var html = @"Test1 <div>Test2 <script>Test3</script> <b>Test4</b></div>";
+            var actual = sanitizer.Sanitize(html);
+
+            Assert.Equal("Test1 Test2 Test3 <b>Test4</b>", actual);
+        }
     }
 }
 
