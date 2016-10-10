@@ -2857,6 +2857,26 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             Assert.Equal(@"<div class=""good"">Test</div>", actual);
         }
+
+        [Fact]
+        public void TextTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowedTags.Remove("div");
+            sanitizer.RemovingTag += (s, e) =>
+            {
+                if (e.Tag.HasChildNodes)
+                {
+                    e.Tag.Replace(e.Tag.ChildNodes.ToArray());
+                    e.Cancel = true;
+                }
+            };
+
+            var html = @"Test1 <div>Test2 <script>Test3</script> <b>Test4</b></div>";
+            var actual = sanitizer.Sanitize(html);
+
+            Assert.Equal("Test1 Test2 Test3 <b>Test4</b>", actual);
+        }
     }
 }
 
