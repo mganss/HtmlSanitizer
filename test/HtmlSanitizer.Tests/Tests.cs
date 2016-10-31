@@ -891,7 +891,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<IMG style=\"\">";
+            string expected = "<img>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -911,7 +911,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "exp/*<a style=\"\"></a>";
+            string expected = "exp/*<a></a>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
