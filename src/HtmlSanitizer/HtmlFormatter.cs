@@ -24,7 +24,7 @@ namespace Ganss.XSS
         // disable XML comments warnings
         #pragma warning disable 1591
 
-        public string Attribute(IAttr attr)
+        public virtual string Attribute(IAttr attr)
         {
             var namespaceUri = attr.NamespaceUri;
             var localName = attr.LocalName;
@@ -75,22 +75,22 @@ namespace Ganss.XSS
             return name != NamespaceNames.XmlNsPrefix ? (NamespaceNames.XmlNsPrefix + ":") : name;
         }
 
-        public string CloseTag(IElement element, bool selfClosing)
+        public virtual string CloseTag(IElement element, bool selfClosing)
         {
             return HtmlMarkupFormatter.Instance.CloseTag(element, selfClosing);
         }
 
-        public string Comment(IComment comment)
+        public virtual string Comment(IComment comment)
         {
             return HtmlMarkupFormatter.Instance.Comment(comment);
         }
 
-        public string Doctype(IDocumentType doctype)
+        public virtual string Doctype(IDocumentType doctype)
         {
             return HtmlMarkupFormatter.Instance.Doctype(doctype);
         }
 
-        public string OpenTag(IElement element, bool selfClosing)
+        public virtual string OpenTag(IElement element, bool selfClosing)
         {
             var temp = new StringBuilder();
 
@@ -113,12 +113,12 @@ namespace Ganss.XSS
             return temp.ToString();
         }
 
-        public string Processing(IProcessingInstruction processing)
+        public virtual string Processing(IProcessingInstruction processing)
         {
             return HtmlMarkupFormatter.Instance.Processing(processing);
         }
 
-        public string Text(string text)
+        public virtual string Text(string text)
         {
             return HtmlMarkupFormatter.Instance.Text(text);
         }
