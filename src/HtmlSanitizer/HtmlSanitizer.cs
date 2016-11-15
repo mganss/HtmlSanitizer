@@ -581,8 +581,6 @@ namespace Ganss.XSS
         {
             if (PostProcessNode != null)
             {
-                var replaced = false;
-
                 foreach (var node in nodes)
                 {
                     var e = new PostProcessNodeEventArgs { Document = dom, Node = node };
@@ -590,12 +588,8 @@ namespace Ganss.XSS
                     if (e.ReplacementNodes.Any())
                     {
                         ((IChildNode)node).Replace(e.ReplacementNodes.ToArray());
-                        replaced = true;
                     }
                 }
-
-                if (replaced)
-                    dom.Normalize();
             }
         }
 
