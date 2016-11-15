@@ -2889,6 +2889,25 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             Assert.Equal("Test1 Test2 Test3 <b>Test4</b>", actual);
         }
+
+        [Fact]
+        public void NormalizeTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.PostProcessNode += (s, e) =>
+            {
+                Assert.Equal(1, e.Document.Body.ChildNodes.Count());
+                var text = e.Node as IText;
+                Assert.NotNull(text);
+                Assert.Equal("Test1Test2", text.NodeValue);
+            };
+
+            var html = @"Test1<script>test();</script>Test2<!-- comment -->";
+
+            var actual = sanitizer.Sanitize(html);
+
+            Assert.Equal("Test1Test2", actual);
+        }
     }
 }
 

@@ -432,10 +432,24 @@ namespace Ganss.XSS
         /// Removes all comment nodes from a list of nodes.
         /// </summary>
         /// <param name="nodes">The list of nodes.</param>
-        private static void RemoveComments(List<INode> nodes)
+        /// <returns><c>true</c> if any comments were removed; otherwise, <c>false</c>.</returns>
+        private static bool RemoveComments(List<INode> nodes)
         {
-            foreach (var comment in nodes.OfType<IComment>())
-                comment.Remove();
+            var removed = false;
+
+            for (int i = 0; i < nodes.Count; i++)
+            {
+                var comment = nodes[i] as IComment;
+                if (comment != null)
+                {
+                    comment.Remove();
+                    nodes.RemoveAt(i);
+                    removed = true;
+                    i--;
+                }
+            }
+
+            return removed;
         }
 
         private void DoSanitize(IHtmlDocument dom, IElement context, string baseUrl = "")
@@ -482,9 +496,12 @@ namespace Ganss.XSS
                 }
             }
 
+            dom.Normalize();
+
             var nodes = GetAllNodes(context).ToList();
 
-            RemoveComments(nodes);
+            if (RemoveComments(nodes))
+                dom.Normalize();
 
             DoPostProcess(dom, nodes);
         }
@@ -564,13 +581,21 @@ namespace Ganss.XSS
         {
             if (PostProcessNode != null)
             {
+                var replaced = false;
+
                 foreach (var node in nodes)
                 {
                     var e = new PostProcessNodeEventArgs { Document = dom, Node = node };
                     OnPostProcessNode(e);
                     if (e.ReplacementNodes.Any())
+                    {
                         ((IChildNode)node).Replace(e.ReplacementNodes.ToArray());
+                        replaced = true;
+                    }
                 }
+
+                if (replaced)
+                    dom.Normalize();
             }
         }
 
