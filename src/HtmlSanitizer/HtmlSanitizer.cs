@@ -431,25 +431,12 @@ namespace Ganss.XSS
         /// <summary>
         /// Removes all comment nodes from a list of nodes.
         /// </summary>
-        /// <param name="nodes">The list of nodes.</param>
+        /// <param name="context">The element within which to remove comments.</param>
         /// <returns><c>true</c> if any comments were removed; otherwise, <c>false</c>.</returns>
-        private static bool RemoveComments(List<INode> nodes)
+        private static void RemoveComments(IElement context)
         {
-            var removed = false;
-
-            for (int i = 0; i < nodes.Count; i++)
-            {
-                var comment = nodes[i] as IComment;
-                if (comment != null)
-                {
-                    comment.Remove();
-                    nodes.RemoveAt(i);
-                    removed = true;
-                    i--;
-                }
-            }
-
-            return removed;
+            foreach (var comment in GetAllNodes(context).OfType<IComment>().ToList())
+                comment.Remove();
         }
 
         private void DoSanitize(IHtmlDocument dom, IElement context, string baseUrl = "")
@@ -496,14 +483,9 @@ namespace Ganss.XSS
                 }
             }
 
-            dom.Normalize();
+            RemoveComments(context);
 
-            var nodes = GetAllNodes(context).ToList();
-
-            if (RemoveComments(nodes))
-                dom.Normalize();
-
-            DoPostProcess(dom, nodes);
+            DoPostProcess(dom, context);
         }
 
         private void SanitizeStyleSheets(IHtmlDocument dom, string baseUrl)
@@ -576,11 +558,14 @@ namespace Ganss.XSS
         /// Performs post processing on all nodes in the document.
         /// </summary>
         /// <param name="dom">The HTML document.</param>
-        /// <param name="nodes">The list of nodes in the document.</param>
-        private void DoPostProcess(IHtmlDocument dom, List<INode> nodes)
+        /// <param name="context">The element within which to post process all nodes.</param>
+        private void DoPostProcess(IHtmlDocument dom, IElement context)
         {
             if (PostProcessNode != null)
             {
+                dom.Normalize();
+                var nodes = GetAllNodes(context).ToList();
+
                 foreach (var node in nodes)
                 {
                     var e = new PostProcessNodeEventArgs { Document = dom, Node = node };
