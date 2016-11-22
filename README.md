@@ -65,6 +65,20 @@ sanitizer.AllowedSchemes.Add("mailto");
 
 The `Sanitize()` and `SanitizeDocument()` methods are thread-safe, i.e. you can use these methods on a single shared instance from different threads provided you do not simultaneously set instance or static properties. A typical use case is that you prepare an `HtmlSanitizer` instance once (i.e. set desired properties such as `AllowedTags` etc.) from a single thread, then call `Sanitize()`/`SanitizeDocument()` from multiple threads.
 
+### Text content not necessarily preserved as-is
+
+Please note that as the input is parsed by AngleSharp's HTML parser and then rendered back out, you cannot expect the text content to be preserved exactly as it was input, even if no elements or attributes were removed. Examples:
+
+- `4 < 5` becomes `4 &lt; 5`
+- `<SPAN>test</p>` becomes `<span>test<p></p></span>`
+- `<span title='test'>test</span>` becomes `<span title="test">test</span>`
+
+On the other hand, although some broken HTML is fixed by the parser, the output might still contain invalid HTML. Examples:
+
+- `<div><li>test</li></div>`
+- `<ul><br><li>test</li></ul>`
+- `<h3><p>test</p></h3>`
+
 Usage
 -----
 
