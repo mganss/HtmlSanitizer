@@ -311,7 +311,7 @@ namespace Ganss.XSS
         /// <param name="e">The <see cref="PostProcessNodeEventArgs"/> instance containing the event data.</param>
         protected virtual void OnPostProcessNode(PostProcessNodeEventArgs e)
         {
-            if (PostProcessNode != null) PostProcessNode(this, e);
+            PostProcessNode?.Invoke(this, e);
         }
 
         /// <summary>
@@ -320,7 +320,7 @@ namespace Ganss.XSS
         /// <param name="e">The <see cref="RemovingTagEventArgs"/> instance containing the event data.</param>
         protected virtual void OnRemovingTag(RemovingTagEventArgs e)
         {
-            if (RemovingTag != null) RemovingTag(this, e);
+            RemovingTag?.Invoke(this, e);
         }
 
         /// <summary>
@@ -329,7 +329,7 @@ namespace Ganss.XSS
         /// <param name="e">The <see cref="RemovingAttributeEventArgs"/> instance containing the event data.</param>
         protected virtual void OnRemovingAttribute(RemovingAttributeEventArgs e)
         {
-            if (RemovingAttribute != null) RemovingAttribute(this, e);
+            RemovingAttribute?.Invoke(this, e);
         }
 
         /// <summary>
@@ -338,7 +338,7 @@ namespace Ganss.XSS
         /// <param name="e">The <see cref="RemovingStyleEventArgs"/> instance containing the event data.</param>
         protected virtual void OnRemovingStyle(RemovingStyleEventArgs e)
         {
-            if (RemovingStyle != null) RemovingStyle(this, e);
+            RemovingStyle?.Invoke(this, e);
         }
 
         /// <summary>
@@ -347,7 +347,7 @@ namespace Ganss.XSS
         /// <param name="e">The <see cref="RemovingAtRuleEventArgs"/> instance containing the event data.</param>
         protected virtual void OnRemovingAtRule(RemovingAtRuleEventArgs e)
         {
-            if (RemovingAtRule != null) RemovingAtRule(this, e);
+            RemovingAtRule?.Invoke(this, e);
         }
 
         /// <summary>
