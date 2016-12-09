@@ -73,7 +73,7 @@ namespace Ganss.XSS
     public class RemovingAttributeEventArgs : CancelEventArgs
     {
         /// <summary>
-        /// The tag containing the attribute to be removed.
+        /// Gets or sets the tag containing the attribute to be removed.
         /// </summary>
         /// <value>
         /// The tag.
@@ -103,7 +103,7 @@ namespace Ganss.XSS
     public class RemovingStyleEventArgs : CancelEventArgs
     {
         /// <summary>
-        /// The tag containing the style to be removed.
+        /// Gets or sets the tag containing the style to be removed.
         /// </summary>
         /// <value>
         /// The tag.
@@ -133,7 +133,7 @@ namespace Ganss.XSS
     public class RemovingAtRuleEventArgs : CancelEventArgs
     {
         /// <summary>
-        /// The tag containing the at-rule to be removed.
+        /// Gets or sets the tag containing the at-rule to be removed.
         /// </summary>
         /// <value>
         /// The tag.
@@ -147,5 +147,19 @@ namespace Ganss.XSS
         /// The rule.
         /// </value>
         public ICssRule Rule { get; set; }
+    }
+
+    /// <summary>
+    /// Provides data for the <see cref="HtmlSanitizer.RemovingComment"/> event.
+    /// </summary>
+    public class RemovingCommentEventArgs : CancelEventArgs
+    {
+        /// <summary>
+        /// Gets or sets the comment node to be removed.
+        /// </summary>
+        /// <value>
+        /// The comment node.
+        /// </value>
+        public IComment Comment { get; set; }
     }
 }

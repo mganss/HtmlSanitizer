@@ -304,6 +304,10 @@ namespace Ganss.XSS
         /// Occurs before an at-rule is removed.
         /// </summary>
         public event EventHandler<RemovingAtRuleEventArgs> RemovingAtRule;
+        /// <summary>
+        /// Occurs before a comment is removed.
+        /// </summary>
+        public event EventHandler<RemovingCommentEventArgs> RemovingComment;
 
         /// <summary>
         /// Raises the <see cref="E:PostProcessNode" /> event.
@@ -348,6 +352,15 @@ namespace Ganss.XSS
         protected virtual void OnRemovingAtRule(RemovingAtRuleEventArgs e)
         {
             RemovingAtRule?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="E:RemovingComment" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="RemovingCommentEventArgs"/> instance containing the event data.</param>
+        protected virtual void OnRemovingComment(RemovingCommentEventArgs e)
+        {
+            RemovingComment?.Invoke(this, e);
         }
 
         /// <summary>
@@ -433,10 +446,15 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="context">The element within which to remove comments.</param>
         /// <returns><c>true</c> if any comments were removed; otherwise, <c>false</c>.</returns>
-        private static void RemoveComments(IElement context)
+        private void RemoveComments(IElement context)
         {
             foreach (var comment in GetAllNodes(context).OfType<IComment>().ToList())
-                comment.Remove();
+            {
+                var e = new RemovingCommentEventArgs { Comment = comment };
+                OnRemovingComment(e);
+                if (!e.Cancel)
+                    comment.Remove();
+            }
         }
 
         private void DoSanitize(IHtmlDocument dom, IElement context, string baseUrl = "")

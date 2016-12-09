@@ -2908,6 +2908,19 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             Assert.Equal("Test1Test2", actual);
         }
+
+        [Fact]
+        public void RemovingCommentTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.RemovingComment += (s, e) => e.Cancel = e.Comment.TextContent.Contains("good comment");
+
+            var html = @"<!-- bad comment --><!-- good comment -->";
+
+            var actual = sanitizer.Sanitize(html);
+
+            Assert.Equal("<!-- good comment -->", actual);
+        }
     }
 }
 
