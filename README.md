@@ -94,7 +94,7 @@ Assert.That(sanitized, Is.EqualTo(@"<div style=""background-color: test"">"
     + @"Test<img style=""margin: 10px"" src=""http://www.example.com/test.gif""></div>");
 ```
 
-There's a [demo at .NET Fiddle](https://dotnetfiddle.net/qqpiDh) you can play with.
+There's an [online demo](http://xss.ganss.org/), plus there's also a [.NET Fiddle](https://dotnetfiddle.net/qqpiDh) you can play with.
 
 License
 -------
