@@ -3,7 +3,7 @@
   "title": "HtmlSanitizer",
   "description": "Cleans HTML from constructs that can be used for cross site scripting (XSS)",
   "authors": [ "Michael Ganss" ],
-  "copyright": "Copyright 2013-2016 Michael Ganss",
+  "copyright": "Copyright 2013-2017 Michael Ganss",
   "packOptions": {
     "projectUrl": "https://github.com/mganss/HtmlSanitizer",
     "tags": [ "xss", "anti", "antixss", "html", "security" ],
