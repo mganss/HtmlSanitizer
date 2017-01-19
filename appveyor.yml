@@ -1,4 +1,4 @@
-version: 3.4.{build}-beta
+version: 3.4.{build}
 skip_tags: true
 environment:
   CoverityProjectToken:
