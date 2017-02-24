@@ -91,7 +91,7 @@ var html = @"<script>alert('xss')</script><div onload=""alert('xss')"""
     + @"style=""background-image: url(javascript:alert('xss')); margin: 10px""></div>";
 var sanitized = sanitizer.Sanitize(html, "http://www.example.com");
 Assert.That(sanitized, Is.EqualTo(@"<div style=""background-color: test"">"
-    + @"Test<img style=""margin: 10px"" src=""http://www.example.com/test.gif""></div>");
+    + @"Test<img style=""margin: 10px"" src=""http://www.example.com/test.gif""></div>"));
 ```
 
 There's an [online demo](http://xss.ganss.org/), plus there's also a [.NET Fiddle](https://dotnetfiddle.net/qqpiDh) you can play with.
