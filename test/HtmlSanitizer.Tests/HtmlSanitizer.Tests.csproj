@@ -42,6 +42,13 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AngleSharp, Version=0.10.0.0, Culture=neutral, PublicKeyToken=e83494dcdc6d31ea, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\AngleSharp.Css\src\AngleSharp.Css\bin\Debug\AngleSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="AngleSharp.Css">
+      <HintPath>..\..\..\AngleSharp.Css\src\AngleSharp.Css\bin\Debug\AngleSharp.Css.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Net" />
   </ItemGroup>

@@ -1,15 +1,15 @@
 using AngleSharp.Dom;
-using AngleSharp.Dom.Html;
-using AngleSharp.Parser.Html;
+using AngleSharp.Html.Dom;
+using AngleSharp.Html.Parser;
 using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using AngleSharp;
-using AngleSharp.Dom.Css;
 using System.Threading;
 using System.Reflection;
+using AngleSharp.Css.Dom;
 
 // Tests based on tests from http://roadkill.codeplex.com/
 
@@ -2191,7 +2191,7 @@ rl(javascript:alert(""foo""))'>";
                     var autolinked = Regex.Replace(text.NodeValue, @"https?://[^\s]+[^\s!?.:;,]+", m => $@"<a href=""{m.Value}"">{m.Value}</a>", RegexOptions.IgnoreCase);
                     if (autolinked != text.NodeValue)
                     {
-                        var f = new HtmlParser().Parse(autolinked);
+                        var f = new HtmlParser().ParseDocument(autolinked);
                         foreach (var node in f.Body.ChildNodes)
                             e.ReplacementNodes.Add(node);
                     }
@@ -2546,10 +2546,10 @@ rl(javascript:alert(""foo""))'>";
         {
             var s = new HtmlSanitizer();
             s.AllowedTags.Add("style");
-            s.AllowedAtRules.Add(AngleSharp.Dom.Css.CssRuleType.Media);
-            s.AllowedAtRules.Add(AngleSharp.Dom.Css.CssRuleType.Keyframes);
-            s.AllowedAtRules.Add(AngleSharp.Dom.Css.CssRuleType.Keyframe);
-            s.AllowedAtRules.Add(AngleSharp.Dom.Css.CssRuleType.Page);
+            s.AllowedAtRules.Add(AngleSharp.Css.Dom.CssRuleType.Media);
+            s.AllowedAtRules.Add(AngleSharp.Css.Dom.CssRuleType.Keyframes);
+            s.AllowedAtRules.Add(AngleSharp.Css.Dom.CssRuleType.Keyframe);
+            s.AllowedAtRules.Add(AngleSharp.Css.Dom.CssRuleType.Page);
             var html = @"<html><head><style>
 @charset ""UTF-8"";
 @import url(evil.css);
@@ -2739,7 +2739,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             // https://github.com/mganss/HtmlSanitizer/issues/81
 
-            var s = new HtmlSanitizer { HtmlParserFactory = () => new HtmlParser(new Configuration()) };
+            var s = new HtmlSanitizer { HtmlParserFactory = () => new HtmlParser(new HtmlParserOptions(), BrowsingContext.New(new Configuration())) };
             var html = @"<p style=""t"">xyz</p>";
 
             var actual = s.Sanitize(html);
@@ -2752,7 +2752,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             // https://github.com/mganss/HtmlSanitizer/issues/84
 
-            var s = new HtmlSanitizer { HtmlParserFactory = () => new HtmlParser(new Configuration()) };
+            var s = new HtmlSanitizer { HtmlParserFactory = () => new HtmlParser(new HtmlParserOptions(), BrowsingContext.New(new Configuration())) };
             var html = @"<input type=""text"" name=""my_name"" value=""<insert name>"">";
 
             var actual = s.Sanitize(html);

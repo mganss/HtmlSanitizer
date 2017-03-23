@@ -1,11 +1,9 @@
 using AngleSharp;
+using AngleSharp.Css.Dom;
+using AngleSharp.Css.Parser;
 using AngleSharp.Dom;
-using AngleSharp.Dom.Css;
-using AngleSharp.Dom.Html;
-using AngleSharp.Extensions;
-using AngleSharp.Html;
-using AngleSharp.Parser.Css;
-using AngleSharp.Parser.Html;
+using AngleSharp.Html.Dom;
+using AngleSharp.Html.Parser;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -397,7 +395,7 @@ namespace Ganss.XSS
         public string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
             var parser = HtmlParserFactory();
-            var dom = parser.Parse("<html><body></body></html>");
+            var dom = parser.ParseDocument("<html><body></body></html>");
             dom.Body.InnerHtml = html;
 
             DoSanitize(dom, dom.Body, baseUrl);
@@ -417,7 +415,7 @@ namespace Ganss.XSS
         public string SanitizeDocument(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
             var parser = HtmlParserFactory();
-            var dom = parser.Parse(html);
+            var dom = parser.ParseDocument(html);
 
             DoSanitize(dom, dom.DocumentElement, baseUrl);
 
@@ -432,13 +430,12 @@ namespace Ganss.XSS
         /// <returns>An instance of <see cref="HtmlParser"/>.</returns>
         private static HtmlParser CreateParser()
         {
-            return new HtmlParser(new Configuration().WithCss(e => e.Options = new CssParserOptions
+            return new HtmlParser(new HtmlParserOptions(), BrowsingContext.New(new Configuration().WithCss(new CssParserOptions
             {
                 IsIncludingUnknownDeclarations = true,
                 IsIncludingUnknownRules = true,
-                IsToleratingInvalidConstraints = true,
-                IsToleratingInvalidValues = true
-            }));
+                IsToleratingInvalidSelectors = true,
+            })));
         }
 
         /// <summary>
@@ -645,14 +642,14 @@ namespace Ganss.XSS
             // filter out invalid CSS declarations
             // see https://github.com/AngleSharp/AngleSharp/issues/101
             if (element.GetAttribute("style") == null) return;
-            if (element.Style == null)
+            if (element.GetStyle() == null)
             {
                 element.RemoveAttribute("style");
                 return;
             }
-            element.SetAttribute("style", element.Style.ToCss());
+            element.SetAttribute("style", element.GetStyle().ToCss());
 
-            var styles = element.Style;
+            var styles = element.GetStyle();
             if (styles == null || styles.Length == 0) return;
 
             SanitizeStyleDeclaration(element, styles, baseUrl);
