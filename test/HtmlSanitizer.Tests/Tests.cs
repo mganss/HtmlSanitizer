@@ -1150,7 +1150,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT/XSS%20SRC="">""&gt;XSS</a>";
+            string expected = "<a href=\"http://www.codeplex.com?url=&lt;SCRIPT/XSS SRC=\">\"&gt;XSS</a>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -1250,7 +1250,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = @"<a href=""http://www.codeplex.com/?url=%3C%3CSCRIPT%3Ealert("">""&gt;XSS</a>";
+            string expected = "<a href=\"http://www.codeplex.com?url=&lt;&lt;SCRIPT&gt;alert(\">\"&gt;XSS</a>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -1349,7 +1349,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT%20SRC=//ha.ckers.org/.j%3E"">XSS</a>";
+            string expected = "<a href=\"http://www.codeplex.com?url=&lt;SCRIPT SRC=//ha.ckers.org/.j&gt;\">XSS</a>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -1409,7 +1409,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT%3Ea=/XSS/alert(a.source)%3C/SCRIPT%3E"">XSS</a>";
+            string expected = "<a href=\"http://www.codeplex.com?url=&lt;SCRIPT&gt;a=/XSS/alert(a.source)&lt;/SCRIPT&gt;\">XSS</a>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -1469,7 +1469,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = @"<a href=""http://www.codeplex.com/?url=%C2%BCscript%C2%BEalert(%C2%A2XSS%C2%A2)%C2%BC/script%C2%BE"">XSS</a>";
+            string expected = "<a href=\"http://www.codeplex.com?url=¼script¾alert(¢XSS¢)¼/script¾\">XSS</a>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -1488,7 +1488,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = @"<a href=""http://www.codeplex.com/?url=%3C!--[if%20gte%20IE%204]%3E%3CSCRIPT%3Ealert('XSS');%3C/SCRIPT%3E%3C![endif]--%3E"">XSS</a>";
+            string expected = "<a href=\"http://www.codeplex.com?url=&lt;!--[if gte IE 4]&gt;&lt;SCRIPT&gt;alert('XSS');&lt;/SCRIPT&gt;&lt;![endif]--&gt;\">XSS</a>";
 
             try
             {
@@ -1542,7 +1542,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = @"<a href=""http://www.codeplex.com/?url=%3CSCRIPT%20a="">"" SRC=""http://ha.ckers.org/xss.js""&gt;""&gt;XSS</a>";
+            string expected = "<a href=\"http://www.codeplex.com?url=&lt;SCRIPT a=\">\" SRC=\"http://ha.ckers.org/xss.js\"&gt;\"&gt;XSS</a>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -1744,7 +1744,7 @@ S
 
             html = @"<a href=""http:xxx"">test</a>";
             actual = sanitizer.Sanitize(html);
-            expected = @"<a>test</a>";
+            expected = @"<a href=""http:xxx"">test</a>";
             Assert.Equal(expected, actual, ignoreCase: true);
 
             html = @"<a href=""folder/file.jpg"">test</a>";
@@ -1796,7 +1796,7 @@ S
             Assert.Equal(@"<a href=""#"">fo<br>o</a>", sanitizer.Sanitize(html), ignoreCase: true);
 
             html = @"<a href=""#with:colon"">foo</a>";
-            Assert.Equal(@"<a>foo</a>", sanitizer.Sanitize(html), ignoreCase: true);
+            Assert.Equal(html, sanitizer.Sanitize(html), ignoreCase: true);
         }
 
         [Fact]
@@ -2291,7 +2291,7 @@ rl(javascript:alert(""foo""))'>";
             var actual = s.Sanitize(htmlFragment);
 
             // Assert
-            var expected = @"<a>Bang Bang</a>";
+            var expected = htmlFragment;
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -2623,7 +2623,6 @@ rl(javascript:alert(""foo""))'>";
             var sanitizer = new HtmlSanitizer();
             sanitizer.AllowDataAttributes = true;
             sanitizer.AllowedSchemes.Add("data");
-            sanitizer.RemovingAttribute += (s, e) => e.Cancel = e.Reason == RemoveReason.NotAllowedUrlValue && e.Attribute.Value.Length >= 0xfff0 && e.Attribute.Value.StartsWith("data:", StringComparison.OrdinalIgnoreCase);
             var html = @"    <p>
         <img src=""data:image/jpeg;base64,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
@@ -2920,6 +2919,32 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var actual = sanitizer.Sanitize(html);
 
             Assert.Equal("<!-- good comment -->", actual);
+        }
+
+        [Fact]
+        public void TrailingSlashTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowedSchemes.Add("resources");
+
+            var html = "<IMG src=\"resources://ais_w20_h20_33ba129c.png\">";
+
+            var actual = sanitizer.Sanitize(html);
+
+            Assert.Equal(html, actual, ignoreCase: true);
+        }
+
+        [Fact]
+        public void FileUrlTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowedSchemes.Add("file");
+
+            var html = @"<a href=""file:///C:/exampleㄓ.txt"">test</a>";
+
+            var actual = sanitizer.Sanitize(html);
+
+            Assert.Equal(html, actual);
         }
     }
 }
