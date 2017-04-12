@@ -13,7 +13,7 @@ build_script:
 test_script:
   - dotnet test test\HtmlSanitizer.Tests\HtmlSanitizer.Tests.csproj
   - nuget.exe install OpenCover -ExcludeVersion
-  - OpenCover\tools\OpenCover.Console.exe -register:user -filter:"+[HtmlSanitizer]*" -target:"C:\Program Files\dotnet\dotnet.exe" "-targetargs:test test\HtmlSanitizer.Tests" -returntargetcode -hideskipped:All -output:coverage.xml
+  - OpenCover\tools\OpenCover.Console.exe -register:user -filter:"+[HtmlSanitizer]*" -target:"C:\Program Files\dotnet\dotnet.exe" "-targetargs:test test\HtmlSanitizer.Tests\HtmlSanitizer.Tests.csproj" -returntargetcode -hideskipped:All -output:coverage.xml
   - "SET PATH=C:\\Python34;C:\\Python34\\Scripts;%PATH%"
   - pip install codecov
   - codecov -f "coverage.xml"
