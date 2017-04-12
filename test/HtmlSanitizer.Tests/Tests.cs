@@ -1954,7 +1954,7 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Fact]
-        public void capitalExpressionTest()
+        public void CapitalExpressionTest()
         {
             var sanitizer = Sanitizer;
             var html = @"<div style=""top:EXPRESSION(alert())"">XSS</div>";
@@ -2127,8 +2127,10 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void AllowDataAttributesTest()
         {
-            var sanitizer = new HtmlSanitizer();
-            sanitizer.AllowDataAttributes = true;
+            var sanitizer = new HtmlSanitizer()
+            {
+                AllowDataAttributes = true
+            };
             var html = @"<div data-test1=""value x""></div>";
             Assert.Equal(html, sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -2136,8 +2138,10 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void AllowDataAttributesCaseTest()
         {
-            var sanitizer = new HtmlSanitizer();
-            sanitizer.AllowDataAttributes = true;
+            var sanitizer = new HtmlSanitizer()
+            {
+                AllowDataAttributes = true
+            };
             var html = @"<div DAta-test1=""value x""></div>";
             Assert.Equal(html, sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -2145,8 +2149,10 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void AllowDataAttributesOffTest()
         {
-            var sanitizer = new HtmlSanitizer();
-            sanitizer.AllowDataAttributes = false;
+            var sanitizer = new HtmlSanitizer()
+            {
+                AllowDataAttributes = false
+            };
             var html = @"<div data-test1=""value x""></div>";
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -2165,8 +2171,7 @@ rl(javascript:alert(""foo""))'>";
             var sanitizer = new HtmlSanitizer();
             sanitizer.PostProcessNode += (s, e) =>
             {
-                var el = e.Node as IHtmlElement;
-                if (el != null)
+                if (e.Node is IHtmlElement el)
                 {
                     el.ClassList.Add("test");
                     var b = e.Document.CreateElement("b");
@@ -2185,8 +2190,7 @@ rl(javascript:alert(""foo""))'>";
             var sanitizer = new HtmlSanitizer();
             sanitizer.PostProcessNode += (s, e) =>
             {
-                var text = e.Node as IText;
-                if (text != null)
+                if (e.Node is IText text)
                 {
                     var autolinked = Regex.Replace(text.NodeValue, @"https?://[^\s]+[^\s!?.:;,]+", m => $@"<a href=""{m.Value}"">{m.Value}</a>", RegexOptions.IgnoreCase);
                     if (autolinked != text.NodeValue)
@@ -2620,8 +2624,10 @@ rl(javascript:alert(""foo""))'>";
         {
             // https://github.com/mganss/HtmlSanitizer/issues/66
 
-            var sanitizer = new HtmlSanitizer();
-            sanitizer.AllowDataAttributes = true;
+            var sanitizer = new HtmlSanitizer()
+            {
+                AllowDataAttributes = true
+            };
             sanitizer.AllowedSchemes.Add("data");
             var html = @"    <p>
         <img src=""data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAFvAeoDASIAAhEBAxEB/8QAHgAAAAcBAQEBAAAAAAAAAAAAAgMEBQYHCAEJAAr/xABrEAABAwMCAwQGBQQHEA0JBwUBAgMEAAURBiEHEjEIE0FRCRQiYXGBFTJCkaEjM7HBFhdSYnXR0iQ1NzhDY3J2gpKis7TU4fAYGSU0VnSEhZSVsrXCJicoNkZTZnOjREVUV4Ok8VVkZZOW/8QAHAEAAQUBAQEAAAAAAAAAAAAABAECAwUGAAcI/8QAOhEAAQQBBAADBQYFAwQDAAAAAQACAxEEBRIhMRNBUQYUImFxIzIzNIGRFSRCocEHUrE10eHwFkPx/9oADAMBAAIRAxEAPwCsOwKgjhLKXyKx9NPjPcjH5tv7f6v4q2HaSAEn34rIfYBCVcIZWA3kXqQT7auf8214dMfj0rXMJB5UFJ99eg6T/wBPZ+q8+1gVqDz9FMLYsnpUpgrWEDIO25qJWhwEdOlSmG7gAJzvQWX2psY8J7hvpKMg7e+liHfZ26im+OAU9cY8KVt486qZGgqxj6S5K87k184okkjxopC84GK6tWUKHT30KGU5EB3HCbLmvmSoKwAn3+NQe4pBeJT0zUynILqVJK8eJNRWe2hJwjfNW2JwhJk1Hf5UFQPKTR6kZxQe5Uds1at55QDuklaAWr6uaOdjnuiQnrSlEUpGMDJo9TQDeD51KH0oCwO7UXlW3vle0jPz60mFlTn2B8RUuLDRweXpQkMtg55QanGU7pRe7hRL6ASGQQklWab5FsUhRSp
@@ -2764,9 +2770,10 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             // https://github.com/mganss/HtmlSanitizer/issues/80
 
-            var s = new HtmlSanitizer();
-
-            s.AllowDataAttributes = true;
+            var s = new HtmlSanitizer()
+            {
+                AllowDataAttributes = true
+            };
             s.AllowedAtRules.Add(CssRuleType.FontFace);
 
             s.AllowedTags.Add("style");

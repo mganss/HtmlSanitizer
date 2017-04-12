@@ -528,17 +528,13 @@ namespace Ganss.XSS
         {
             if (!AllowedAtRules.Contains(rule.Type)) return false;
 
-            var styleRule = rule as ICssStyleRule;
-
-            if (styleRule != null)
+            if (rule is ICssStyleRule styleRule)
             {
                 SanitizeStyleDeclaration(styleTag, styleRule.Style, baseUrl);
             }
             else
             {
-                var groupingRule = rule as ICssGroupingRule;
-
-                if (groupingRule != null)
+                if (rule is ICssGroupingRule groupingRule)
                 {
                     for (int i = 0; i < groupingRule.Rules.Length;)
                     {
@@ -548,23 +544,20 @@ namespace Ganss.XSS
                         else i++;
                     }
                 }
-                else if (rule is ICssPageRule)
+                else if (rule is ICssPageRule pageRule)
                 {
-                    var pageRule = (ICssPageRule)rule;
                     SanitizeStyleDeclaration(styleTag, pageRule.Style, baseUrl);
                 }
-                else if (rule is ICssKeyframesRule)
+                else if (rule is ICssKeyframesRule keyFramesRule)
                 {
-                    var keyFramesRule = (ICssKeyframesRule)rule;
                     foreach (var childRule in keyFramesRule.Rules.OfType<ICssKeyframeRule>().ToList())
                     {
                         if (!SanitizeStyleRule(childRule, styleTag, baseUrl) && RemoveAtRule(styleTag, childRule))
                             keyFramesRule.Remove(childRule.KeyText);
                     }
                 }
-                else if (rule is ICssKeyframeRule)
+                else if (rule is ICssKeyframeRule keyFrameRule)
                 {
-                    var keyFrameRule = (ICssKeyframeRule)rule;
                     SanitizeStyleDeclaration(styleTag, keyFrameRule.Style, baseUrl);
                 }
             }
