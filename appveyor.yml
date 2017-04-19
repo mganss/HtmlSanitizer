@@ -1,18 +1,19 @@
 version: 3.4.{build}
 skip_tags: true
+image: Visual Studio 2017
 environment:
   CoverityProjectToken:
     secure: pUUrynbyxCRpsAgGdKBVYDZCilwBmaWQ1Jg+rg5znr0=
   CoverityNotificationEmail:
     secure: m/ox72HU97EeJExWEFWx+0M9uov0cydn6E8mSaQzsQE=
 build_script:
-  - ps: (Get-Content src\HtmlSanitizer\project.json).Replace("1.0.0-VERSION", $env:APPVEYOR_BUILD_VERSION) | Set-Content src\HtmlSanitizer\project.json
+  - ps: (Get-Content src\HtmlSanitizer\HtmlSanitizer.csproj).Replace("1.0.0-VERSION", $env:APPVEYOR_BUILD_VERSION) | Set-Content src\HtmlSanitizer\HtmlSanitizer.csproj
   - dotnet restore
   - dotnet pack -c Release src\HtmlSanitizer
 test_script:
-  - dotnet test test\HtmlSanitizer.Tests
+  - dotnet test test\HtmlSanitizer.Tests\HtmlSanitizer.Tests.csproj
   - nuget.exe install OpenCover -ExcludeVersion
-  - OpenCover\tools\OpenCover.Console.exe -register:user -filter:"+[HtmlSanitizer]*" -target:"C:\Program Files\dotnet\dotnet.exe" "-targetargs:test test\HtmlSanitizer.Tests" -returntargetcode -hideskipped:All -output:coverage.xml
+  - OpenCover\tools\OpenCover.Console.exe -register:user -filter:"+[HtmlSanitizer]*" -target:"C:\Program Files\dotnet\dotnet.exe" "-targetargs:test test\HtmlSanitizer.Tests\HtmlSanitizer.Tests.csproj" -returntargetcode -hideskipped:All -output:coverage.xml
   - "SET PATH=C:\\Python34;C:\\Python34\\Scripts;%PATH%"
   - pip install codecov
   - codecov -f "coverage.xml"
