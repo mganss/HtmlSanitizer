@@ -26,7 +26,6 @@
 
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="[0.9.9]" />
-    <PackageReference Include="System.ValueTuple" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
