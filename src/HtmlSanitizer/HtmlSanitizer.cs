@@ -468,7 +468,7 @@ namespace Ganss.XSS
             SanitizeStyleSheets(dom, baseUrl);
 
             // cleanup attributes
-            foreach (var tag in context.QuerySelectorAll("*").OfType<IHtmlElement>().ToList())
+            foreach (var tag in context.QuerySelectorAll("*").OfType<IElement>().ToList())
             {
                 // remove non-whitelisted attributes
                 foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
@@ -633,7 +633,7 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="element">The element.</param>
         /// <param name="baseUrl">The base URL.</param>
-        protected void SanitizeStyle(IHtmlElement element, string baseUrl)
+        protected void SanitizeStyle(IElement element, string baseUrl)
         {
             // filter out invalid CSS declarations
             // see https://github.com/AngleSharp/AngleSharp/issues/101

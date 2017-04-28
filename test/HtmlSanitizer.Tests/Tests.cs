@@ -2953,6 +2953,21 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             Assert.Equal(html, actual);
         }
+
+        [Fact]
+        public void SvgTest()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/119
+
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowedTags.Add("svg");
+
+            var html = @"<svg onchange='alert(1)'>123</svg>";
+
+            var actual = sanitizer.Sanitize(html);
+
+            Assert.Equal("<svg>123</svg>", actual);
+        }
     }
 }
 
