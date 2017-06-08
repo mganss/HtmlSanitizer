@@ -465,7 +465,7 @@ namespace Ganss.XSS
             SanitizeStyleSheets(dom, baseUrl);
 
             // cleanup attributes
-            foreach (var tag in context.QuerySelectorAll("*").OfType<IHtmlElement>().ToList())
+            foreach (var tag in context.QuerySelectorAll("*").OfType<IElement>().ToList())
             {
                 // remove non-whitelisted attributes
                 foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
@@ -525,17 +525,13 @@ namespace Ganss.XSS
         {
             if (!AllowedAtRules.Contains(rule.Type)) return false;
 
-            var styleRule = rule as ICssStyleRule;
-
-            if (styleRule != null)
+            if (rule is ICssStyleRule styleRule)
             {
                 SanitizeStyleDeclaration(styleTag, styleRule.Style, baseUrl);
             }
             else
             {
-                var groupingRule = rule as ICssGroupingRule;
-
-                if (groupingRule != null)
+                if (rule is ICssGroupingRule groupingRule)
                 {
                     for (int i = 0; i < groupingRule.Rules.Length;)
                     {
@@ -545,23 +541,20 @@ namespace Ganss.XSS
                         else i++;
                     }
                 }
-                else if (rule is ICssPageRule)
+                else if (rule is ICssPageRule pageRule)
                 {
-                    var pageRule = (ICssPageRule)rule;
                     SanitizeStyleDeclaration(styleTag, pageRule.Style, baseUrl);
                 }
-                else if (rule is ICssKeyframesRule)
+                else if (rule is ICssKeyframesRule keyFramesRule)
                 {
-                    var keyFramesRule = (ICssKeyframesRule)rule;
                     foreach (var childRule in keyFramesRule.Rules.OfType<ICssKeyframeRule>().ToList())
                     {
                         if (!SanitizeStyleRule(childRule, styleTag, baseUrl) && RemoveAtRule(styleTag, childRule))
                             keyFramesRule.Remove(childRule.KeyText);
                     }
                 }
-                else if (rule is ICssKeyframeRule)
+                else if (rule is ICssKeyframeRule keyFrameRule)
                 {
-                    var keyFrameRule = (ICssKeyframeRule)rule;
                     SanitizeStyleDeclaration(styleTag, keyFrameRule.Style, baseUrl);
                 }
             }
@@ -637,7 +630,7 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="element">The element.</param>
         /// <param name="baseUrl">The base URL.</param>
-        protected void SanitizeStyle(IHtmlElement element, string baseUrl)
+        protected void SanitizeStyle(IElement element, string baseUrl)
         {
             // filter out invalid CSS declarations
             // see https://github.com/AngleSharp/AngleSharp/issues/101
@@ -681,7 +674,7 @@ namespace Ganss.XSS
 
                 if (urls.Count > 0)
                 {
-                    if (urls.Cast<Match>().Any(m => GetSafeUri(m.Groups[2].Value) == null || SanitizeUrl(m.Groups[2].Value, baseUrl) == null))
+                    if (urls.Cast<Match>().Any(m => SanitizeUrl(m.Groups[2].Value, baseUrl) == null))
                         removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedUrlValue));
                     else
                     {
@@ -729,29 +722,24 @@ namespace Ganss.XSS
             return r;
         }
 
+        private static readonly Regex SchemeRegex = new Regex(@"^\s*([^\/#]*?)(?:\:|&#0*58|&#x0*3a)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
         /// <summary>
-        /// Tries to create a safe <see cref="Uri"/> object from a string.
+        /// Tries to create a safe <see cref="Iri"/> object from a string.
         /// </summary>
         /// <param name="url">The URL.</param>
-        /// <returns>The <see cref="Uri"/> object or null if no safe <see cref="Uri"/> can be created.</returns>
-        protected Uri GetSafeUri(string url)
+        /// <returns>The <see cref="Iri"/> object or null if no safe <see cref="Iri"/> can be created.</returns>
+        protected Iri GetSafeIri(string url)
         {
-            Uri uri;
-            if (!Uri.TryCreate(url, UriKind.RelativeOrAbsolute, out uri)
-                || !uri.IsAbsoluteUri && !IsWellFormedRelativeUri(uri)
-                || uri.IsAbsoluteUri && !AllowedSchemes.Contains(uri.Scheme, StringComparer.OrdinalIgnoreCase))
-                return null;
+            var schemeMatch = SchemeRegex.Match(url);
 
-            return uri;
-        }
+            if (schemeMatch.Success)
+            {
+                var scheme = schemeMatch.Groups[1].Value;
+                return AllowedSchemes.Contains(scheme, StringComparer.OrdinalIgnoreCase) ? new Iri { Value = url, Scheme = scheme } : null;
+            }
 
-        private static readonly Uri _exampleUri = new Uri("http://www.example.com/");
-        private static bool IsWellFormedRelativeUri(Uri uri)
-        {
-            if (uri.IsAbsoluteUri) return false;
-
-            Uri absoluteUri;
-            return Uri.TryCreate(_exampleUri, uri, out absoluteUri) && !uri.OriginalString.Contains(":");
+            return new Iri { Value = url };
         }
 
         /// <summary>
@@ -762,27 +750,28 @@ namespace Ganss.XSS
         /// <returns>The sanitized URL or null if no safe URL can be created.</returns>
         protected string SanitizeUrl(string url, string baseUrl)
         {
-            var uri = GetSafeUri(url);
+            var iri = GetSafeIri(url);
 
-            if (uri == null) return null;
+            if (iri == null) return null;
 
-            if (!uri.IsAbsoluteUri && !string.IsNullOrEmpty(baseUrl))
+            if (!iri.IsAbsolute && !string.IsNullOrEmpty(baseUrl))
             {
                 // resolve relative uri
-                Uri baseUri;
-                if (Uri.TryCreate(baseUrl, UriKind.Absolute, out baseUri))
-                    uri = new Uri(baseUri, uri.ToString());
+                if (Uri.TryCreate(baseUrl, UriKind.Absolute, out Uri baseUri))
+                {
+                    try
+                    {
+                        return new Uri(baseUri, iri.Value).AbsoluteUri;
+                    }
+                    catch (UriFormatException)
+                    {
+                        return null;
+                    }
+                }
                 else return null;
             }
 
-            try
-            {
-                return uri.IsAbsoluteUri ? uri.AbsoluteUri : uri.GetComponents(UriComponents.SerializationInfoString, UriFormat.UriEscaped);
-            }
-            catch (UriFormatException)
-            {
-                return null;
-            }
+            return iri.Value;
         }
 
         /// <summary>
