@@ -162,4 +162,34 @@ namespace Ganss.XSS
         /// </value>
         public IComment Comment { get; set; }
     }
+
+    /// <summary>
+    /// Provides data for the <see cref="HtmlSanitizer.RemovingCssClass"/> event.
+    /// </summary>
+    public class RemovingCssClassEventArgs : CancelEventArgs
+    {
+        /// <summary>
+        /// Gets or sets the tag containing the CSS class to be removed.
+        /// </summary>
+        /// <value>
+        /// The tag.
+        /// </value>
+        public IElement Tag { get; set; }
+
+        /// <summary>
+        /// Gets or sets the CSS class to be removed.
+        /// </summary>
+        /// <value>
+        /// The CSS class.
+        /// </value>
+        public string CssClass { get; set; }
+
+        /// <summary>
+        /// Gets or sets the reason why the CSS class will be removed.
+        /// </summary>
+        /// <value>
+        /// The reason.
+        /// </value>
+        public RemoveReason Reason { get; set; }
+    }
 }

@@ -64,6 +64,13 @@ namespace Ganss.XSS
         /// </value>
         Regex DisallowCssPropertyValue { get; set; }
 
+        /// Gets or sets the allowed CSS classes.
+        /// </summary>
+        /// <value>
+        /// The allowed CSS classes.
+        /// </value>
+        ISet<string> AllowedCssClasses { get; }
+
         /// <summary>
         /// Occurs for every node after sanitizing.
         /// </summary>
@@ -83,6 +90,11 @@ namespace Ganss.XSS
         /// Occurs before a style is removed.
         /// </summary>
         event EventHandler<RemovingStyleEventArgs> RemovingStyle;
+
+        /// <summary>
+        /// Occurs before a CSS class is removed.
+        /// </summary>
+        event EventHandler<RemovingCssClassEventArgs> RemovingCssClass;
 
         /// <summary>
         /// Sanitizes the specified HTML.

@@ -25,5 +25,13 @@
         /// Value is not allowed or harmful
         /// </summary>
         NotAllowedValue,
+        /// <summary>
+        /// CSS Class is not allowed
+        /// </summary>
+        NotAllowedCssClass,
+        /// <summary>
+        /// The class attribute is empty
+        /// </summary>
+        ClassAttributeEmpty
     }
 }
