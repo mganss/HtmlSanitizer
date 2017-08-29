@@ -1,4 +1,6 @@
 using AngleSharp;
+using AngleSharp.Dom.Css;
+using AngleSharp.Parser.Html;
 using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
@@ -11,6 +13,29 @@ namespace Ganss.XSS
     /// </summary>
     public interface IHtmlSanitizer
     {
+        /// <summary>
+        /// Gets or sets a value indicating whether to keep child nodes of elements that are removed. Default is <see cref="DefaultKeepChildNodes"/>.
+        /// </summary>
+        bool KeepChildNodes { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="Func{HtmlParser}"/> object the creates the parser used for parsing the input.
+        /// </summary>
+        Func<HtmlParser> HtmlParserFactory { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="IMarkupFormatter"/> object used for generating output. Default is <see cref="DefaultOutputFormatter"/>.
+        /// </summary>
+        IMarkupFormatter OutputFormatter { get; set; }
+
+        /// <summary>
+        /// Gets or sets the allowed CSS at-rules such as "@media" and "@font-face".
+        /// </summary>
+        /// <value>
+        /// The allowed CSS at-rules.
+        /// </value>
+        ISet<CssRuleType> AllowedAtRules { get; }
+
         /// <summary>
         /// Gets or sets the allowed HTTP schemes such as "http" and "https".
         /// </summary>
@@ -90,6 +115,16 @@ namespace Ganss.XSS
         /// Occurs before a style is removed.
         /// </summary>
         event EventHandler<RemovingStyleEventArgs> RemovingStyle;
+
+        /// <summary>
+        /// Occurs before an at-rule is removed.
+        /// </summary>
+        event EventHandler<RemovingAtRuleEventArgs> RemovingAtRule;
+
+        /// <summary>
+        /// Occurs before a comment is removed.
+        /// </summary>
+        event EventHandler<RemovingCommentEventArgs> RemovingComment;
 
         /// <summary>
         /// Occurs before a CSS class is removed.
