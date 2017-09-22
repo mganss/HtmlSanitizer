@@ -1,5 +1,6 @@
 using AngleSharp;
 using AngleSharp.Dom.Css;
+using AngleSharp.Dom.Html;
 using AngleSharp.Parser.Html;
 using System;
 using System.Collections.Generic;
@@ -97,6 +98,11 @@ namespace Ganss.XSS
         ISet<string> AllowedCssClasses { get; }
 
         /// <summary>
+        /// Occurs after sanitizing the document and post processing nodes.
+        /// </summary>
+        event EventHandler<PostProcessDomEventArgs> PostProcessDom;
+
+        /// <summary>
         /// Occurs for every node after sanitizing.
         /// </summary>
         event EventHandler<PostProcessNodeEventArgs> PostProcessNode;
@@ -139,5 +145,22 @@ namespace Ganss.XSS
         /// <param name="outputFormatter">The formatter used to render the DOM. Using the default formatter if null.</param>
         /// <returns>The sanitized HTML.</returns>
         string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null);
+
+        /// <summary>
+        /// Sanitizes the specified HTML body fragment. If a document is given, only the body part will be returned.
+        /// </summary>
+        /// <param name="html">The HTML body fragment to sanitize.</param>
+        /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
+        /// <returns>The sanitized HTML Document.</returns>
+        IHtmlDocument SantizeDom(string html, string baseUrl = "");
+
+        /// <summary>
+        /// Sanitizes the specified HTML document. Even if only a fragment is given, a whole document will be returned.
+        /// </summary>
+        /// <param name="html">The HTML document to sanitize.</param>
+        /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
+        /// <param name="outputFormatter">The formatter used to render the DOM. Using the <see cref="OutputFormatter"/> if null.</param>
+        /// <returns>The sanitized HTML document.</returns>
+        string SanitizeDocument(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null);
     }
 }
