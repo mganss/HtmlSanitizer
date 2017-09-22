@@ -8,7 +8,7 @@ using System.ComponentModel;
 namespace Ganss.XSS
 {
     /// <summary>
-    /// Provides data for the <see cref="HtmlSanitizer.PostProcessNode"/> event.
+    /// Provides data for the <see cref="HtmlSanitizer.PostProcessDom"/> event.
     /// </summary>
     public class PostProcessDomEventArgs : EventArgs
     {
