@@ -10,6 +10,26 @@ namespace Ganss.XSS
     /// <summary>
     /// Provides data for the <see cref="HtmlSanitizer.PostProcessNode"/> event.
     /// </summary>
+    public class PostProcessDomEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Gets or sets the document.
+        /// </summary>
+        /// <value>
+        /// The document.
+        /// </value>
+        public IHtmlDocument Document { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PostProcessDomEventArgs"/> class.
+        /// </summary>
+        public PostProcessDomEventArgs()
+        { }
+    }
+
+    /// <summary>
+    /// Provides data for the <see cref="HtmlSanitizer.PostProcessNode"/> event.
+    /// </summary>
     public class PostProcessNodeEventArgs : EventArgs
     {
         /// <summary>
