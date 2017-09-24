@@ -2166,7 +2166,7 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Fact]
-        public void PostProcessTest()
+        public void PostProcessNodeTest()
         {
             var sanitizer = new HtmlSanitizer();
             sanitizer.PostProcessNode += (s, e) =>
@@ -2184,6 +2184,22 @@ rl(javascript:alert(""foo""))'>";
             Assert.Equal(@"<div class=""test"">Hallo<b>Test</b></div>", sanitized, ignoreCase: true);
         }
 
+        [Fact]
+        public void PostProcessDomTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.PostProcessDom += (s, e) => 
+            {
+                var p = e.Document.CreateElement("p");
+                p.TextContent = "World";
+                e.Document.Body.AppendChild(p);
+            };
+
+            var html = @"<div>Hallo</div>";
+            var sanitized = sanitizer.Sanitize(html);
+            Assert.Equal(@"<div>Hallo</div><p>World</p>", sanitized, ignoreCase: true);
+        }
+        
         [Fact]
         public void AutoLinkTest()
         {

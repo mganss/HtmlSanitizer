@@ -295,6 +295,10 @@ namespace Ganss.XSS
         public ISet<string> AllowedCssClasses { get; private set; }
 
         /// <summary>
+        /// Occurs after sanitizing the document and post processing nodes.
+        /// </summary>
+        public event EventHandler<PostProcessDomEventArgs> PostProcessDom;
+        /// <summary>
         /// Occurs for every node after sanitizing.
         /// </summary>
         public event EventHandler<PostProcessNodeEventArgs> PostProcessNode;
@@ -322,6 +326,15 @@ namespace Ganss.XSS
         /// Occurs before a CSS class is removed.
         /// </summary>
         public event EventHandler<RemovingCssClassEventArgs> RemovingCssClass;
+
+        /// <summary>
+        /// Raises the <see cref="E:PostProcessDom" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="PostProcessDomEventArgs"/> instance containing the event data.</param>
+        protected virtual void OnPostProcessDom(PostProcessDomEventArgs e)
+        {
+            PostProcessDom?.Invoke(this, e);
+        }
 
         /// <summary>
         /// Raises the <see cref="E:PostProcessNode" /> event.
@@ -419,17 +432,29 @@ namespace Ganss.XSS
         /// <returns>The sanitized HTML body fragment.</returns>
         public string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
+            var dom = SanitizeDom(html, baseUrl);
+            var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
+            return output;
+        }
+
+        
+        /// <summary>
+        /// Sanitizes the specified HTML body fragment. If a document is given, only the body part will be returned.
+        /// </summary>
+        /// <param name="html">The HTML body fragment to sanitize.</param>
+        /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
+        /// <returns>The sanitized HTML Document.</returns>
+        public IHtmlDocument SanitizeDom(string html, string baseUrl = "")
+        {
             var parser = HtmlParserFactory();
             var dom = parser.Parse("<html><body></body></html>");
             dom.Body.InnerHtml = html;
 
             DoSanitize(dom, dom.Body, baseUrl);
 
-            var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
-
-            return output;
+            return dom;
         }
-
+        
         /// <summary>
         /// Sanitizes the specified HTML document. Even if only a fragment is given, a whole document will be returned.
         /// </summary>
@@ -629,6 +654,12 @@ namespace Ganss.XSS
                         ((IChildNode)node).Replace(e.ReplacementNodes.ToArray());
                     }
                 }
+            }
+
+            if (PostProcessDom != null)
+            {
+                var e = new PostProcessDomEventArgs { Document = dom };
+                OnPostProcessDom(e);
             }
         }
 
