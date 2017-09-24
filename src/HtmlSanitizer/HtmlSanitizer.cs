@@ -432,18 +432,19 @@ namespace Ganss.XSS
         /// <returns>The sanitized HTML body fragment.</returns>
         public string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
-            var dom = SantizeDom(html, baseUrl);
+            var dom = SanitizeDom(html, baseUrl);
             var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
             return output;
         }
 
+        
         /// <summary>
         /// Sanitizes the specified HTML body fragment. If a document is given, only the body part will be returned.
         /// </summary>
         /// <param name="html">The HTML body fragment to sanitize.</param>
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
         /// <returns>The sanitized HTML Document.</returns>
-        public IHtmlDocument SantizeDom(string html, string baseUrl = "")
+        public IHtmlDocument SanitizeDom(string html, string baseUrl = "")
         {
             var parser = HtmlParserFactory();
             var dom = parser.Parse("<html><body></body></html>");

@@ -152,7 +152,7 @@ namespace Ganss.XSS
         /// <param name="html">The HTML body fragment to sanitize.</param>
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
         /// <returns>The sanitized HTML Document.</returns>
-        IHtmlDocument SantizeDom(string html, string baseUrl = "");
+        IHtmlDocument SanitizeDom(string html, string baseUrl = "");
 
         /// <summary>
         /// Sanitizes the specified HTML document. Even if only a fragment is given, a whole document will be returned.
