@@ -2166,7 +2166,7 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Fact]
-        public void PostProcessTest()
+        public void PostProcessNodeTest()
         {
             var sanitizer = new HtmlSanitizer();
             sanitizer.PostProcessNode += (s, e) =>
@@ -2184,6 +2184,22 @@ rl(javascript:alert(""foo""))'>";
             Assert.Equal(@"<div class=""test"">Hallo<b>Test</b></div>", sanitized, ignoreCase: true);
         }
 
+        [Fact]
+        public void PostProcessDomTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.PostProcessDom += (s, e) => 
+            {
+                var p = e.Document.CreateElement("p");
+                p.TextContent = "World";
+                e.Document.Body.AppendChild(p);
+            };
+
+            var html = @"<div>Hallo</div>";
+            var sanitized = sanitizer.Sanitize(html);
+            Assert.Equal(@"<div>Hallo</div><p>World</p>", sanitized, ignoreCase: true);
+        }
+        
         [Fact]
         public void AutoLinkTest()
         {
@@ -2497,6 +2513,44 @@ rl(javascript:alert(""foo""))'>";
             };
             s.Sanitize("<span>Hi</span><script>alert('Hello world!')</script>");
             Assert.Equal(RemoveReason.NotAllowedTag, actual);
+        }
+
+        [Fact]
+        public void RemoveEventForNotAllowedCssClass()
+        {
+            RemoveReason? reason = null;
+            string removedClass = null;
+
+            var s = new HtmlSanitizer(allowedAttributes: new[] { "class" }, allowedCssClasses: new[] { "good" });
+            s.RemovingCssClass += (sender, args) =>
+            {
+                reason = args.Reason;
+                removedClass = args.CssClass;
+            };
+
+            s.Sanitize(@"<div class=""good bad"">Test</div>");
+
+            Assert.Equal("bad", removedClass);
+            Assert.Equal(RemoveReason.NotAllowedCssClass, reason);
+        }
+
+        [Fact]
+        public void RemoveEventForEmptyClassAttributeAfterClassRemoval()
+        {
+            RemoveReason? reason = null;
+            string attributeName = null;
+
+            var s = new HtmlSanitizer(allowedAttributes: new[] { "class" }, allowedCssClasses: new[] { "other" });
+            s.RemovingAttribute += (sender, args) =>
+            {
+                attributeName = args.Attribute.Name;
+                reason = args.Reason;
+            };
+
+            s.Sanitize(@"<div class=""good bad"">Test</div>");
+
+            Assert.Equal("class", attributeName);
+            Assert.Equal(RemoveReason.ClassAttributeEmpty, reason);
         }
 
         [Fact]
@@ -2844,9 +2898,31 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
                 Assert.Equal(0, failures);
             }
         }
+        
+        [Fact]
+        public void AllowAllClassesByDefaultTest()
+        {
+            var sanitizer = new HtmlSanitizer(allowedAttributes: new[] { "class" });
+
+            var html = @"<div class=""good bad"">Test</div>";
+            var actual = sanitizer.Sanitize(html);
+
+            Assert.Equal(@"<div class=""good bad"">Test</div>", actual);
+        }
 
         [Fact]
         public void AllowClassesTest()
+        {
+            var sanitizer = new HtmlSanitizer(allowedAttributes: new[] { "class" }, allowedCssClasses: new[] { "good" });
+
+            var html = @"<div class=""good bad"">Test</div>";
+            var actual = sanitizer.Sanitize(html);
+
+            Assert.Equal(@"<div class=""good"">Test</div>", actual);
+        }
+
+        [Fact]
+        public void AllowClassesUsingEventTest()
         {
             var sanitizer = new HtmlSanitizer();
             sanitizer.RemovingAttribute += (s, e) =>
@@ -2862,6 +2938,29 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var actual = sanitizer.Sanitize(html);
 
             Assert.Equal(@"<div class=""good"">Test</div>", actual);
+        }
+
+        [Fact]
+        public void RemoveClassAttributeIfNoAllowedClassesTest()
+        {
+            // Empty array for allowed classes = no classes allowed
+            var sanitizer = new HtmlSanitizer(allowedAttributes: new[] { "class" }, allowedCssClasses: new string[0]);
+
+            var html = @"<div class=""good bad"">Test</div>";
+            var actual = sanitizer.Sanitize(html);
+
+            Assert.Equal(@"<div>Test</div>", actual);
+        }
+
+        [Fact]
+        public void RemoveClassAttributeIfEmptyTest()
+        {
+            var sanitizer = new HtmlSanitizer(allowedAttributes: new[] { "class" }, allowedCssClasses: new[] { "other" });
+
+            var html = @"<div class=""good bad"">Test</div>";
+            var actual = sanitizer.Sanitize(html);
+
+            Assert.Equal(@"<div>Test</div>", actual);
         }
 
         [Fact]

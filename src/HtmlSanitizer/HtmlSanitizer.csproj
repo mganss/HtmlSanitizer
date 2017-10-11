@@ -19,9 +19,9 @@
     <RepositoryUrl>git://github.com/mganss/HtmlSanitizer</RepositoryUrl>
     <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.3' ">$(PackageTargetFallback);dotnet</PackageTargetFallback>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-	<AppConfig Condition="'$(TargetFramework)' == 'net40'">app.net40.config</AppConfig>
-	<AutoUnifyAssemblyReferences Condition="'$(TargetFramework)' == 'net40'">false</AutoUnifyAssemblyReferences>
-	<RootNamespace>Ganss.XSS</RootNamespace>
+    <AppConfig Condition="'$(TargetFramework)' == 'net40'">app.net40.config</AppConfig>
+    <AutoUnifyAssemblyReferences Condition="'$(TargetFramework)' == 'net40'">false</AutoUnifyAssemblyReferences>
+    <RootNamespace>Ganss.XSS</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -53,8 +53,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-	<PackageReference Include="System.ComponentModel" Version="4.3.0" />
-	<Reference Include="System.ComponentModel" />
+    <PackageReference Include="System.ComponentModel" Version="4.3.0" />
   </ItemGroup>
 
 </Project>

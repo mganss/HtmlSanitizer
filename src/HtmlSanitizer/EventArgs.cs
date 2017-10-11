@@ -8,6 +8,26 @@ using System.ComponentModel;
 namespace Ganss.XSS
 {
     /// <summary>
+    /// Provides data for the <see cref="HtmlSanitizer.PostProcessDom"/> event.
+    /// </summary>
+    public class PostProcessDomEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Gets or sets the document.
+        /// </summary>
+        /// <value>
+        /// The document.
+        /// </value>
+        public IHtmlDocument Document { get; set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PostProcessDomEventArgs"/> class.
+        /// </summary>
+        public PostProcessDomEventArgs()
+        { }
+    }
+
+    /// <summary>
     /// Provides data for the <see cref="HtmlSanitizer.PostProcessNode"/> event.
     /// </summary>
     public class PostProcessNodeEventArgs : EventArgs
@@ -161,5 +181,35 @@ namespace Ganss.XSS
         /// The comment node.
         /// </value>
         public IComment Comment { get; set; }
+    }
+
+    /// <summary>
+    /// Provides data for the <see cref="HtmlSanitizer.RemovingCssClass"/> event.
+    /// </summary>
+    public class RemovingCssClassEventArgs : CancelEventArgs
+    {
+        /// <summary>
+        /// Gets or sets the tag containing the CSS class to be removed.
+        /// </summary>
+        /// <value>
+        /// The tag.
+        /// </value>
+        public IElement Tag { get; set; }
+
+        /// <summary>
+        /// Gets or sets the CSS class to be removed.
+        /// </summary>
+        /// <value>
+        /// The CSS class.
+        /// </value>
+        public string CssClass { get; set; }
+
+        /// <summary>
+        /// Gets or sets the reason why the CSS class will be removed.
+        /// </summary>
+        /// <value>
+        /// The reason.
+        /// </value>
+        public RemoveReason Reason { get; set; }
     }
 }

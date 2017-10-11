@@ -53,12 +53,13 @@ namespace Ganss.XSS
         /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class.
         /// </summary>
         /// <param name="allowedTags">The allowed tag names such as "a" and "div". When <c>null</c>, uses <see cref="DefaultAllowedTags"/></param>
-        /// <param name="allowedSchemes">The allowed HTTP schemes such as "http" and "https". When <c>null</c>,  uses <see cref="DefaultAllowedSchemes"/></param>
+        /// <param name="allowedSchemes">The allowed HTTP schemes such as "http" and "https". When <c>null</c>, uses <see cref="DefaultAllowedSchemes"/></param>
         /// <param name="allowedAttributes">The allowed HTML attributes such as "href" and "alt". When <c>null</c>, uses <see cref="DefaultAllowedAttributes"/></param>
-        /// <param name="uriAttributes">the HTML attributes that can contain a URI such as "href". When <c>null</c>, uses <see cref="DefaultUriAttributes"/></param>
-        /// <param name="allowedCssProperties">the allowed CSS properties such as "font" and "margin". When <c>null</c>, uses <see cref="DefaultAllowedCssProperties"/></param>
+        /// <param name="uriAttributes">The HTML attributes that can contain a URI such as "href". When <c>null</c>, uses <see cref="DefaultUriAttributes"/></param>
+        /// <param name="allowedCssProperties">The allowed CSS properties such as "font" and "margin". When <c>null</c>, uses <see cref="DefaultAllowedCssProperties"/></param>
+        /// <param name="allowedCssClasses">CSS class names which are allowed in the value of a class attribute. When <c>null</c>, any class names are allowed.</param>
         public HtmlSanitizer(IEnumerable<string> allowedTags = null, IEnumerable<string> allowedSchemes = null,
-            IEnumerable<string> allowedAttributes = null, IEnumerable<string> uriAttributes = null, IEnumerable<string> allowedCssProperties = null)
+            IEnumerable<string> allowedAttributes = null, IEnumerable<string> uriAttributes = null, IEnumerable<string> allowedCssProperties = null, IEnumerable<string> allowedCssClasses = null)
         {
             AllowedTags = new HashSet<string>(allowedTags ?? DefaultAllowedTags, StringComparer.OrdinalIgnoreCase);
             AllowedSchemes = new HashSet<string>(allowedSchemes ?? DefaultAllowedSchemes, StringComparer.OrdinalIgnoreCase);
@@ -66,6 +67,7 @@ namespace Ganss.XSS
             UriAttributes = new HashSet<string>(uriAttributes ?? DefaultUriAttributes, StringComparer.OrdinalIgnoreCase);
             AllowedCssProperties = new HashSet<string>(allowedCssProperties ?? DefaultAllowedCssProperties, StringComparer.OrdinalIgnoreCase);
             AllowedAtRules = new HashSet<CssRuleType>(DefaultAllowedAtRules);
+            AllowedCssClasses = allowedCssClasses != null ? new HashSet<string>(allowedCssClasses) : null;
         }
 
         /// <summary>
@@ -283,6 +285,18 @@ namespace Ganss.XSS
         }
 
         /// <summary>
+        /// Gets or sets the allowed CSS classes.
+        /// </summary>
+        /// <value>
+        /// The allowed CSS classes.
+        /// </value>
+        public ISet<string> AllowedCssClasses { get; private set; }
+
+        /// <summary>
+        /// Occurs after sanitizing the document and post processing nodes.
+        /// </summary>
+        public event EventHandler<PostProcessDomEventArgs> PostProcessDom;
+        /// <summary>
         /// Occurs for every node after sanitizing.
         /// </summary>
         public event EventHandler<PostProcessNodeEventArgs> PostProcessNode;
@@ -306,6 +320,19 @@ namespace Ganss.XSS
         /// Occurs before a comment is removed.
         /// </summary>
         public event EventHandler<RemovingCommentEventArgs> RemovingComment;
+        /// <summary>
+        /// Occurs before a CSS class is removed.
+        /// </summary>
+        public event EventHandler<RemovingCssClassEventArgs> RemovingCssClass;
+
+        /// <summary>
+        /// Raises the <see cref="E:PostProcessDom" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="PostProcessDomEventArgs"/> instance containing the event data.</param>
+        protected virtual void OnPostProcessDom(PostProcessDomEventArgs e)
+        {
+            PostProcessDom?.Invoke(this, e);
+        }
 
         /// <summary>
         /// Raises the <see cref="E:PostProcessNode" /> event.
@@ -367,6 +394,15 @@ namespace Ganss.XSS
         public static readonly Regex DefaultDisallowedCssPropertyValue = new Regex(@"[<>]", RegexOptions.Compiled);
 
         /// <summary>
+        /// Raises the <see cref="E:RemovingCSSClass" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="RemovingCSSClass"/> instance containing the event data.</param>
+        protected virtual void OnRemovingCssClass(RemovingCssClassEventArgs e)
+        {
+            RemovingCssClass?.Invoke(this, e);
+        }
+
+        /// <summary>
         /// Return all nested subnodes of a node.
         /// </summary>
         /// <param name="dom">The root node.</param>
@@ -394,17 +430,29 @@ namespace Ganss.XSS
         /// <returns>The sanitized HTML body fragment.</returns>
         public string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
+            var dom = SanitizeDom(html, baseUrl);
+            var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
+            return output;
+        }
+
+        
+        /// <summary>
+        /// Sanitizes the specified HTML body fragment. If a document is given, only the body part will be returned.
+        /// </summary>
+        /// <param name="html">The HTML body fragment to sanitize.</param>
+        /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
+        /// <returns>The sanitized HTML Document.</returns>
+        public IHtmlDocument SanitizeDom(string html, string baseUrl = "")
+        {
             var parser = HtmlParserFactory();
             var dom = parser.ParseDocument("<html><body></body></html>");
             dom.Body.InnerHtml = html;
 
             DoSanitize(dom, dom.Body, baseUrl);
 
-            var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
-
-            return output;
+            return dom;
         }
-
+        
         /// <summary>
         /// Sanitizes the specified HTML document. Even if only a fragment is given, a whole document will be returned.
         /// </summary>
@@ -486,15 +534,35 @@ namespace Ganss.XSS
                 // sanitize the style attribute
                 SanitizeStyle(tag, baseUrl);
 
+                var checkClasses = AllowedCssClasses != null;
+                var allowedTags = AllowedCssClasses?.ToArray() ?? new string[0];
+
                 // sanitize the value of the attributes
                 foreach (var attribute in tag.Attributes.ToList())
                 {
                     // The '& Javascript include' is a possible method to execute Javascript and can lead to XSS.
                     // (see https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#.26_JavaScript_includes)
                     if (attribute.Value.Contains("&{"))
+                    {
                         RemoveAttribute(tag, attribute, RemoveReason.NotAllowedValue);
+                    }
                     else
-                        tag.SetAttribute(attribute.Name, attribute.Value);
+                    {
+                        if (checkClasses && attribute.Name == "class")
+                        {
+                            var removedClasses = tag.ClassList.Except(allowedTags).ToArray();
+
+                            foreach(var removedClass in removedClasses)
+                                RemoveCssClass(tag, removedClass, RemoveReason.NotAllowedCssClass);
+
+                            if (!tag.ClassList.Any())
+                                RemoveAttribute(tag, attribute, RemoveReason.ClassAttributeEmpty);
+                        }
+                        else
+                        {
+                            tag.SetAttribute(attribute.Name, attribute.Value);
+                        }
+                    }
                 }
             }
 
@@ -583,6 +651,12 @@ namespace Ganss.XSS
                         ((IChildNode)node).Replace(e.ReplacementNodes.ToArray());
                     }
                 }
+            }
+
+            if (PostProcessDom != null)
+            {
+                var e = new PostProcessDomEventArgs { Document = dom };
+                OnPostProcessDom(e);
             }
         }
 
@@ -830,6 +904,19 @@ namespace Ganss.XSS
             var e = new RemovingAtRuleEventArgs { Tag = tag, Rule = rule };
             OnRemovingAtRule(e);
             return !e.Cancel;
+        }
+
+        /// <summary>
+        /// Removes a CSS class from a class attribute.
+        /// </summary>
+        /// <param name="tag">Tag the style belongs to</param>
+        /// <param name="rule">Rule to be removed</param>
+        /// <returns>true, if the rule can be removed; false, otherwise.</returns>
+        private void RemoveCssClass(IElement tag, string cssClass, RemoveReason reason)
+        {
+            var e = new RemovingCssClassEventArgs { Tag = tag, CssClass = cssClass, Reason = reason };
+            OnRemovingCssClass(e);
+            if (!e.Cancel) tag.ClassList.Remove(cssClass);
         }
     }
 }
