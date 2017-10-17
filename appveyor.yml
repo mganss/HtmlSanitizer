@@ -1,4 +1,4 @@
-version: 3.5.{build}-beta
+version: 4.0.{build}
 skip_tags: true
 image: Visual Studio 2017
 environment:
