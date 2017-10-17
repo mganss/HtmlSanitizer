@@ -437,7 +437,7 @@ namespace Ganss.XSS
             return output;
         }
 
-        
+
         /// <summary>
         /// Sanitizes the specified HTML body fragment. If a document is given, only the body part will be returned.
         /// </summary>
@@ -454,7 +454,7 @@ namespace Ganss.XSS
 
             return dom;
         }
-        
+
         /// <summary>
         /// Sanitizes the specified HTML document. Even if only a fragment is given, a whole document will be returned.
         /// </summary>
