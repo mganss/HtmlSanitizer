@@ -9,7 +9,7 @@ environment:
 build_script:
   - ps: (Get-Content src\HtmlSanitizer\HtmlSanitizer.csproj).Replace("1.0.0-VERSION", $env:APPVEYOR_BUILD_VERSION) | Set-Content src\HtmlSanitizer\HtmlSanitizer.csproj
   - dotnet restore
-  - dotnet pack -c Release src\HtmlSanitizer
+  - dotnet pack --include-symbols --include-source -c Release src\HtmlSanitizer
 test_script:
   - dotnet test test\HtmlSanitizer.Tests\HtmlSanitizer.Tests.csproj
   - nuget.exe install OpenCover -ExcludeVersion
