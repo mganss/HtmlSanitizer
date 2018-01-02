@@ -432,11 +432,12 @@ namespace Ganss.XSS
         /// <returns>The sanitized HTML body fragment.</returns>
         public string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
-            var dom = SanitizeDom(html, baseUrl);
-            var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
-            return output;
+            using (var dom = SanitizeDom(html, baseUrl))
+            {
+                var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
+                return output;
+            }
         }
-
 
         /// <summary>
         /// Sanitizes the specified HTML body fragment. If a document is given, only the body part will be returned.
@@ -465,13 +466,15 @@ namespace Ganss.XSS
         public string SanitizeDocument(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
             var parser = HtmlParserFactory();
-            var dom = parser.Parse(html);
 
-            DoSanitize(dom, dom.DocumentElement, baseUrl);
+            using (var dom = parser.Parse(html))
+            {
+                DoSanitize(dom, dom.DocumentElement, baseUrl);
 
-            var output = dom.ToHtml(outputFormatter ?? OutputFormatter);
+                var output = dom.ToHtml(outputFormatter ?? OutputFormatter);
 
-            return output;
+                return output;
+            }
         }
 
         /// <summary>
