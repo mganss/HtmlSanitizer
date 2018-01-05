@@ -2188,7 +2188,7 @@ rl(javascript:alert(""foo""))'>";
         public void PostProcessDomTest()
         {
             var sanitizer = new HtmlSanitizer();
-            sanitizer.PostProcessDom += (s, e) => 
+            sanitizer.PostProcessDom += (s, e) =>
             {
                 var p = e.Document.CreateElement("p");
                 p.TextContent = "World";
@@ -2199,7 +2199,7 @@ rl(javascript:alert(""foo""))'>";
             var sanitized = sanitizer.Sanitize(html);
             Assert.Equal(@"<div>Hallo</div><p>World</p>", sanitized, ignoreCase: true);
         }
-        
+
         [Fact]
         public void AutoLinkTest()
         {
@@ -2668,7 +2668,7 @@ rl(javascript:alert(""foo""))'>";
             Assert.Equal(@"<html><head><style>@namespace url(""http://www.w3.org/1999/xhtml"");
 @namespace svg url(""http://www.w3.org/2000/svg"");
 @media (min-width: 100px) { div { color: black } }
-@page * { margin: 2cm }
+@page { margin: 2cm }
 @keyframes identifier { 0% { top: 0 } 50% { top: 30px; left: 20px } 50% { top: 10px } 100% { top: 0 } }</style></head><body></body></html>".Replace("\r\n", "\n"),
                 actual);
         }
@@ -2898,7 +2898,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
                 Assert.Equal(0, failures);
             }
         }
-        
+
         [Fact]
         public void AllowAllClassesByDefaultTest()
         {

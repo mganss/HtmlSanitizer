@@ -25,7 +25,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="[0.9.9]" />
+    <PackageReference Include="AngleSharp" Version="[0.9.9.1]" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
