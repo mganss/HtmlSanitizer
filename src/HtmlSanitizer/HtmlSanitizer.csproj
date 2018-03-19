@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <Description>Cleans HTML from constructs that can be used for cross site scripting (XSS)</Description>
-    <Copyright>Copyright 2013-2017 Michael Ganss</Copyright>
+    <Copyright>Copyright 2013-2018 Michael Ganss</Copyright>
     <AssemblyTitle>HtmlSanitizer</AssemblyTitle>
     <VersionPrefix>1.0.0-VERSION</VersionPrefix>
     <Authors>Michael Ganss</Authors>
@@ -25,7 +25,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="[0.9.9.1]" />
+    <PackageReference Include="AngleSharp" Version="[0.9.9.2]" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
