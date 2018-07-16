@@ -2,6 +2,8 @@ version: 4.0.{build}
 skip_tags: true
 image: Visual Studio 2017
 environment:
+  access_token:
+    secure: Eq6BjtZ80BXKLwFMg76IjuQAvbLjbojIF/X/ARouGVhxPneJtgDfCXMPNgJ7KBKq
   CoverityProjectToken:
     secure: pUUrynbyxCRpsAgGdKBVYDZCilwBmaWQ1Jg+rg5znr0=
   CoverityNotificationEmail:
@@ -19,3 +21,10 @@ test_script:
   - codecov -f "coverage.xml"
 artifacts:
   - path: 'src\**\*.nupkg'
+on_success:
+  - git config --global credential.helper store
+  - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+  - git config --global user.email "michael@ganss.org"
+  - git config --global user.name "Michael Ganss"
+  - git tag v%APPVEYOR_BUILD_VERSION%
+  - git push origin --tags
