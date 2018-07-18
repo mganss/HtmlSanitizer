@@ -3001,7 +3001,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var sanitizer = new HtmlSanitizer();
             sanitizer.PostProcessNode += (s, e) =>
             {
-                Assert.Equal(1, e.Document.Body.ChildNodes.Count());
+                Assert.Single(e.Document.Body.ChildNodes);
                 var text = e.Node as IText;
                 Assert.NotNull(text);
                 Assert.Equal("Test1Test2", text.NodeValue);
