@@ -3067,6 +3067,21 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             Assert.Equal("<svg>123</svg>", actual);
         }
+
+        [Fact]
+        public void SquareBracketTest()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/137
+
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowedAttributes.Add("[minutes]");
+
+            var html = @"<div [minutes]=""2"">123</div>";
+
+            var actual = sanitizer.Sanitize(html);
+
+            Assert.Equal(html, actual);
+        }
     }
 }
 

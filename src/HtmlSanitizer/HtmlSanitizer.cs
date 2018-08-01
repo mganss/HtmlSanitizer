@@ -558,15 +558,15 @@ namespace Ganss.XSS
                         {
                             var removedClasses = tag.ClassList.Except(allowedTags).ToArray();
 
-                            foreach(var removedClass in removedClasses)
+                            foreach (var removedClass in removedClasses)
                                 RemoveCssClass(tag, removedClass, RemoveReason.NotAllowedCssClass);
 
                             if (!tag.ClassList.Any())
                                 RemoveAttribute(tag, attribute, RemoveReason.ClassAttributeEmpty);
                         }
-                        else
+                        else if (string.IsNullOrEmpty(attribute.Value))
                         {
-                            tag.SetAttribute(attribute.Name, attribute.Value);
+                            tag.RemoveAttribute(attribute.Name);
                         }
                     }
                 }
