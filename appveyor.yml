@@ -4,10 +4,8 @@ image: Visual Studio 2017
 environment:
   access_token:
     secure: Eq6BjtZ80BXKLwFMg76IjuQAvbLjbojIF/X/ARouGVhxPneJtgDfCXMPNgJ7KBKq
-  CoverityProjectToken:
-    secure: pUUrynbyxCRpsAgGdKBVYDZCilwBmaWQ1Jg+rg5znr0=
-  CoverityNotificationEmail:
-    secure: m/ox72HU97EeJExWEFWx+0M9uov0cydn6E8mSaQzsQE=
+nuget:
+  disable_publish_on_pr: true
 build_script:
   - ps: (Get-Content src\HtmlSanitizer\HtmlSanitizer.csproj).Replace("1.0.0-VERSION", $env:APPVEYOR_BUILD_VERSION) | Set-Content src\HtmlSanitizer\HtmlSanitizer.csproj
   - dotnet restore
@@ -21,9 +19,12 @@ test_script:
 artifacts:
   - path: 'src\**\*.nupkg'
 on_success:
-  - git config --global credential.helper store
-  - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
-  - git config --global user.email "michael@ganss.org"
-  - git config --global user.name "Michael Ganss"
-  - git tag v%APPVEYOR_BUILD_VERSION%
-  - git push origin --tags
+  - ps: |
+      if (-not $env:APPVEYOR_PULL_REQUEST_NUMBER) {
+          git config --global credential.helper store
+          Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+          git config --global user.email "michael@ganss.org"
+          git config --global user.name "Michael Ganss"
+          git tag v$env:APPVEYOR_BUILD_VERSION
+          git push origin --tags --porcelain
+      }

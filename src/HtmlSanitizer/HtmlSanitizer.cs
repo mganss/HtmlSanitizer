@@ -398,7 +398,7 @@ namespace Ganss.XSS
         /// <summary>
         /// Raises the <see cref="E:RemovingCSSClass" /> event.
         /// </summary>
-        /// <param name="e">The <see cref="RemovingCSSClass"/> instance containing the event data.</param>
+        /// <param name="e">The <see cref="RemovingCssClassEventArgs"/> instance containing the event data.</param>
         protected virtual void OnRemovingCssClass(RemovingCssClassEventArgs e)
         {
             RemovingCssClass?.Invoke(this, e);
@@ -916,8 +916,8 @@ namespace Ganss.XSS
         /// Removes a CSS class from a class attribute.
         /// </summary>
         /// <param name="tag">Tag the style belongs to</param>
-        /// <param name="rule">Rule to be removed</param>
-        /// <returns>true, if the rule can be removed; false, otherwise.</returns>
+        /// <param name="cssClass">Class to be removed</param>
+        /// <param name="reason">Reason for removal</param>
         private void RemoveCssClass(IElement tag, string cssClass, RemoveReason reason)
         {
             var e = new RemovingCssClassEventArgs { Tag = tag, CssClass = cssClass, Reason = reason };

@@ -15,7 +15,7 @@ namespace Ganss.XSS
     public interface IHtmlSanitizer
     {
         /// <summary>
-        /// Gets or sets a value indicating whether to keep child nodes of elements that are removed. Default is <see cref="DefaultKeepChildNodes"/>.
+        /// Gets or sets a value indicating whether to keep child nodes of elements that are removed.
         /// </summary>
         bool KeepChildNodes { get; set; }
 
@@ -25,7 +25,7 @@ namespace Ganss.XSS
         Func<HtmlParser> HtmlParserFactory { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="IMarkupFormatter"/> object used for generating output. Default is <see cref="DefaultOutputFormatter"/>.
+        /// Gets or sets the <see cref="IMarkupFormatter"/> object used for generating output.
         /// </summary>
         IMarkupFormatter OutputFormatter { get; set; }
 
@@ -90,6 +90,7 @@ namespace Ganss.XSS
         /// </value>
         Regex DisallowCssPropertyValue { get; set; }
 
+        /// <summary>
         /// Gets or sets the allowed CSS classes.
         /// </summary>
         /// <value>

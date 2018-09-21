@@ -22,6 +22,8 @@
     <AppConfig Condition="'$(TargetFramework)' == 'net40'">app.net40.config</AppConfig>
     <AutoUnifyAssemblyReferences Condition="'$(TargetFramework)' == 'net40'">false</AutoUnifyAssemblyReferences>
     <RootNamespace>Ganss.XSS</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\HtmlSanitizer.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
