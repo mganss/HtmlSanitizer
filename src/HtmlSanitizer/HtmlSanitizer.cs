@@ -113,7 +113,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed CSS at-rules.
         /// </summary>
-        public static readonly ISet<CssRuleType> DefaultAllowedAtRules = new HashSet<CssRuleType>() { CssRuleType.Style, CssRuleType.Namespace };
+        public static ISet<CssRuleType> DefaultAllowedAtRules { get; } = new HashSet<CssRuleType>() { CssRuleType.Style, CssRuleType.Namespace };
 
         /// <summary>
         /// Gets or sets the allowed HTTP schemes such as "http" and "https".
@@ -126,7 +126,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed URI schemes.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedSchemes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "http", "https" };
+        public static ISet<string> DefaultAllowedSchemes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "http", "https" };
 
         /// <summary>
         /// Gets or sets the allowed HTML tag names such as "a" and "div".
@@ -139,7 +139,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed HTML tag names.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+        public static ISet<string> DefaultAllowedTags { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
             // https://developer.mozilla.org/en/docs/Web/Guide/HTML/HTML5/HTML5_element_list
             "a", "abbr", "acronym", "address", "area", "b",
             "big", "blockquote", "br", "button", "caption", "center", "cite",
@@ -181,7 +181,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed HTML attributes.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedAttributes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+        public static ISet<string> DefaultAllowedAttributes { get; }  = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
             // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
             "abbr", "accept", "accept-charset", "accesskey",
             "action", "align", "alt", "axis", "bgcolor", "border", "cellpadding",
@@ -232,7 +232,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default URI attributes.
         /// </summary>
-        public static readonly ISet<string> DefaultUriAttributes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "action", "background", "dynsrc", "href", "lowsrc", "src" };
+        public static ISet<string> DefaultUriAttributes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "action", "background", "dynsrc", "href", "lowsrc", "src" };
 
         /// <summary>
         /// Gets or sets the allowed CSS properties such as "font" and "margin".
@@ -245,7 +245,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed CSS properties.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedCssProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+        public static ISet<string> DefaultAllowedCssProperties { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
             // CSS 3 properties <http://www.w3.org/TR/CSS/#properties>
             "background", "background-attachment", "background-color",
             "background-image", "background-position", "background-repeat",
@@ -519,7 +519,7 @@ namespace Ganss.XSS
             SanitizeStyleSheets(dom, baseUrl);
 
             // cleanup attributes
-            foreach (var tag in context.QuerySelectorAll("*").OfType<IElement>().ToList())
+            foreach (var tag in context.QuerySelectorAll("*").ToList())
             {
                 // remove non-whitelisted attributes
                 foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
