@@ -14,6 +14,10 @@
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <SonarQubeExclude>true</SonarQubeExclude>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\HtmlSanitizer\HtmlSanitizer.csproj" />
   </ItemGroup>
