@@ -32,7 +32,7 @@ namespace Ganss.XSS
     /// <item>You can specify the allowed HTML tags through the property <see cref="AllowedTags"/>. All other tags will be stripped.</item>
     /// <item>You can specify the allowed HTML attributes through the property <see cref="AllowedAttributes"/>. All other attributes will be stripped.</item>
     /// <item>You can specify the allowed CSS property names through the property <see cref="AllowedCssProperties"/>. All other styles will be stripped.</item>
-    /// <item>You can specify the allowed URI schemes through the property <see cref="AllowedCssProperties"/>. All other URIs will be stripped.</item>
+    /// <item>You can specify the allowed URI schemes through the property <see cref="AllowedSchemes"/>. All other URIs will be stripped.</item>
     /// <item>You can specify the HTML attributes that contain URIs (such as "src", "href" etc.) through the property <see cref="UriAttributes"/>.</item>
     /// </list>
     /// </para>
@@ -111,7 +111,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed CSS at-rules.
         /// </summary>
-        public static readonly ISet<CssRuleType> DefaultAllowedAtRules = new HashSet<CssRuleType>() { CssRuleType.Style, CssRuleType.Namespace };
+        public static ISet<CssRuleType> DefaultAllowedAtRules { get; } = new HashSet<CssRuleType>() { CssRuleType.Style, CssRuleType.Namespace };
 
         /// <summary>
         /// Gets or sets the allowed HTTP schemes such as "http" and "https".
@@ -124,7 +124,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed URI schemes.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedSchemes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "http", "https" };
+        public static ISet<string> DefaultAllowedSchemes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "http", "https" };
 
         /// <summary>
         /// Gets or sets the allowed HTML tag names such as "a" and "div".
@@ -137,7 +137,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed HTML tag names.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedTags = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+        public static ISet<string> DefaultAllowedTags { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
             // https://developer.mozilla.org/en/docs/Web/Guide/HTML/HTML5/HTML5_element_list
             "a", "abbr", "acronym", "address", "area", "b",
             "big", "blockquote", "br", "button", "caption", "center", "cite",
@@ -179,7 +179,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed HTML attributes.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedAttributes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+        public static ISet<string> DefaultAllowedAttributes { get; }  = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
             // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
             "abbr", "accept", "accept-charset", "accesskey",
             "action", "align", "alt", "axis", "bgcolor", "border", "cellpadding",
@@ -230,7 +230,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default URI attributes.
         /// </summary>
-        public static readonly ISet<string> DefaultUriAttributes = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "action", "background", "dynsrc", "href", "lowsrc", "src" };
+        public static ISet<string> DefaultUriAttributes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "action", "background", "dynsrc", "href", "lowsrc", "src" };
 
         /// <summary>
         /// Gets or sets the allowed CSS properties such as "font" and "margin".
@@ -243,7 +243,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed CSS properties.
         /// </summary>
-        public static readonly ISet<string> DefaultAllowedCssProperties = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+        public static ISet<string> DefaultAllowedCssProperties { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
             // CSS 3 properties <http://www.w3.org/TR/CSS/#properties>
             "background", "background-attachment", "background-color",
             "background-image", "background-position", "background-repeat",
@@ -396,7 +396,7 @@ namespace Ganss.XSS
         /// <summary>
         /// Raises the <see cref="E:RemovingCSSClass" /> event.
         /// </summary>
-        /// <param name="e">The <see cref="RemovingCSSClass"/> instance containing the event data.</param>
+        /// <param name="e">The <see cref="RemovingCssClassEventArgs"/> instance containing the event data.</param>
         protected virtual void OnRemovingCssClass(RemovingCssClassEventArgs e)
         {
             RemovingCssClass?.Invoke(this, e);
@@ -430,12 +430,13 @@ namespace Ganss.XSS
         /// <returns>The sanitized HTML body fragment.</returns>
         public string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
-            var dom = SanitizeDom(html, baseUrl);
-            var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
-            return output;
+            using (var dom = SanitizeDom(html, baseUrl))
+            {
+                var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
+                return output;
+            }
         }
 
-        
         /// <summary>
         /// Sanitizes the specified HTML body fragment. If a document is given, only the body part will be returned.
         /// </summary>
@@ -452,7 +453,7 @@ namespace Ganss.XSS
 
             return dom;
         }
-        
+
         /// <summary>
         /// Sanitizes the specified HTML document. Even if only a fragment is given, a whole document will be returned.
         /// </summary>
@@ -513,7 +514,7 @@ namespace Ganss.XSS
             SanitizeStyleSheets(dom, baseUrl);
 
             // cleanup attributes
-            foreach (var tag in context.QuerySelectorAll("*").OfType<IElement>().ToList())
+            foreach (var tag in context.QuerySelectorAll("*").ToList())
             {
                 // remove non-whitelisted attributes
                 foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
@@ -552,15 +553,15 @@ namespace Ganss.XSS
                         {
                             var removedClasses = tag.ClassList.Except(allowedTags).ToArray();
 
-                            foreach(var removedClass in removedClasses)
+                            foreach (var removedClass in removedClasses)
                                 RemoveCssClass(tag, removedClass, RemoveReason.NotAllowedCssClass);
 
                             if (!tag.ClassList.Any())
                                 RemoveAttribute(tag, attribute, RemoveReason.ClassAttributeEmpty);
                         }
-                        else
+                        else if (string.IsNullOrEmpty(attribute.Value))
                         {
-                            tag.SetAttribute(attribute.Name, attribute.Value);
+                            tag.RemoveAttribute(attribute.Name);
                         }
                     }
                 }
@@ -910,8 +911,8 @@ namespace Ganss.XSS
         /// Removes a CSS class from a class attribute.
         /// </summary>
         /// <param name="tag">Tag the style belongs to</param>
-        /// <param name="rule">Rule to be removed</param>
-        /// <returns>true, if the rule can be removed; false, otherwise.</returns>
+        /// <param name="cssClass">Class to be removed</param>
+        /// <param name="reason">Reason for removal</param>
         private void RemoveCssClass(IElement tag, string cssClass, RemoveReason reason)
         {
             var e = new RemovingCssClassEventArgs { Tag = tag, CssClass = cssClass, Reason = reason };

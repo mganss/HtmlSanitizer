@@ -2188,7 +2188,7 @@ rl(javascript:alert(""foo""))'>";
         public void PostProcessDomTest()
         {
             var sanitizer = new HtmlSanitizer();
-            sanitizer.PostProcessDom += (s, e) => 
+            sanitizer.PostProcessDom += (s, e) =>
             {
                 var p = e.Document.CreateElement("p");
                 p.TextContent = "World";
@@ -2199,7 +2199,7 @@ rl(javascript:alert(""foo""))'>";
             var sanitized = sanitizer.Sanitize(html);
             Assert.Equal(@"<div>Hallo</div><p>World</p>", sanitized, ignoreCase: true);
         }
-        
+
         [Fact]
         public void AutoLinkTest()
         {
@@ -2668,7 +2668,7 @@ rl(javascript:alert(""foo""))'>";
             Assert.Equal(@"<html><head><style>@namespace url(""http://www.w3.org/1999/xhtml"");
 @namespace svg url(""http://www.w3.org/2000/svg"");
 @media (min-width: 100px) { div { color: black } }
-@page * { margin: 2cm }
+@page { margin: 2cm }
 @keyframes identifier { 0% { top: 0 } 50% { top: 30px; left: 20px } 50% { top: 10px } 100% { top: 0 } }</style></head><body></body></html>".Replace("\r\n", "\n"),
                 actual);
         }
@@ -2898,7 +2898,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
                 Assert.Equal(0, failures);
             }
         }
-        
+
         [Fact]
         public void AllowAllClassesByDefaultTest()
         {
@@ -3001,7 +3001,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var sanitizer = new HtmlSanitizer();
             sanitizer.PostProcessNode += (s, e) =>
             {
-                Assert.Equal(1, e.Document.Body.ChildNodes.Count());
+                Assert.Single(e.Document.Body.ChildNodes);
                 var text = e.Node as IText;
                 Assert.NotNull(text);
                 Assert.Equal("Test1Test2", text.NodeValue);
@@ -3066,6 +3066,21 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var actual = sanitizer.Sanitize(html);
 
             Assert.Equal("<svg>123</svg>", actual);
+        }
+
+        [Fact]
+        public void SquareBracketTest()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/137
+
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowedAttributes.Add("[minutes]");
+
+            var html = @"<div [minutes]=""2"">123</div>";
+
+            var actual = sanitizer.Sanitize(html);
+
+            Assert.Equal(html, actual);
         }
     }
 }

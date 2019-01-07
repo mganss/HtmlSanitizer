@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <Description>Cleans HTML from constructs that can be used for cross site scripting (XSS)</Description>
-    <Copyright>Copyright 2013-2017 Michael Ganss</Copyright>
+    <Copyright>Copyright 2013-2018 Michael Ganss</Copyright>
     <AssemblyTitle>HtmlSanitizer</AssemblyTitle>
     <VersionPrefix>1.0.0-VERSION</VersionPrefix>
     <Authors>Michael Ganss</Authors>
-    <TargetFrameworks>net40;net45;netstandard1.3</TargetFrameworks>
+    <TargetFrameworks>net46;netstandard2.0</TargetFrameworks>
     <AssemblyName>HtmlSanitizer</AssemblyName>
     <AssemblyOriginatorKeyFile>HtmlSanitizer.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
@@ -17,43 +17,21 @@
     <PackageLicenseUrl>https://raw.github.com/mganss/HtmlSanitizer/master/LICENSE.md</PackageLicenseUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>git://github.com/mganss/HtmlSanitizer</RepositoryUrl>
-    <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.3' ">$(PackageTargetFallback);dotnet</PackageTargetFallback>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
-    <AppConfig Condition="'$(TargetFramework)' == 'net40'">app.net40.config</AppConfig>
-    <AutoUnifyAssemblyReferences Condition="'$(TargetFramework)' == 'net40'">false</AutoUnifyAssemblyReferences>
     <RootNamespace>Ganss.XSS</RootNamespace>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\HtmlSanitizer.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="AngleSharp, Version=0.10.0.0, Culture=neutral, PublicKeyToken=e83494dcdc6d31ea, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\AngleSharp.Css\src\AngleSharp.Css\bin\Debug\AngleSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="AngleSharp.Css">
-      <HintPath>..\..\..\AngleSharp.Css\src\AngleSharp.Css\bin\Debug\AngleSharp.Css.dll</HintPath>
-    </Reference>
-    <PackageReference Include="AngleSharp" Version="[0.9.9]" />
+    <PackageReference Include="AngleSharp" Version="[0.10.0]" />
+    <PackageReference Include="AngleSharp.Css" Version="[0.10.0]" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.5.0" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net40' ">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net46' ">
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
-    <Reference Include="System.Globalization" />
-    <Reference Include="System.IO" />
-    <Reference Include="System.Runtime" />
-    <Reference Include="System" />
-    <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <DefineConstants>$(DefineConstants);NETSTANDARD</DefineConstants>
-  </PropertyGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <PackageReference Include="System.ComponentModel" Version="4.3.0" />
   </ItemGroup>
 
 </Project>

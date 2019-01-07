@@ -1,21 +1,41 @@
-version: 3.5.{build}-beta
+version: 4.0.{build}
 skip_tags: true
 image: Visual Studio 2017
 environment:
-  CoverityProjectToken:
-    secure: pUUrynbyxCRpsAgGdKBVYDZCilwBmaWQ1Jg+rg5znr0=
-  CoverityNotificationEmail:
-    secure: m/ox72HU97EeJExWEFWx+0M9uov0cydn6E8mSaQzsQE=
+  access_token:
+    secure: Eq6BjtZ80BXKLwFMg76IjuQAvbLjbojIF/X/ARouGVhxPneJtgDfCXMPNgJ7KBKq
+  sonar_token:
+    secure: W7pHKhuTW6Lh8WlXJNTOIaOzeuxLi+H6Nqmnm4pr28jM6jyIpOZ+1r10lIQi0eCA
+nuget:
+  disable_publish_on_pr: true
 build_script:
   - ps: (Get-Content src\HtmlSanitizer\HtmlSanitizer.csproj).Replace("1.0.0-VERSION", $env:APPVEYOR_BUILD_VERSION) | Set-Content src\HtmlSanitizer\HtmlSanitizer.csproj
   - dotnet restore
-  - dotnet pack -c Release src\HtmlSanitizer
+  - dotnet pack --include-symbols --include-source -c Release src\HtmlSanitizer
 test_script:
-  - dotnet test test\HtmlSanitizer.Tests\HtmlSanitizer.Tests.csproj
-  - nuget.exe install OpenCover -ExcludeVersion
-  - OpenCover\tools\OpenCover.Console.exe -register:user -filter:"+[HtmlSanitizer]*" -target:"C:\Program Files\dotnet\dotnet.exe" "-targetargs:test test\HtmlSanitizer.Tests\HtmlSanitizer.Tests.csproj" -returntargetcode -hideskipped:All -output:coverage.xml
+  - ps: |
+      if (-not $env:APPVEYOR_PULL_REQUEST_NUMBER) {
+          dotnet tool install --global dotnet-sonarscanner
+          dotnet sonarscanner begin /k:"mganss_HtmlSanitizer" /v:$env:APPVEYOR_BUILD_VERSION /d:sonar.organization="mganss-github" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="$env:sonar_token" /d:sonar.cs.opencover.reportsPaths="$($env:APPVEYOR_BUILD_FOLDER)\coverage.xml" /d:sonar.coverage.exclusions="**/Program.cs"
+          dotnet build
+      }
+  - dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput="..\..\coverage.xml" test\HtmlSanitizer.Tests\HtmlSanitizer.Tests.csproj -f netcoreapp2.0
+  - ps: |
+      if (-not $env:APPVEYOR_PULL_REQUEST_NUMBER) {
+          dotnet sonarscanner end /d:sonar.login="$env:sonar_token"
+      }
   - "SET PATH=C:\\Python34;C:\\Python34\\Scripts;%PATH%"
   - pip install codecov
   - codecov -f "coverage.xml"
 artifacts:
   - path: 'src\**\*.nupkg'
+on_success:
+  - ps: |
+      if (-not $env:APPVEYOR_PULL_REQUEST_NUMBER) {
+          git config --global credential.helper store
+          Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+          git config --global user.email "michael@ganss.org"
+          git config --global user.name "Michael Ganss"
+          git tag v$env:APPVEYOR_BUILD_VERSION
+          git push origin --tags --porcelain
+      }
