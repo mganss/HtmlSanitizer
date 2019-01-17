@@ -32,6 +32,10 @@
         /// <summary>
         /// The class attribute is empty
         /// </summary>
-        ClassAttributeEmpty
+        ClassAttributeEmpty,
+        /// <summary>
+        /// The style attribute is empty
+        /// </summary>
+        StyleAttributeEmpty,
     }
 }
