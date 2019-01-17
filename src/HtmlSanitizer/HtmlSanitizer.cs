@@ -533,6 +533,7 @@ namespace Ganss.XSS
                 }
 
                 // sanitize the style attribute
+                var oldStyleEmpty = string.IsNullOrEmpty(tag.GetAttribute("style"));
                 SanitizeStyle(tag, baseUrl);
 
                 var checkClasses = AllowedCssClasses != null;
@@ -559,9 +560,9 @@ namespace Ganss.XSS
                             if (!tag.ClassList.Any())
                                 RemoveAttribute(tag, attribute, RemoveReason.ClassAttributeEmpty);
                         }
-                        else if (string.IsNullOrEmpty(attribute.Value))
+                        else if (!oldStyleEmpty && attribute.Name == "style" && string.IsNullOrEmpty(attribute.Value))
                         {
-                            tag.RemoveAttribute(attribute.Name);
+                            RemoveAttribute(tag, attribute, RemoveReason.StyleAttributeEmpty);
                         }
                     }
                 }
