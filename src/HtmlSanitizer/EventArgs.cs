@@ -212,4 +212,26 @@ namespace Ganss.XSS
         /// </value>
         public RemoveReason Reason { get; set; }
     }
+
+    /// <summary>
+    /// Provides data for the <see cref="HtmlSanitizer.FilterUrl"/> event.
+    /// </summary>
+    public class FilterUrlEventArgs: EventArgs
+    {
+        /// <summary>
+        /// Gets or sets the original URL.
+        /// </summary>
+        /// <value>
+        /// The original URL.
+        /// </value>
+        public string OriginalUrl { get; set; }
+
+        /// <summary>
+        /// Gets or sets the sanitized URL.
+        /// </summary>
+        /// <value>
+        /// The sanitized URL. If it is null, it will be removed.
+        /// </value>
+        public string SanitizedUrl { get; set; }
+    }
 }
