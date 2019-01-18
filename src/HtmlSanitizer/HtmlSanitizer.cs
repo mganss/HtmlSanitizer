@@ -326,6 +326,10 @@ namespace Ganss.XSS
         /// Occurs before a CSS class is removed.
         /// </summary>
         public event EventHandler<RemovingCssClassEventArgs> RemovingCssClass;
+        /// <summary>
+        /// Occurs when a URL is being sanitized.
+        /// </summary>
+        public event EventHandler<FilterUrlEventArgs> FilterUrl;
 
         /// <summary>
         /// Raises the <see cref="E:PostProcessDom" /> event.
@@ -402,6 +406,15 @@ namespace Ganss.XSS
         protected virtual void OnRemovingCssClass(RemovingCssClassEventArgs e)
         {
             RemovingCssClass?.Invoke(this, e);
+        }
+
+        /// <summary>
+        /// Raises the <see cref="E:RemovingUrl" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="FilterUrlEventArgs"/> instance containing the event data.</param>
+        protected virtual void OnFilteringUrl(FilterUrlEventArgs e)
+        {
+            FilterUrl?.Invoke(this, e);
         }
 
         /// <summary>
@@ -829,13 +842,11 @@ namespace Ganss.XSS
         /// <param name="url">The URL.</param>
         /// <param name="baseUrl">The base URL relative URLs are resolved against (empty or null for no resolution).</param>
         /// <returns>The sanitized URL or null if no safe URL can be created.</returns>
-        protected string SanitizeUrl(string url, string baseUrl)
+        protected virtual string SanitizeUrl(string url, string baseUrl)
         {
             var iri = GetSafeIri(url);
 
-            if (iri == null) return null;
-
-            if (!iri.IsAbsolute && !string.IsNullOrEmpty(baseUrl))
+            if (iri != null && !iri.IsAbsolute && !string.IsNullOrEmpty(baseUrl))
             {
                 // resolve relative uri
                 if (Uri.TryCreate(baseUrl, UriKind.Absolute, out Uri baseUri))
@@ -846,13 +857,16 @@ namespace Ganss.XSS
                     }
                     catch (UriFormatException)
                     {
-                        return null;
+                        iri = null;
                     }
                 }
-                else return null;
+                else iri = null;
             }
 
-            return iri.Value;
+            var e = new FilterUrlEventArgs { OriginalUrl = url, SanitizedUrl = iri?.Value };
+            OnFilteringUrl(e);
+
+            return e.SanitizedUrl;
         }
 
         /// <summary>

@@ -3082,6 +3082,21 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             Assert.Equal(html, actual);
         }
+
+        [Fact]
+        public void FilterUrlTest()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/156
+
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.FilterUrl += (s, e) => e.SanitizedUrl = "https://www.example.com/test.png";
+
+            var html = @"<img src=""http://www.example.com/"">";
+
+            var actual = sanitizer.Sanitize(html);
+
+            Assert.Equal(@"<img src=""https://www.example.com/test.png"">", actual);
+        }
     }
 }
 
