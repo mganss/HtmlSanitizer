@@ -7,6 +7,7 @@ using AngleSharp.Html.Parser;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -475,6 +476,25 @@ namespace Ganss.XSS
         /// <param name="outputFormatter">The formatter used to render the DOM. Using the <see cref="OutputFormatter"/> if null.</param>
         /// <returns>The sanitized HTML document.</returns>
         public string SanitizeDocument(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
+        {
+            var parser = HtmlParserFactory();
+            var dom = parser.ParseDocument(html);
+
+            DoSanitize(dom, dom.DocumentElement, baseUrl);
+
+            var output = dom.ToHtml(outputFormatter ?? OutputFormatter);
+
+            return output;
+        }
+
+        /// <summary>
+        /// Sanitizes the specified HTML document. Even if only a fragment is given, a whole document will be returned.
+        /// </summary>
+        /// <param name="html">The HTML document to sanitize.</param>
+        /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
+        /// <param name="outputFormatter">The formatter used to render the DOM. Using the <see cref="OutputFormatter"/> if null.</param>
+        /// <returns>The sanitized HTML document.</returns>
+        public string SanitizeDocument(Stream html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
         {
             var parser = HtmlParserFactory();
             var dom = parser.ParseDocument(html);
