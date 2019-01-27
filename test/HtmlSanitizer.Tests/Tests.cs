@@ -10,6 +10,8 @@ using AngleSharp;
 using AngleSharp.Dom.Css;
 using System.Threading;
 using System.Reflection;
+using System.IO;
+using System.Text;
 
 // Tests based on tests from http://roadkill.codeplex.com/
 
@@ -36,6 +38,7 @@ namespace Ganss.XSS.Tests
 
         public HtmlSanitizerTests(HtmlSanitizerFixture fixture)
         {
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             Sanitizer = fixture.Sanitizer;
         }
 
@@ -3096,6 +3099,27 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var actual = sanitizer.Sanitize(html);
 
             Assert.Equal(@"<img src=""https://www.example.com/test.png"">", actual);
+        }
+
+
+        [Fact]
+        public void EncodingTest()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/158
+
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowedTags.Add("meta");
+            sanitizer.AllowedAttributes.Add("http-equiv");
+            sanitizer.AllowedAttributes.Add("content");
+
+            var html = @"<html><head><meta http-equiv=""Content-Type"" content=""text/html; charset=iso-8859-1""></head><body>kopieën</body></html>";
+
+            using (var stream = new MemoryStream(Encoding.GetEncoding("iso-8859-1").GetBytes(html)))
+            {
+                var actual = sanitizer.SanitizeDocument(stream);
+
+                Assert.Equal(html, actual);
+            }
         }
     }
 }
