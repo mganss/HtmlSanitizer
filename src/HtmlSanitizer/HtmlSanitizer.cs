@@ -462,8 +462,7 @@ namespace Ganss.XSS
         public IHtmlDocument SanitizeDom(string html, string baseUrl = "")
         {
             var parser = HtmlParserFactory();
-            var dom = parser.Parse("<html><body></body></html>");
-            dom.Body.InnerHtml = html;
+            var dom = parser.Parse("<html><body>" + html);
 
             DoSanitize(dom, dom.Body, baseUrl);
 
