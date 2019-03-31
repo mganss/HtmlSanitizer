@@ -9,14 +9,13 @@ environment:
 nuget:
   disable_publish_on_pr: true
 build_script:
-  - ps: (Get-Content src\HtmlSanitizer\HtmlSanitizer.csproj).Replace("1.0.0-VERSION", $env:APPVEYOR_BUILD_VERSION) | Set-Content src\HtmlSanitizer\HtmlSanitizer.csproj
   - dotnet restore
   - dotnet pack --include-symbols --include-source -c Release src\HtmlSanitizer
 test_script:
   - ps: |
       if (-not $env:APPVEYOR_PULL_REQUEST_NUMBER) {
           dotnet tool install --global dotnet-sonarscanner
-          dotnet sonarscanner begin /k:"mganss_HtmlSanitizer" /v:$env:APPVEYOR_BUILD_VERSION /d:sonar.organization="mganss-github" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="$env:sonar_token" /d:sonar.cs.opencover.reportsPaths="$($env:APPVEYOR_BUILD_FOLDER)\coverage.xml" /d:sonar.coverage.exclusions="**/Program.cs"
+          dotnet sonarscanner begin /k:"mganss_HtmlSanitizer" /v:$env:APPVEYOR_BUILD_VERSION /o:"mganss-github" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="$env:sonar_token" /d:sonar.cs.opencover.reportsPaths="$($env:APPVEYOR_BUILD_FOLDER)\coverage.xml" /d:sonar.coverage.exclusions="**/Program.cs"
           dotnet build
       }
   - dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput="..\..\coverage.xml" test\HtmlSanitizer.Tests\HtmlSanitizer.Tests.csproj -f netcoreapp2.0
