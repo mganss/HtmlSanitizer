@@ -7,7 +7,8 @@
     <AppVeyor_Build_Version Condition="'$(APPVEYOR_BUILD_VERSION)' == ''">1.0.0</AppVeyor_Build_Version>
     <AssemblyVersion>4.0.0.0</AssemblyVersion>
     <FileVersion>$(AppVeyor_Build_Version).0</FileVersion>
-    <PackageVersion>$(AppVeyor_Build_Version)</PackageVersion>    
+    <PackageVersion>$(AppVeyor_Build_Version)</PackageVersion>
+    <ProductVersion></ProductVersion>
     <Authors>Michael Ganss</Authors>
     <TargetFrameworks>net40;net45;netstandard1.3;netstandard2.0;</TargetFrameworks>
     <AssemblyName>HtmlSanitizer</AssemblyName>
@@ -27,12 +28,12 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\HtmlSanitizer.xml</DocumentationFile>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
-    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="[0.9.11]" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-18618-05" PrivateAssets="All"/>
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net40' or '$(TargetFramework)' == 'net45'">
