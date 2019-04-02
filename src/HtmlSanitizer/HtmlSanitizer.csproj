@@ -8,7 +8,6 @@
     <AssemblyVersion>4.0.0.0</AssemblyVersion>
     <FileVersion>$(AppVeyor_Build_Version).0</FileVersion>
     <PackageVersion>$(AppVeyor_Build_Version)</PackageVersion>
-    <ProductVersion></ProductVersion>
     <Authors>Michael Ganss</Authors>
     <TargetFrameworks>net40;net45;netstandard1.3;netstandard2.0;</TargetFrameworks>
     <AssemblyName>HtmlSanitizer</AssemblyName>
