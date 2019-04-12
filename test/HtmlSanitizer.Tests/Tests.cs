@@ -3121,6 +3121,20 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
                 Assert.Equal(html, actual);
             }
         }
+
+        [Fact]
+        public void RemovingFramesetShouldTriggerEventTest()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/163
+
+            var sanitizer = new HtmlSanitizer();
+            bool anyNodeRemoved = false;
+            sanitizer.RemovingTag += (s, e) => anyNodeRemoved = true;
+            var html = @"<html><frameset><frame src=""javascript:alert(1)""></frame></frameset></html>";
+            var actual = sanitizer.SanitizeDocument(html);
+            Assert.True(anyNodeRemoved);
+            Assert.Equal("<html><head></head></html>", actual);
+        }
     }
 }
 
