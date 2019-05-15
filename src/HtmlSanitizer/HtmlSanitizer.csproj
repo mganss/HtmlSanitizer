@@ -2,9 +2,12 @@
 
   <PropertyGroup>
     <Description>Cleans HTML from constructs that can be used for cross site scripting (XSS)</Description>
-    <Copyright>Copyright 2013-2018 Michael Ganss</Copyright>
+    <Copyright>Copyright 2013-$([System.DateTime]::Now.Year) Michael Ganss</Copyright>
     <AssemblyTitle>HtmlSanitizer</AssemblyTitle>
-    <VersionPrefix>1.0.0-VERSION</VersionPrefix>
+    <AppVeyor_Build_Version Condition="'$(APPVEYOR_BUILD_VERSION)' == ''">1.0.0</AppVeyor_Build_Version>
+    <AssemblyVersion>5.0.0.0</AssemblyVersion>
+    <FileVersion>$(AppVeyor_Build_Version).0</FileVersion>
+    <PackageVersion>$(AppVeyor_Build_Version)-beta</PackageVersion>
     <Authors>Michael Ganss</Authors>
     <TargetFrameworks>net46;netstandard2.0</TargetFrameworks>
     <AssemblyName>HtmlSanitizer</AssemblyName>
@@ -14,13 +17,15 @@
     <PackageId>HtmlSanitizer</PackageId>
     <PackageTags>xss;anti;antixss;html;security</PackageTags>
     <PackageProjectUrl>https://github.com/mganss/HtmlSanitizer</PackageProjectUrl>
-    <PackageLicenseUrl>https://raw.github.com/mganss/HtmlSanitizer/master/LICENSE.md</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>git://github.com/mganss/HtmlSanitizer</RepositoryUrl>
-    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <RootNamespace>Ganss.XSS</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\HtmlSanitizer.xml</DocumentationFile>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <IncludeSymbols>true</IncludeSymbols>
   </PropertyGroup>
 
   <ItemGroup>

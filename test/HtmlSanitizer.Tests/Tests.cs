@@ -2430,8 +2430,10 @@ rl(javascript:alert(""foo""))'>";
             var allowedStyles = new[] { "margin-top" };
             RemoveReason? actual = null;
 
-            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, allowedCssProperties: allowedStyles);
-            s.DisallowCssPropertyValue = new Regex(@"\d+.*");
+            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, allowedCssProperties: allowedStyles)
+            {
+                DisallowCssPropertyValue = new Regex(@"\d+.*")
+            };
             s.RemovingStyle += (sender, args) =>
             {
                 actual = args.Reason;
