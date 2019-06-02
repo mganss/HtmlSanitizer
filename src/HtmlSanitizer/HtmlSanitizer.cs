@@ -482,7 +482,7 @@ namespace Ganss.XSS
 
             using (var dom = parser.Parse(html))
             {
-                DoSanitize(dom, dom.DocumentElement, baseUrl);
+                DoSanitize(dom, dom, baseUrl);
 
                 var output = dom.ToHtml(outputFormatter ?? OutputFormatter);
 
@@ -503,7 +503,7 @@ namespace Ganss.XSS
 
             using (var dom = parser.Parse(html))
             {
-                DoSanitize(dom, dom.DocumentElement, baseUrl);
+                DoSanitize(dom, dom, baseUrl);
 
                 var output = dom.ToHtml(outputFormatter ?? OutputFormatter);
 
@@ -542,7 +542,7 @@ namespace Ganss.XSS
             }
         }
 
-        private void DoSanitize(IHtmlDocument dom, IElement context, string baseUrl = "")
+        private void DoSanitize(IHtmlDocument dom, IParentNode context, string baseUrl = "")
         {
             // remove non-whitelisted tags
             foreach (var tag in context.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList())
@@ -607,9 +607,9 @@ namespace Ganss.XSS
                 }
             }
 
-            RemoveComments(context);
+            RemoveComments(context as IElement);
 
-            DoPostProcess(dom, context);
+            DoPostProcess(dom, context as IElement);
         }
 
         private void SanitizeStyleSheets(IHtmlDocument dom, string baseUrl)

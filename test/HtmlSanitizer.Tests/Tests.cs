@@ -3135,6 +3135,19 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             Assert.True(anyNodeRemoved);
             Assert.Equal("<html><head></head></html>", actual);
         }
+
+        [Fact]
+        public void HtmlDocumentTest()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/164
+
+            var sanitizer = new HtmlSanitizer();
+            var html = @"<html onmousemove=""alert(document.location)""><head></head><body></body></html>";
+
+            var actual = sanitizer.SanitizeDocument(html);
+
+            Assert.Equal("<html><head></head><body></body></html>", actual);
+        }
     }
 }
 
