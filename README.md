@@ -28,6 +28,25 @@ In order to facilitate different use cases, HtmlSanitizer can be customized at s
 - Provide a base URI that will be used to resolve relative URIs against.
 - Cancelable events are raised before a tag, attribute, or style is removed.
 
+Usage
+-----
+
+Install the [HtmlSanitizer NuGet package](https://www.nuget.org/packages/HtmlSanitizer/). Then:
+
+```C#
+var sanitizer = new HtmlSanitizer();
+var html = @"<script>alert('xss')</script><div onload=""alert('xss')"""
+    + @"style=""background-color: test"">Test<img src=""test.gif"""
+    + @"style=""background-image: url(javascript:alert('xss')); margin: 10px""></div>";
+var sanitized = sanitizer.Sanitize(html, "http://www.example.com");
+Assert.That(sanitized, Is.EqualTo(@"<div style=""background-color: test"">"
+    + @"Test<img style=""margin: 10px"" src=""http://www.example.com/test.gif""></div>"));
+```
+
+There's an [online demo](http://xss.ganss.org/), plus there's also a [.NET Fiddle](https://dotnetfiddle.net/qqpiDh) you can play with.
+
+More example code and a description of possible options can be found in the [Wiki](https://github.com/mganss/HtmlSanitizer/wiki).
+
 ### Tags allowed by default
 `a, abbr, acronym, address, area, article, aside, b, bdi, big, blockquote, br, button, caption, center, cite, code, col, colgroup, data, datalist, dd, del, details, dfn, dir, div, dl, dt, em, fieldset, figcaption, figure, font, footer, form, h1, h2, h3, h4, h5, h6, header, hr, i, img, input, ins, kbd, keygen, label, legend, li, main, map, mark, menu, menuitem, meter, nav, ol, optgroup, option, output, p, pre, progress, q, rp, rt, ruby, s, samp, section, select, small, span, strike, strong, sub, summary, sup, table, tbody, td, textarea, tfoot, th, thead, time, tr, tt, u, ul, var, wbr`
 
@@ -84,23 +103,6 @@ On the other hand, although some broken HTML is fixed by the parser, the output 
 - `<div><li>test</li></div>`
 - `<ul><br><li>test</li></ul>`
 - `<h3><p>test</p></h3>`
-
-Usage
------
-
-Install the [HtmlSanitizer NuGet package](https://www.nuget.org/packages/HtmlSanitizer/). Then:
-
-```C#
-var sanitizer = new HtmlSanitizer();
-var html = @"<script>alert('xss')</script><div onload=""alert('xss')"""
-    + @"style=""background-color: test"">Test<img src=""test.gif"""
-    + @"style=""background-image: url(javascript:alert('xss')); margin: 10px""></div>";
-var sanitized = sanitizer.Sanitize(html, "http://www.example.com");
-Assert.That(sanitized, Is.EqualTo(@"<div style=""background-color: test"">"
-    + @"Test<img style=""margin: 10px"" src=""http://www.example.com/test.gif""></div>"));
-```
-
-There's an [online demo](http://xss.ganss.org/), plus there's also a [.NET Fiddle](https://dotnetfiddle.net/qqpiDh) you can play with.
 
 License
 -------
