@@ -1,17 +1,17 @@
+using AngleSharp;
+using AngleSharp.Css.Dom;
 using AngleSharp.Dom;
-using AngleSharp.Dom.Html;
-using AngleSharp.Parser.Html;
-using Xunit;
+using AngleSharp.Html.Dom;
+using AngleSharp.Html.Parser;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using AngleSharp;
-using AngleSharp.Dom.Css;
-using System.Threading;
-using System.Reflection;
 using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using Xunit;
 
 // Tests based on tests from http://roadkill.codeplex.com/
 
@@ -533,7 +533,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div></div>";
+            string expected = "<div style=\"\"></div>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -1583,7 +1583,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div style=\"background-color: test\"></div>";
+            string expected = "<div></div>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -1601,7 +1601,7 @@ S
             string actual = sanitizer.Sanitize(htmlFragment);
 
             // Assert
-            string expected = "<div style=\"background-color: test\">Test<img src=\"http://www.example.com/test.gif\" style=\"background-image: url(&quot;http://www.example.com/bg.jpg&quot;); margin: 10px\"></div>";
+            string expected = "<div>Test<img src=\"http://www.example.com/test.gif\" style=\"background-image: url(&quot;http://www.example.com/bg.jpg&quot;); margin: 10px\"></div>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -1670,7 +1670,7 @@ S
 
             html = @"<div style=""background-color: red""><sCRipt>hallo</scripT></div><a href=""#"">Test</a>";
             actual = sanitizer.Sanitize(html);
-            expected = @"<div style=""background-color: red""></div><a href=""#"">Test</a>";
+            expected = @"<div style=""background-color: rgba(255, 0, 0, 1)""></div><a href=""#"">Test</a>";
             Assert.Equal(expected, actual, ignoreCase: true);
 
             html = @"<IMG SRC=""jav	ascript:alert('XSS');"">";
@@ -1698,9 +1698,9 @@ S
             expected = "<img>";
             Assert.Equal(expected, actual, ignoreCase: true);
 
-            html = "<script>alert('xss')</script><div onload=\"alert('xss')\" style=\"background-color: test\">Test<img src=\"test.gif\" style=\"background-image: url(javascript:alert('xss')); margin: 10px\"></div>";
+            html = "<script>alert('xss')</script><div onload=\"alert('xss')\" style=\"background-color: red\">Test<img src=\"test.gif\" style=\"background-image: url(javascript:alert('xss')); margin: 10px\"></div>";
             actual = sanitizer.Sanitize(html, "http://www.example.com");
-            expected = @"<div style=""background-color: test"">Test<img src=""http://www.example.com/test.gif"" style=""margin: 10px""></div>";
+            expected = @"<div style=""background-color: rgba(255, 0, 0, 1)"">Test<img src=""http://www.example.com/test.gif"" style=""margin: 10px""></div>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -1876,33 +1876,33 @@ S
         {
             var sanitizer = Sanitizer;
             // Inline style with url() using javascript: scheme
-            var html = @"<DIV STYLE='background: url(javascript:alert(""foo""))'>";
+            var html = @"<DIV STYLE='background-image: url(javascript:alert(""foo""))'>";
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
             // Inline style with url() using javascript: scheme, using control char
-            html = @"<DIV STYLE='background: url(&#1;javascript:alert(""foo""))'>";
+            html = @"<DIV STYLE='background-image: url(&#1;javascript:alert(""foo""))'>";
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
             // Inline style with url() using javascript: scheme, in quotes
-            html = @"<DIV STYLE='background: url(""javascript:alert(foo)"")'>";
+            html = @"<DIV STYLE='background-image: url(""javascript:alert(foo)"")'>";
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
             // IE expressions in CSS not allowed
             html = @"<DIV STYLE='width: expression(alert(""foo""));'>";
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
             html = @"<DIV STYLE='width: e/**/xpression(alert(""foo""));'>";
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
-            html = @"<DIV STYLE='background: url(javascript:alert(""foo""));color: #fff'>";
-            Assert.Equal(@"<div style=""color: #fff""></div>", sanitizer.Sanitize(html), ignoreCase: true);
+            html = @"<DIV STYLE='background-image: url(javascript:alert(""foo""));color: #fff'>";
+            Assert.Equal(@"<div style=""color: rgba(255, 255, 255, 1)""></div>", sanitizer.Sanitize(html), ignoreCase: true);
 
             // Inline style with url() using javascript: scheme, using unicode
             // escapes
-            html = @"<DIV STYLE='background: \75rl(javascript:alert(""foo""))'>";
+            html = @"<DIV STYLE='background-image: \75rl(javascript:alert(""foo""))'>";
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
-            html = @"<DIV STYLE='background: \000075rl(javascript:alert(""foo""))'>";
+            html = @"<DIV STYLE='background-image: \000075rl(javascript:alert(""foo""))'>";
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
-            html = @"<DIV STYLE='background: \75 rl(javascript:alert(""foo""))'>";
+            html = @"<DIV STYLE='background-image: \75 rl(javascript:alert(""foo""))'>";
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
-            html = @"<DIV STYLE='background: \000075 rl(javascript:alert(""foo""))'>";
+            html = @"<DIV STYLE='background-image: \000075 rl(javascript:alert(""foo""))'>";
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
-            html = @"<DIV STYLE='background: \000075
+            html = @"<DIV STYLE='background-image: \000075
 rl(javascript:alert(""foo""))'>";
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
@@ -2031,7 +2031,7 @@ rl(javascript:alert(""foo""))'>";
         {
             var sanitizer = Sanitizer;
             var html = @"<div style=""display:none;border-left-color:red;userDefined:1;-moz-user-selct:-moz-all"">prop</div>";
-            Assert.Equal(@"<div style=""display: none; border-left-color: red"">prop</div>", sanitizer.Sanitize(html), ignoreCase: true);
+            Assert.Equal(@"<div style=""display: none; border-left-color: rgba(255, 0, 0, 1)"">prop</div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
 
         [Fact]
@@ -2089,9 +2089,9 @@ rl(javascript:alert(""foo""))'>";
         public void RemovingStyleEventTest()
         {
             var sanitizer = new HtmlSanitizer();
-            sanitizer.RemovingStyle += (s, e) => e.Cancel = e.Style.Name == "test";
-            var html = @"<div style=""background: 0; test: xyz; bad: bad;""></div>";
-            Assert.Equal(@"<div style=""background: 0; test: xyz""></div>", sanitizer.Sanitize(html), ignoreCase: true);
+            sanitizer.RemovingStyle += (s, e) => e.Cancel = e.Style.Name == "column-count";
+            var html = @"<div style=""top: 1px; column-count: 3;""></div>";
+            Assert.Equal(@"<div style=""top: 1px; column-count: 3""></div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
 
         [Fact]
@@ -2214,7 +2214,7 @@ rl(javascript:alert(""foo""))'>";
                     var autolinked = Regex.Replace(text.NodeValue, @"https?://[^\s]+[^\s!?.:;,]+", m => $@"<a href=""{m.Value}"">{m.Value}</a>", RegexOptions.IgnoreCase);
                     if (autolinked != text.NodeValue)
                     {
-                        var f = new HtmlParser().Parse(autolinked);
+                        var f = new HtmlParser().ParseDocument(autolinked);
                         foreach (var node in f.Body.ChildNodes)
                             e.ReplacementNodes.Add(node);
                     }
@@ -2244,14 +2244,14 @@ rl(javascript:alert(""foo""))'>";
         public void DisallowCssPropertyValueTest()
         {
             // Arrange
-            var s = new HtmlSanitizer { DisallowCssPropertyValue = new Regex("^b.*") };
+            var s = new HtmlSanitizer { DisallowCssPropertyValue = new Regex(@"^rgba\(0.*") };
 
             // Act
-            var htmlFragment = @"<div style=""color: black; background-color: white"">Test</div>";
+            var htmlFragment = @"<div style=""color: rgba(0, 0, 0, 1); background-color: rgba(255, 255, 255, 1)"">Test</div>";
             var actual = s.Sanitize(htmlFragment);
 
             // Assert
-            var expected = @"<div style=""background-color: white"">Test</div>";
+            var expected = @"<div style=""background-color: rgba(255, 255, 255, 1)"">Test</div>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -2277,11 +2277,11 @@ rl(javascript:alert(""foo""))'>";
             var s = Sanitizer;
 
             // Act
-            var htmlFragment = @"<div style=""color: black; background-image: URL(x/y/bg.jpg)"">Test</div>";
+            var htmlFragment = @"<div style=""color: rgba(0, 0, 0, 1); background-image: URL(x/y/bg.jpg)"">Test</div>";
             var actual = s.Sanitize(htmlFragment, "hallo");
 
             // Assert
-            var expected = @"<div style=""color: black"">Test</div>";
+            var expected = @"<div style=""color: rgba(0, 0, 0, 1)"">Test</div>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -2427,16 +2427,19 @@ rl(javascript:alert(""foo""))'>";
         {
             var allowedTags = new[] { "a" };
             var allowedAttributes = new[] { "style" };
-            var allowedStyles = new[] { "margin" };
+            var allowedStyles = new[] { "margin-top" };
             RemoveReason? actual = null;
 
-            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, allowedCssProperties: allowedStyles);
+            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, allowedCssProperties: allowedStyles)
+            {
+                DisallowCssPropertyValue = new Regex(@"\d+.*")
+            };
             s.RemovingStyle += (sender, args) =>
             {
                 actual = args.Reason;
             };
 
-            s.Sanitize("<a style=\"margin:expression(alert('xss'))\">just any content</a>");
+            s.Sanitize("<a style=\"margin-top:17px\">just any content</a>");
 
             Assert.Equal(RemoveReason.NotAllowedValue, actual);
         }
@@ -2465,7 +2468,7 @@ rl(javascript:alert(""foo""))'>";
         {
             var allowedTags = new[] { "a" };
             var allowedAttributes = new[] { "style" };
-            var allowedStyles = new[] { "background" };
+            var allowedStyles = new[] { "background-image" };
             RemoveReason? actual = null;
 
             var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, allowedCssProperties: allowedStyles);
@@ -2474,7 +2477,7 @@ rl(javascript:alert(""foo""))'>";
                 actual = args.Reason;
             };
 
-            s.Sanitize("<a style=\"background:url(javascript:alert('xss'))\">just any content</a>");
+            var h = s.Sanitize("<a style=\"background-image:url(javascript:alert('xss'))\">just any content</a>");
 
             Assert.Equal(RemoveReason.NotAllowedUrlValue, actual);
         }
@@ -2595,11 +2598,11 @@ rl(javascript:alert(""foo""))'>";
         {
             var s = new HtmlSanitizer();
             s.AllowedTags.Add("style");
-            var html = "<html><head><style>body { background-color: white; hallo-ballo: xyz }</style></head><body><div>Test</div></body></html>";
+            var html = "<html><head><style>body { background-color: rgba(255, 255, 255, 1); hallo-ballo: xyz }</style></head><body><div>Test</div></body></html>";
 
             var actual = s.SanitizeDocument(html);
 
-            Assert.Equal("<html><head><style>body { background-color: white }</style></head><body><div>Test</div></body></html>", actual);
+            Assert.Equal("<html><head><style>body { background-color: rgba(255, 255, 255, 1) }</style></head><body><div>Test</div></body></html>", actual);
         }
 
         [Fact]
@@ -2607,17 +2610,17 @@ rl(javascript:alert(""foo""))'>";
         {
             var s = new HtmlSanitizer();
             s.AllowedTags.Add("style");
-            s.AllowedAtRules.Add(AngleSharp.Dom.Css.CssRuleType.Media);
-            s.AllowedAtRules.Add(AngleSharp.Dom.Css.CssRuleType.Keyframes);
-            s.AllowedAtRules.Add(AngleSharp.Dom.Css.CssRuleType.Keyframe);
-            s.AllowedAtRules.Add(AngleSharp.Dom.Css.CssRuleType.Page);
+            s.AllowedAtRules.Add(AngleSharp.Css.Dom.CssRuleType.Media);
+            s.AllowedAtRules.Add(AngleSharp.Css.Dom.CssRuleType.Keyframes);
+            s.AllowedAtRules.Add(AngleSharp.Css.Dom.CssRuleType.Keyframe);
+            s.AllowedAtRules.Add(AngleSharp.Css.Dom.CssRuleType.Page);
             var html = @"<html><head><style>
 @charset ""UTF-8"";
 @import url(evil.css);
 @namespace url(http://www.w3.org/1999/xhtml);
 @namespace svg url(http://www.w3.org/2000/svg);
 @media (min-width: 100px) {
-    div { color: black; }
+    div { color: rgba(0, 0, 0, 1); }
     @font-face { font-family: test }
 }
 @supports (--foo: green) {
@@ -2638,17 +2641,17 @@ rl(javascript:alert(""foo""))'>";
         background: yellow;
     }
 }
-@page { size:8.5in 11in; margin: 2cm }
+@page { size:8.5in 11in; margin-top: 2cm }
 @font-face {
       font-family: ""Bitstream Vera Serif Bold""
       src: url(""https://mdn.mozillademos.org/files/2468/VeraSeBd.ttf"");
-      color: black;
+      color: rgba(0, 0, 0, 1);
 }
 @keyframes identifier {
   0% { top: 0; }
   50% { top: 30px; left: 20px; }
   50% { top: 10px; }
-  100% { top: 0; background: url('javascript:alert(xss)') }
+  100% { top: 0; background-image: url('javascript:alert(xss)') }
 }
 @viewport {
   min-width: 640px;
@@ -2670,8 +2673,8 @@ rl(javascript:alert(""foo""))'>";
 
             Assert.Equal(@"<html><head><style>@namespace url(""http://www.w3.org/1999/xhtml"");
 @namespace svg url(""http://www.w3.org/2000/svg"");
-@media (min-width: 100px) { div { color: black } }
-@page { margin: 2cm }
+@media (min-width: 100px) { div { color: rgba(0, 0, 0, 1) } }
+@page { margin-top: 2cm }
 @keyframes identifier { 0% { top: 0 } 50% { top: 30px; left: 20px } 50% { top: 10px } 100% { top: 0 } }</style></head><body></body></html>".Replace("\r\n", "\n"),
                 actual);
         }
@@ -2801,7 +2804,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             // https://github.com/mganss/HtmlSanitizer/issues/81
 
-            var s = new HtmlSanitizer { HtmlParserFactory = () => new HtmlParser(new Configuration()) };
+            var s = new HtmlSanitizer { HtmlParserFactory = () => new HtmlParser(new HtmlParserOptions(), BrowsingContext.New(new Configuration())) };
             var html = @"<p style=""t"">xyz</p>";
 
             var actual = s.Sanitize(html);
@@ -2814,7 +2817,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             // https://github.com/mganss/HtmlSanitizer/issues/84
 
-            var s = new HtmlSanitizer { HtmlParserFactory = () => new HtmlParser(new Configuration()) };
+            var s = new HtmlSanitizer { HtmlParserFactory = () => new HtmlParser(new HtmlParserOptions(), BrowsingContext.New(new Configuration())) };
             var html = @"<input type=""text"" name=""my_name"" value=""<insert name>"">";
 
             var actual = s.Sanitize(html);

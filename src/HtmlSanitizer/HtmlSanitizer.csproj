@@ -5,11 +5,11 @@
     <Copyright>Copyright 2013-$([System.DateTime]::Now.Year) Michael Ganss</Copyright>
     <AssemblyTitle>HtmlSanitizer</AssemblyTitle>
     <AppVeyor_Build_Version Condition="'$(APPVEYOR_BUILD_VERSION)' == ''">1.0.0</AppVeyor_Build_Version>
-    <AssemblyVersion>4.0.0.0</AssemblyVersion>
+    <AssemblyVersion>5.0.0.0</AssemblyVersion>
     <FileVersion>$(AppVeyor_Build_Version).0</FileVersion>
-    <PackageVersion>$(AppVeyor_Build_Version)</PackageVersion>
+    <PackageVersion>$(AppVeyor_Build_Version)-beta</PackageVersion>
     <Authors>Michael Ganss</Authors>
-    <TargetFrameworks>net40;net45;netstandard1.3;netstandard2.0;</TargetFrameworks>
+    <TargetFrameworks>net46;netstandard2.0</TargetFrameworks>
     <AssemblyName>HtmlSanitizer</AssemblyName>
     <AssemblyOriginatorKeyFile>HtmlSanitizer.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
@@ -20,28 +20,26 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>git://github.com/mganss/HtmlSanitizer</RepositoryUrl>
-    <PackageTargetFallback Condition=" '$(TargetFramework)' == 'netstandard1.3' ">$(PackageTargetFallback);dotnet</PackageTargetFallback>
-    <AppConfig Condition="'$(TargetFramework)' == 'net40'">app.net40.config</AppConfig>
-    <AutoUnifyAssemblyReferences Condition="'$(TargetFramework)' == 'net40'">false</AutoUnifyAssemblyReferences>
     <RootNamespace>Ganss.XSS</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\HtmlSanitizer.xml</DocumentationFile>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <IncludeSymbols>true</IncludeSymbols>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="[0.9.11]" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19324-01" PrivateAssets="All"/>
+    <PackageReference Include="AngleSharp" Version="[0.12.1]" />
+    <PackageReference Include="AngleSharp.Css" Version="[0.12.1]" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="4.5.0" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0-beta2-19270-01" PrivateAssets="All" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net40' or '$(TargetFramework)' == 'net45'">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net46'">
     <Reference Include="System" />
     <Reference Include="Microsoft.CSharp" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.3' ">
-    <PackageReference Include="System.ComponentModel" Version="4.3.0" />
   </ItemGroup>
 
 </Project>

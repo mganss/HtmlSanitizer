@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;netcoreapp2.0;net46</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;net46</TargetFrameworks>
     <AssemblyName>HtmlSanitizer.Tests</AssemblyName>
     <PackageId>HtmlSanitizer.Tests</PackageId>
     <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
@@ -19,6 +19,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Net" />
     <ProjectReference Include="..\..\src\HtmlSanitizer\HtmlSanitizer.csproj" />
   </ItemGroup>
 
@@ -28,6 +30,12 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.1.1" />
+    <PackageReference Include="AngleSharp.Xml" Version="0.12.1" />
+    <PackageReference Include="coverlet.msbuild" Version="2.6.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.1.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>

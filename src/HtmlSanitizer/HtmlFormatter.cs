@@ -1,7 +1,6 @@
 ﻿using AngleSharp;
 using AngleSharp.Html;
 using AngleSharp.Dom;
-using AngleSharp.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -118,11 +117,11 @@ namespace Ganss.XSS
             return HtmlMarkupFormatter.Instance.Processing(processing);
         }
 
-        public virtual string Text(string text)
+        public virtual string Text(ICharacterData text)
         {
             return HtmlMarkupFormatter.Instance.Text(text);
         }
 
-        #pragma warning restore 1591
+#pragma warning restore 1591
     }
 }
