@@ -629,9 +629,9 @@ namespace Ganss.XSS
         /// <summary>
         /// Removes all comment nodes from a list of nodes.
         /// </summary>
-        /// <param name="context">The element within which to remove comments.</param>
+        /// <param name="context">The node within which to remove comments.</param>
         /// <returns><c>true</c> if any comments were removed; otherwise, <c>false</c>.</returns>
-        private void RemoveComments(IElement context)
+        private void RemoveComments(INode context)
         {
             foreach (var comment in GetAllNodes(context).OfType<IComment>().ToList())
             {
@@ -707,9 +707,9 @@ namespace Ganss.XSS
                 }
             }
 
-            RemoveComments(context as IElement);
+            RemoveComments(context as INode);
 
-            DoPostProcess(dom, context as IElement);
+            DoPostProcess(dom, context as INode);
         }
 
         private void SanitizeStyleSheets(IHtmlDocument dom, string baseUrl)
@@ -775,8 +775,8 @@ namespace Ganss.XSS
         /// Performs post processing on all nodes in the document.
         /// </summary>
         /// <param name="dom">The HTML document.</param>
-        /// <param name="context">The element within which to post process all nodes.</param>
-        private void DoPostProcess(IHtmlDocument dom, IElement context)
+        /// <param name="context">The node within which to post process all nodes.</param>
+        private void DoPostProcess(IHtmlDocument dom, INode context)
         {
             if (PostProcessNode != null)
             {

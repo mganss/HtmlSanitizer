@@ -2188,6 +2188,25 @@ rl(javascript:alert(""foo""))'>";
         }
 
         [Fact]
+        public void PostProcessNodeTestUsingDocument()
+        {
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.PostProcessNode += (s, e) =>
+            {
+                if (e.Node is IHtmlDivElement el)
+                {
+                    el.ClassList.Add("test");
+                    var b = e.Document.CreateElement("b");
+                    b.TextContent = "Test";
+                    el.AppendChild(b);
+                }
+            };
+            var html = @"<html><head></head><body><div>Hallo</div></body></html>";
+            var sanitized = sanitizer.SanitizeDocument(html);
+            Assert.Equal(@"<html><head></head><body><div class=""test"">Hallo<b>Test</b></div></body></html>", sanitized, ignoreCase: true);
+        }
+
+        [Fact]
         public void PostProcessDomTest()
         {
             var sanitizer = new HtmlSanitizer();
