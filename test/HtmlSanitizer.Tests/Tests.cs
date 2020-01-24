@@ -1497,6 +1497,7 @@ S
             {
                 Assert.Equal(expected, actual, ignoreCase: true);
             }
+#pragma warning disable CA1031 // Do not catch general exception types
             catch (Exception)
             {
 
@@ -1508,6 +1509,7 @@ S
 
                 Assert.Equal(expectedNet35, actual, ignoreCase: true);
             }
+#pragma warning restore CA1031 // Do not catch general exception types
         }
 
         /// <summary>
@@ -2907,11 +2909,13 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
                             if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
                             m.Invoke(tests, null);
                         }
+#pragma warning disable CA1031 // Do not catch general exception types
                         catch (Exception ex)
                         {
                             Interlocked.CompareExchange(ref firstException, ex, null);
                             Interlocked.Increment(ref failures);
                         }
+#pragma warning restore CA1031 // Do not catch general exception types
                     })).ToList();
 
                 foreach (var thread in threads)
@@ -2969,7 +2973,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         public void RemoveClassAttributeIfNoAllowedClassesTest()
         {
             // Empty array for allowed classes = no classes allowed
-            var sanitizer = new HtmlSanitizer(allowedAttributes: new[] { "class" }, allowedCssClasses: new string[0]);
+            var sanitizer = new HtmlSanitizer(allowedAttributes: new[] { "class" }, allowedCssClasses: Array.Empty<string>());
 
             var html = @"<div class=""good bad"">Test</div>";
             var actual = sanitizer.Sanitize(html);

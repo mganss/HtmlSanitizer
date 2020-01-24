@@ -676,7 +676,7 @@ namespace Ganss.XSS
                 SanitizeStyle(tag, baseUrl);
 
                 var checkClasses = AllowedCssClasses != null;
-                var allowedTags = AllowedCssClasses?.ToArray() ?? new string[0];
+                var allowedTags = AllowedCssClasses?.ToArray() ?? Array.Empty<string>();
 
                 // sanitize the value of the attributes
                 foreach (var attribute in tag.Attributes.ToList())
@@ -976,10 +976,12 @@ namespace Ganss.XSS
                     {
                         return new Uri(baseUri, iri.Value).AbsoluteUri;
                     }
+#pragma warning disable CA1031 // Do not catch general exception types
                     catch (UriFormatException)
                     {
                         iri = null;
                     }
+#pragma warning restore CA1031 // Do not catch general exception types
                 }
                 else iri = null;
             }
