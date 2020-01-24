@@ -18,7 +18,7 @@ test_script:
           dotnet sonarscanner begin /k:"mganss_HtmlSanitizer" /v:$env:APPVEYOR_BUILD_VERSION /o:"mganss-github" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="$env:sonar_token" /d:sonar.cs.opencover.reportsPaths="$($env:APPVEYOR_BUILD_FOLDER)\coverage.netcoreapp2.2.xml" /d:sonar.coverage.exclusions="**/Program.cs"
           dotnet build
       }
-  - dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput="..\..\coverage.xml" test\HtmlSanitizer.Tests\HtmlSanitizer.Tests.csproj -f netcoreapp2.1
+  - dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput="..\..\coverage.xml" test\HtmlSanitizer.Tests\HtmlSanitizer.Tests.csproj -f netcoreapp2.2
   - ps: |
       if (-not $env:APPVEYOR_PULL_REQUEST_NUMBER) {
           dotnet sonarscanner end /d:sonar.login="$env:sonar_token"
