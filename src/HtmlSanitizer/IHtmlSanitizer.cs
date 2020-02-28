@@ -91,12 +91,12 @@ namespace Ganss.XSS
         Regex DisallowCssPropertyValue { get; set; }
 
         /// <summary>
-        /// Gets or sets the allowed CSS classes.
+        /// Gets or sets the allowed CSS classes. If the set is empty, all classes will be allowed.
         /// </summary>
         /// <value>
-        /// The allowed CSS classes.
+        /// The allowed CSS classes. An empty set means all classes are allowed.
         /// </value>
-        ISet<string> AllowedCssClasses { get; }
+        ISet<string> AllowedClasses { get; }
 
         /// <summary>
         /// Occurs after sanitizing the document and post processing nodes.

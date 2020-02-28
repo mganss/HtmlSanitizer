@@ -58,9 +58,8 @@ namespace Ganss.XSS
         /// <param name="allowedAttributes">The allowed HTML attributes such as "href" and "alt". When <c>null</c>, uses <see cref="DefaultAllowedAttributes"/></param>
         /// <param name="uriAttributes">The HTML attributes that can contain a URI such as "href". When <c>null</c>, uses <see cref="DefaultUriAttributes"/></param>
         /// <param name="allowedCssProperties">The allowed CSS properties such as "font" and "margin". When <c>null</c>, uses <see cref="DefaultAllowedCssProperties"/></param>
-        /// <param name="allowedCssClasses">CSS class names which are allowed in the value of a class attribute. When <c>null</c>, any class names are allowed.</param>
         public HtmlSanitizer(IEnumerable<string> allowedTags = null, IEnumerable<string> allowedSchemes = null,
-            IEnumerable<string> allowedAttributes = null, IEnumerable<string> uriAttributes = null, IEnumerable<string> allowedCssProperties = null, IEnumerable<string> allowedCssClasses = null)
+            IEnumerable<string> allowedAttributes = null, IEnumerable<string> uriAttributes = null, IEnumerable<string> allowedCssProperties = null)
         {
             AllowedTags = new HashSet<string>(allowedTags ?? DefaultAllowedTags, StringComparer.OrdinalIgnoreCase);
             AllowedSchemes = new HashSet<string>(allowedSchemes ?? DefaultAllowedSchemes, StringComparer.OrdinalIgnoreCase);
@@ -68,7 +67,7 @@ namespace Ganss.XSS
             UriAttributes = new HashSet<string>(uriAttributes ?? DefaultUriAttributes, StringComparer.OrdinalIgnoreCase);
             AllowedCssProperties = new HashSet<string>(allowedCssProperties ?? DefaultAllowedCssProperties, StringComparer.OrdinalIgnoreCase);
             AllowedAtRules = new HashSet<CssRuleType>(DefaultAllowedAtRules);
-            AllowedCssClasses = allowedCssClasses != null ? new HashSet<string>(allowedCssClasses) : null;
+            AllowedClasses = new HashSet<string>(DefaultAllowedClasses, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
@@ -393,12 +392,17 @@ namespace Ganss.XSS
         }
 
         /// <summary>
-        /// Gets or sets the allowed CSS classes.
+        /// The default allowed CSS classes.
+        /// </summary>
+        public static ISet<string> DefaultAllowedClasses { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        /// <summary>
+        /// Gets or sets the allowed CSS classes. If the set is empty, all classes will be allowed.
         /// </summary>
         /// <value>
-        /// The allowed CSS classes.
+        /// The allowed CSS classes. An empty set means all classes are allowed.
         /// </value>
-        public ISet<string> AllowedCssClasses { get; private set; }
+        public ISet<string> AllowedClasses { get; private set; }
 
         /// <summary>
         /// Occurs after sanitizing the document and post processing nodes.
@@ -675,9 +679,6 @@ namespace Ganss.XSS
                 var oldStyleEmpty = string.IsNullOrEmpty(tag.GetAttribute("style"));
                 SanitizeStyle(tag, baseUrl);
 
-                var checkClasses = AllowedCssClasses != null;
-                var allowedTags = AllowedCssClasses?.ToArray() ?? Array.Empty<string>();
-
                 // sanitize the value of the attributes
                 foreach (var attribute in tag.Attributes.ToList())
                 {
@@ -689,9 +690,9 @@ namespace Ganss.XSS
                     }
                     else
                     {
-                        if (checkClasses && attribute.Name == "class")
+                        if (AllowedClasses.Any() && attribute.Name == "class")
                         {
-                            var removedClasses = tag.ClassList.Except(allowedTags).ToArray();
+                            var removedClasses = tag.ClassList.Except(AllowedClasses).ToArray();
 
                             foreach (var removedClass in removedClasses)
                                 RemoveCssClass(tag, removedClass, RemoveReason.NotAllowedCssClass);
