@@ -23,11 +23,11 @@ namespace Ganss.XSS
         // disable XML comments warnings
         #pragma warning disable 1591
 
-        protected override string Attribute(IAttr attribute)
+        protected override string Attribute(IAttr attr)
         {
-            var namespaceUri = attribute.NamespaceUri;
-            var localName = attribute.LocalName;
-            var value = attribute.Value;
+            var namespaceUri = attr.NamespaceUri;
+            var localName = attr.LocalName;
+            var value = attr.Value;
             var temp = new StringBuilder();
 
             if (String.IsNullOrEmpty(namespaceUri))
@@ -48,7 +48,7 @@ namespace Ganss.XSS
             }
             else
             {
-                temp.Append(attribute.Name);
+                temp.Append(attr.Name);
             }
 
             temp.Append('=').Append('"');
