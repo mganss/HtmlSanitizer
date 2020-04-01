@@ -13,17 +13,17 @@ namespace Ganss.XSS
     /// HTML5 markup formatter. Identical to <see cref="HtmlMarkupFormatter"/> except for &lt; and &gt; which are
     /// encoded in attribute values.
     /// </summary>
-    public class HtmlFormatter: IMarkupFormatter
+    public class HtmlFormatter: HtmlMarkupFormatter
     {
         /// <summary>
         /// An instance of <see cref="HtmlFormatter"/>.
         /// </summary>
-        public static readonly HtmlFormatter Instance = new HtmlFormatter();
+        new public static readonly HtmlFormatter Instance = new HtmlFormatter();
 
         // disable XML comments warnings
         #pragma warning disable 1591
 
-        public virtual string Attribute(IAttr attribute)
+        protected override string Attribute(IAttr attribute)
         {
             var namespaceUri = attribute.NamespaceUri;
             var localName = attribute.LocalName;
@@ -69,59 +69,6 @@ namespace Ganss.XSS
             return temp.Append('"').ToString();
         }
 
-        static string XmlNamespaceLocalName(string name)
-        {
-            return name != NamespaceNames.XmlNsPrefix ? (NamespaceNames.XmlNsPrefix + ":") : name;
-        }
-
-        public virtual string CloseTag(IElement element, bool selfClosing)
-        {
-            return HtmlMarkupFormatter.Instance.CloseTag(element, selfClosing);
-        }
-
-        public virtual string Comment(IComment comment)
-        {
-            return HtmlMarkupFormatter.Instance.Comment(comment);
-        }
-
-        public virtual string Doctype(IDocumentType doctype)
-        {
-            return HtmlMarkupFormatter.Instance.Doctype(doctype);
-        }
-
-        public virtual string OpenTag(IElement element, bool selfClosing)
-        {
-            var temp = new StringBuilder();
-
-            temp.Append('<');
-
-            if (!string.IsNullOrEmpty(element.Prefix))
-            {
-                temp.Append(element.Prefix).Append(':');
-            }
-
-            temp.Append(element.LocalName);
-
-            foreach (var attribute in element.Attributes)
-            {
-                temp.Append(' ').Append(Attribute(attribute));
-            }
-
-            temp.Append('>');
-
-            return temp.ToString();
-        }
-
-        public virtual string Processing(IProcessingInstruction processing)
-        {
-            return HtmlMarkupFormatter.Instance.Processing(processing);
-        }
-
-        public virtual string Text(ICharacterData text)
-        {
-            return HtmlMarkupFormatter.Instance.Text(text);
-        }
-
-#pragma warning restore 1591
+        #pragma warning restore 1591
     }
 }
