@@ -648,7 +648,7 @@ namespace Ganss.XSS
 
         private void DoSanitize(IHtmlDocument dom, IParentNode context, string baseUrl = "")
         {
-            // remove non-whitelisted tags
+            // remove disallowed tags
             foreach (var tag in context.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList())
             {
                 RemoveTag(tag, RemoveReason.NotAllowedTag);
@@ -659,7 +659,7 @@ namespace Ganss.XSS
             // cleanup attributes
             foreach (var tag in context.QuerySelectorAll("*").ToList())
             {
-                // remove non-whitelisted attributes
+                // remove disallowed attributes
                 foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
                 {
                     RemoveAttribute(tag, attribute, RemoveReason.NotAllowedAttribute);
