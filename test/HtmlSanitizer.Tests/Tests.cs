@@ -3162,6 +3162,39 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             Assert.Equal("<html><head></head><body></body></html>", actual);
         }
+
+        [Fact]
+        public void HtmlDocument2Test()
+        {
+            // https://github.com/mganss/HtmlSanitizer/issues/234
+
+            var sanitizer = new HtmlSanitizer();
+            var html = @"<STYLE>
+pre {
+white-space: pre-wrap;
+}
+</STYLE>
+<html <META="""" http-equiv=""Content-Type"" content=""text/html; charset=US-ASCII""><head><meta http-equiv=""Content-Type"" content=""text/html; charset=us-ascii""><title>abc</Title><style>
+<!--
+body,html,td,p {top-margin:0; padding:0; font-family:Arial,Helvetica,Geneva,sans-serif;}
+-->
+</Style></Head><body bgcolor=""#FFFFFF"">
+<p><br>
+Some text
+<br>
+</P>
+</Body></Html>";
+
+            var actual = sanitizer.SanitizeDocument(html);
+
+            Assert.Equal(@"<html><head>
+</head><body bgcolor=""#FFFFFF"">
+<p><br>
+Some text
+<br>
+</p>
+</body></html>", actual, ignoreLineEndingDifferences: true);
+        }
     }
 }
 
