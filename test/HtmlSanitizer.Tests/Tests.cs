@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using AngleSharp.Css.Parser;
 using Xunit;
 
 // Tests based on tests from http://roadkill.codeplex.com/
@@ -436,6 +437,27 @@ S
             // Assert
             string expected = "<img>";
             Assert.Equal(expected, actual, ignoreCase: true);
+        }
+        
+        
+        [Fact]
+        public void TomTest()
+        {
+            // Arrange
+            var sanitizer = Sanitizer;
+            sanitizer.AllowedTags.Add("style");
+            var parser = new HtmlParser(new HtmlParserOptions(), BrowsingContext.New(new Configuration().WithCss()));
+
+
+            // Act
+            string htmlFragment = "<div style=\"notarealthing: red;\">test test </div>";
+            var doc = parser.ParseDocument(htmlFragment);
+            
+            var newDom = sanitizer.SanitizeDom(doc);
+
+            // Assert
+            string expected = "<img>";
+            // Assert.Equal(expected, actual, ignoreCase: true)
         }
 
         /// <summary>

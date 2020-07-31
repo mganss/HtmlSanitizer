@@ -157,7 +157,7 @@ namespace Ganss.XSS
 
         /// <summary>
         /// Sanitizes the specified parsed HTML body fragment.
-        /// The Document Must have been pared with CSS support and the following options enabled
+        /// The Document Must have been parsed with CSS support and the following options enabled
         /// "IsIncludingUnknownDeclarations", "IsIncludingUnknownRules" and "IsToleratingInvalidSelectors"
         /// </summary>
         /// <param name="document">The parsed HTML Document.</param>
