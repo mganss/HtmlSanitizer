@@ -584,13 +584,21 @@ namespace Ganss.XSS
         /// "IsIncludingUnknownDeclarations", "IsIncludingUnknownRules" and "IsToleratingInvalidSelectors"
         /// </summary>
         /// <param name="document">The pared HTML Document.</param>
+        /// <param name="context">The node within which to sanitize.</param>
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
         /// <returns>The sanitized HTML Document.</returns>
-        public IHtmlDocument SanitizeDom(IHtmlDocument dom, string baseUrl = "")
+        public IHtmlDocument SanitizeDom(IHtmlDocument document, IHtmlElement context = null, string baseUrl = "")
         {
-            DoSanitize(dom, dom.Body, baseUrl);
+            if (context == null)
+            {
+                DoSanitize(document, document, baseUrl);
+            }
+            else
+            {
+                DoSanitize(document, context, baseUrl);
+            }
 
-            return dom;
+            return document;
         }
 
         /// <summary>
