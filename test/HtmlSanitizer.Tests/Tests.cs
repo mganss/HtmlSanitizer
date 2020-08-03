@@ -1,5 +1,6 @@
 using AngleSharp;
 using AngleSharp.Css.Dom;
+using AngleSharp.Css.Parser;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
@@ -11,7 +12,6 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
-using AngleSharp.Css.Parser;
 using Xunit;
 
 // Tests based on tests from http://roadkill.codeplex.com/
@@ -438,7 +438,7 @@ S
             string expected = "<img>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
-        
+
         /// <summary>
         /// A test for Image Xss vector with Null breaks up cross site scripting vector
         /// Example <!-- <image src=" perl -e 'print "<SCR\0IPT>alert(\"XSS\")</SCR\0IPT>";' > out "> -->
@@ -3163,7 +3163,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             Assert.Equal("<html><head></head><body></body></html>", actual);
         }
-        
+
         [Fact]
         public void PreParsedDocumentWithoutContextTest()
         {
@@ -3182,7 +3182,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             Assert.Equal("<html><head></head><body><div>hi</div></body></html>", returnedDocument.ToHtml());
         }
-        
+
         [Fact]
         public void PreParsedDocumentWithContextTest()
         {
