@@ -26,7 +26,7 @@ test_script:
   - pip install codecov
   - codecov -f "coverage.netcoreapp2.2.xml"
 artifacts:
-  - path: 'src\**\*.nupkg'
+  - path: 'src\**\*.*nupkg'
 on_success:
   - ps: |
       if (-not $env:APPVEYOR_PULL_REQUEST_NUMBER) {
