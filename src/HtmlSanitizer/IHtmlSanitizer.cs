@@ -157,7 +157,7 @@ namespace Ganss.XSS
 
         /// <summary>
         /// Sanitizes the specified parsed HTML body fragment.
-        /// The Document must have been parsed with CSS support.
+        /// If the document has not been parsed with CSS support then all styles will be removed
         /// </summary>
         /// <param name="document">The parsed HTML Document.</param>
         /// <param name="context">The node within which to sanitize.</param>
