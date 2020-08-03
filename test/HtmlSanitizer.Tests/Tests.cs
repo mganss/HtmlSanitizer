@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
+using AngleSharp.Css.Parser;
 using Xunit;
 
 // Tests based on tests from http://roadkill.codeplex.com/
@@ -437,7 +438,7 @@ S
             string expected = "<img>";
             Assert.Equal(expected, actual, ignoreCase: true);
         }
-
+        
         /// <summary>
         /// A test for Image Xss vector with Null breaks up cross site scripting vector
         /// Example <!-- <image src=" perl -e 'print "<SCR\0IPT>alert(\"XSS\")</SCR\0IPT>";' > out "> -->
@@ -3162,38 +3163,43 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             Assert.Equal("<html><head></head><body></body></html>", actual);
         }
-
+        
         [Fact]
-        public void HtmlDocument2Test()
+        public void PreParsedDocumentWithoutContextTest()
         {
-            // https://github.com/mganss/HtmlSanitizer/issues/234
-
+            // parse a document before calling SantizeDom
             var sanitizer = new HtmlSanitizer();
-            var html = @"<STYLE>
-pre {
-white-space: pre-wrap;
-}
-</STYLE>
-<html <META="""" http-equiv=""Content-Type"" content=""text/html; charset=US-ASCII""><head><meta http-equiv=""Content-Type"" content=""text/html; charset=us-ascii""><title>abc</Title><style>
-<!--
-body,html,td,p {top-margin:0; padding:0; font-family:Arial,Helvetica,Geneva,sans-serif;}
--->
-</Style></Head><body bgcolor=""#FFFFFF"">
-<p><br>
-Some text
-<br>
-</P>
-</Body></Html>";
+            var parser = new HtmlParser(new HtmlParserOptions(), BrowsingContext.New(new Configuration().WithCss(new CssParserOptions
+            {
+                IsIncludingUnknownDeclarations = true,
+                IsIncludingUnknownRules = true,
+                IsToleratingInvalidSelectors = true,
+            })));
+            var html = @"<html><head></head><body><div>hi</div></body></html>";
 
-            var actual = sanitizer.SanitizeDocument(html);
+            var document = parser.ParseDocument(html);
+            var returnedDocument = sanitizer.SanitizeDom(document);
 
-            Assert.Equal(@"<html><head>
-</head><body bgcolor=""#FFFFFF"">
-<p><br>
-Some text
-<br>
-</p>
-</body></html>", actual, ignoreLineEndingDifferences: true);
+            Assert.Equal("<html><head></head><body><div>hi</div></body></html>", returnedDocument.ToHtml());
+        }
+        
+        [Fact]
+        public void PreParsedDocumentWithContextTest()
+        {
+            // parse a document before calling SantizeDom
+            var sanitizer = new HtmlSanitizer();
+            var parser = new HtmlParser(new HtmlParserOptions(), BrowsingContext.New(new Configuration().WithCss(new CssParserOptions
+            {
+                IsIncludingUnknownDeclarations = true,
+                IsIncludingUnknownRules = true,
+                IsToleratingInvalidSelectors = true,
+            })));
+            var html = @"<html><head></head><body><div>hi</div></body></html>";
+
+            var document = parser.ParseDocument(html);
+            var returnedDocument = sanitizer.SanitizeDom(document, document.Body);
+
+            Assert.Equal("<html><head></head><body><div>hi</div></body></html>", returnedDocument.ToHtml());
         }
     }
 }

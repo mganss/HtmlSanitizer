@@ -579,6 +579,20 @@ namespace Ganss.XSS
         }
 
         /// <summary>
+        /// Sanitizes the specified parsed HTML body fragment.
+        /// If the document has not been parsed with CSS support then all styles will be removed
+        /// </summary>
+        /// <param name="document">The parsed HTML Document.</param>
+        /// <param name="context">The node within which to sanitize.</param>
+        /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
+        /// <returns>The sanitized HTML Document.</returns>
+        public IHtmlDocument SanitizeDom(IHtmlDocument document, IHtmlElement context = null, string baseUrl = "")
+        {
+            DoSanitize(document, context ?? (IParentNode) document, baseUrl);
+            return document;
+        }
+
+        /// <summary>
         /// Sanitizes the specified HTML document. Even if only a fragment is given, a whole document will be returned.
         /// </summary>
         /// <param name="html">The HTML document to sanitize.</param>
@@ -850,7 +864,8 @@ namespace Ganss.XSS
         {
             // filter out invalid CSS declarations
             // see https://github.com/AngleSharp/AngleSharp/issues/101
-            if (element.GetAttribute("style") == null) return;
+            var attribute = element.GetAttribute("style");
+            if (attribute == null) return;
             if (element.GetStyle() == null)
             {
                 element.RemoveAttribute("style");
