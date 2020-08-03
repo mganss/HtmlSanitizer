@@ -156,6 +156,16 @@ namespace Ganss.XSS
         IHtmlDocument SanitizeDom(string html, string baseUrl = "");
 
         /// <summary>
+        /// Sanitizes the specified parsed HTML body fragment.
+        /// If the document has not been parsed with CSS support then all styles will be removed
+        /// </summary>
+        /// <param name="document">The parsed HTML Document.</param>
+        /// <param name="context">The node within which to sanitize.</param>
+        /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
+        /// <returns>The sanitized HTML Document.</returns>
+        IHtmlDocument SanitizeDom(IHtmlDocument document, IHtmlElement context = null, string baseUrl = "");
+
+        /// <summary>
         /// Sanitizes the specified HTML document. Even if only a fragment is given, a whole document will be returned.
         /// </summary>
         /// <param name="html">The HTML document to sanitize.</param>
