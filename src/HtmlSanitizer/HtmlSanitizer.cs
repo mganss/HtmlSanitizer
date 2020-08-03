@@ -589,7 +589,6 @@ namespace Ganss.XSS
         /// <returns>The sanitized HTML Document.</returns>
         public IHtmlDocument SanitizeDom(IHtmlDocument document, IHtmlElement context = null, string baseUrl = "")
         {
-            var styling = document.Context.GetCssStyling();
             DoSanitize(document, context ?? (IParentNode) document, baseUrl);
             return document;
         }
