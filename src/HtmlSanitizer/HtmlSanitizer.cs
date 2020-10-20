@@ -254,6 +254,8 @@ namespace Ganss.XSS
             "background-origin",
             "background-position",
             "background-repeat",
+            "background-repeat-x", // see https://github.com/mganss/HtmlSanitizer/issues/243
+            "background-repeat-y",
             "background-size",
             "border",
             "border-bottom",
