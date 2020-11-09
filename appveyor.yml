@@ -1,11 +1,12 @@
 version: 5.0.{build}
 skip_tags: true
-image: Visual Studio 2017
+image: Visual Studio 2019
 environment:
   access_token:
     secure: Eq6BjtZ80BXKLwFMg76IjuQAvbLjbojIF/X/ARouGVhxPneJtgDfCXMPNgJ7KBKq
   sonar_token:
     secure: W7pHKhuTW6Lh8WlXJNTOIaOzeuxLi+H6Nqmnm4pr28jM6jyIpOZ+1r10lIQi0eCA
+  JAVA_HOME: C:\Program Files\Java\jdk14
 nuget:
   disable_publish_on_pr: true
 build_script:
@@ -31,7 +32,7 @@ on_success:
   - ps: |
       if (-not $env:APPVEYOR_PULL_REQUEST_NUMBER) {
           git config --global credential.helper store
-          Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"
+          Add-Content -Path "$HOME\.git-credentials" -Value "https://$($env:access_token):x-oauth-basic@github.com`n" -NoNewline
           git config --global user.email "michael@ganss.org"
           git config --global user.name "Michael Ganss"
           git tag v$env:APPVEYOR_BUILD_VERSION
