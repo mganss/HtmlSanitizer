@@ -3201,6 +3201,19 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             Assert.Equal("<html><head></head><body><div>hi</div></body></html>", returnedDocument.ToHtml());
         }
+
+        [Fact]
+        public void StyleByPassTest()
+        {
+            var sanitizer = new HtmlSanitizer();
+
+            sanitizer.AllowedTags.Add("style");
+
+            var html = "aaabc<style>x[x='\\3c /style>\\3c img src onerror=alert(1)>']{}</style>";
+            var sanitized = sanitizer.Sanitize(html, "http://www.example.com");
+
+            Assert.Equal("aaabc<style>x[x=\"\\3c/style>\\3cimg src onerror=alert(1)>\"] { }</style>", sanitized);
+        }
     }
 }
 
