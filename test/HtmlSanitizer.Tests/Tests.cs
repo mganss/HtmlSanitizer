@@ -20,9 +20,6 @@ using Xunit;
 // https://www.owasp.org/index.php/XSS_(Cross_Site_Scripting)_Prevention_Cheat_Sheet#RULE_.232_-_Attribute_Escape_Before_Inserting_Untrusted_Data_into_HTML_Common_Attributes
 // and http://ha.ckers.org/xss.html
 
-// disable XML comments warnings
-#pragma warning disable 1591
-
 namespace Ganss.XSS.Tests
 {
     public class HtmlSanitizerFixture
@@ -3129,12 +3126,10 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             var html = @"<html><head><meta http-equiv=""Content-Type"" content=""text/html; charset=iso-8859-1""></head><body>kopieën</body></html>";
 
-            using (var stream = new MemoryStream(Encoding.GetEncoding("iso-8859-1").GetBytes(html)))
-            {
-                var actual = sanitizer.SanitizeDocument(stream);
+            using var stream = new MemoryStream(Encoding.GetEncoding("iso-8859-1").GetBytes(html));
+            var actual = sanitizer.SanitizeDocument(stream);
 
-                Assert.Equal(html, actual);
-            }
+            Assert.Equal(html, actual);
         }
 
         [Fact]
@@ -3216,5 +3211,3 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         }
     }
 }
-
-#pragma warning restore 1591
