@@ -50,6 +50,13 @@ namespace Ganss.XSS
     /// </example>
     public class HtmlSanitizer : IHtmlSanitizer
     {
+        private static readonly IConfiguration defaultConfiguration = Configuration.Default.WithCss(new CssParserOptions
+        {
+            IsIncludingUnknownDeclarations = true,
+            IsIncludingUnknownRules = true,
+            IsToleratingInvalidSelectors = true,
+        });
+        
         /// <summary>
         /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class.
         /// </summary>
@@ -638,12 +645,7 @@ namespace Ganss.XSS
         /// <returns>An instance of <see cref="HtmlParser"/>.</returns>
         private static HtmlParser CreateParser()
         {
-            return new HtmlParser(new HtmlParserOptions(), BrowsingContext.New(new Configuration().WithCss(new CssParserOptions
-            {
-                IsIncludingUnknownDeclarations = true,
-                IsIncludingUnknownRules = true,
-                IsToleratingInvalidSelectors = true,
-            })));
+            return new HtmlParser(new HtmlParserOptions(), BrowsingContext.New(defaultConfiguration));
         }
 
         /// <summary>
