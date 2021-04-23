@@ -16,7 +16,7 @@ namespace Ganss.XSS
         /// <value>
         /// The value of the IRI.
         /// </value>
-        public string Value { get; set; }
+        public string Value { get; private set; }
 
         /// <summary>
         /// Gets a value indicating whether the IRI is absolute.
@@ -32,6 +32,17 @@ namespace Ganss.XSS
         /// <value>
         /// The scheme of the IRI.
         /// </value>
-        public string Scheme { get; set; }
+        public string? Scheme { get; private set; }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Iri"/> class.
+        /// </summary>
+        /// <param name="value">The value.</param>
+        /// <param name="scheme">The scheme.</param>
+        public Iri(string value, string? scheme = null)
+        {
+            Value = value;
+            Scheme = scheme;
+        }
     }
 }
