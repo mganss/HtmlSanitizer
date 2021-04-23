@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <SonarQubeExclude>true</SonarQubeExclude>
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\HtmlSanitizer\HtmlSanitizer.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="*.html" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

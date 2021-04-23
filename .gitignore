@@ -162,3 +162,5 @@ coverity.zip
 *.lock.json
 *.nuget.props
 *.nuget.targets
+
+/.idea
