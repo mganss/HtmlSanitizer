@@ -51,11 +51,11 @@ namespace Ganss.XSS
     public class HtmlSanitizer : IHtmlSanitizer
     {
         // from http://genshi.edgewall.org/
-        private static readonly Regex CssUnicodeEscapes = new Regex(@"\\([0-9a-fA-F]{1,6})\s?|\\([^\r\n\f0-9a-fA-F'""{};:()#*])", RegexOptions.Compiled);
-        private static readonly Regex CssComments = new Regex(@"/\*.*?\*/", RegexOptions.Compiled);
+        private static readonly Regex CssUnicodeEscapes = new(@"\\([0-9a-fA-F]{1,6})\s?|\\([^\r\n\f0-9a-fA-F'""{};:()#*])", RegexOptions.Compiled);
+        private static readonly Regex CssComments = new(@"/\*.*?\*/", RegexOptions.Compiled);
         // IE6 <http://heideri.ch/jso/#80>
-        private static readonly Regex CssExpression = new Regex(@"[eE\uFF25\uFF45][xX\uFF38\uFF58][pP\uFF30\uFF50][rR\u0280\uFF32\uFF52][eE\uFF25\uFF45][sS\uFF33\uFF53]{2}[iI\u026A\uFF29\uFF49][oO\uFF2F\uFF4F][nN\u0274\uFF2E\uFF4E]", RegexOptions.Compiled);
-        private static readonly Regex CssUrl = new Regex(@"[Uu][Rr\u0280][Ll\u029F]\s*\(\s*(['""]?)\s*([^'"")\s]+)\s*(['""]?)\s*", RegexOptions.Compiled);
+        private static readonly Regex CssExpression = new(@"[eE\uFF25\uFF45][xX\uFF38\uFF58][pP\uFF30\uFF50][rR\u0280\uFF32\uFF52][eE\uFF25\uFF45][sS\uFF33\uFF53]{2}[iI\u026A\uFF29\uFF49][oO\uFF2F\uFF4F][nN\u0274\uFF2E\uFF4E]", RegexOptions.Compiled);
+        private static readonly Regex CssUrl = new(@"[Uu][Rr\u0280][Ll\u029F]\s*\(\s*(['""]?)\s*([^'"")\s]+)\s*(['""]?)\s*", RegexOptions.Compiled);
         private static readonly IConfiguration defaultConfiguration = Configuration.Default.WithCss(new CssParserOptions
         {
             IsIncludingUnknownDeclarations = true,
@@ -63,7 +63,7 @@ namespace Ganss.XSS
             IsToleratingInvalidSelectors = true,
         });
 
-        private static readonly HtmlParser defaultHtmlParser = new HtmlParser(new HtmlParserOptions(), BrowsingContext.New(defaultConfiguration));
+        private static readonly HtmlParser defaultHtmlParser = new(new HtmlParserOptions(), BrowsingContext.New(defaultConfiguration));
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class.
@@ -518,7 +518,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default regex for disallowed CSS property values.
         /// </summary>
-        public static readonly Regex DefaultDisallowedCssPropertyValue = new Regex(@"[<>]", RegexOptions.Compiled);
+        public static readonly Regex DefaultDisallowedCssPropertyValue = new(@"[<>]", RegexOptions.Compiled);
 
         /// <summary>
         /// Raises the <see cref="E:RemovingCSSClass" /> event.
@@ -941,7 +941,7 @@ namespace Ganss.XSS
             return r;
         }
 
-        private static readonly Regex SchemeRegex = new Regex(@"^\s*([^\/#]*?)(?:\:|&#0*58|&#x0*3a)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex SchemeRegex = new(@"^\s*([^\/#]*?)(?:\:|&#0*58|&#x0*3a)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <summary>
         /// Tries to create a safe <see cref="Iri"/> object from a string.
