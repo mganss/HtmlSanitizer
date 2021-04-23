@@ -1,4 +1,4 @@
-version: 5.0.{build}
+version: 6.0.{build}-beta
 skip_tags: true
 image: Visual Studio 2019
 environment:
@@ -28,13 +28,13 @@ test_script:
   - codecov -f "coverage.net5.0.xml"
 artifacts:
   - path: 'src\**\*.*nupkg'
-on_success:
-  - ps: |
-      if (-not $env:APPVEYOR_PULL_REQUEST_NUMBER) {
-          git config --global credential.helper store
-          Add-Content -Path "$HOME\.git-credentials" -Value "https://$($env:access_token):x-oauth-basic@github.com`n" -NoNewline
-          git config --global user.email "michael@ganss.org"
-          git config --global user.name "Michael Ganss"
-          git tag v$env:APPVEYOR_BUILD_VERSION
-          git push origin --tags --porcelain
-      }
+deploy:
+  - provider: GitHub
+    tag: v$(APPVEYOR_BUILD_VERSION)
+    release: $(APPVEYOR_BUILD_VERSION)
+    description: '$(APPVEYOR_REPO_COMMIT_MESSAGE)'
+    auth_token:
+      secure: Eq6BjtZ80BXKLwFMg76IjuQAvbLjbojIF/X/ARouGVhxPneJtgDfCXMPNgJ7KBKq
+    draft: true
+    on:
+      branch: master
