@@ -3210,12 +3210,13 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             Assert.Equal("aaabc<style>x[x=\"\\3c/style>\\3cimg src onerror=alert(1)>\"] { }</style>", sanitized);
         }
 
-        //[Fact]
-        //public void Number272Test()
-        //{
-        //    // see https://github.com/mganss/HtmlSanitizer/issues/272
-        //    var html = @"<span style='grid-template-areas: none; grid-template-columns: none; grid-template-rows: none'>";
-        //    var sanitized = Sanitizer.Sanitize(html);
-        //}
+        [Fact]
+        public void Number272Test()
+        {
+            // see https://github.com/mganss/HtmlSanitizer/issues/272
+            var html = @"<span style='grid-template-areas: none; grid-template-columns: none; grid-template-rows: none'>";
+            var sanitized = Sanitizer.Sanitize(html);
+            Assert.Equal("<span></span>", sanitized);
+        }
     }
 }
