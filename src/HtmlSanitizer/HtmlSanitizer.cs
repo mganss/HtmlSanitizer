@@ -50,13 +50,21 @@ namespace Ganss.XSS
     /// </example>
     public class HtmlSanitizer : IHtmlSanitizer
     {
+        // from http://genshi.edgewall.org/
+        private static readonly Regex CssUnicodeEscapes = new Regex(@"\\([0-9a-fA-F]{1,6})\s?|\\([^\r\n\f0-9a-fA-F'""{};:()#*])", RegexOptions.Compiled);
+        private static readonly Regex CssComments = new Regex(@"/\*.*?\*/", RegexOptions.Compiled);
+        // IE6 <http://heideri.ch/jso/#80>
+        private static readonly Regex CssExpression = new Regex(@"[eE\uFF25\uFF45][xX\uFF38\uFF58][pP\uFF30\uFF50][rR\u0280\uFF32\uFF52][eE\uFF25\uFF45][sS\uFF33\uFF53]{2}[iI\u026A\uFF29\uFF49][oO\uFF2F\uFF4F][nN\u0274\uFF2E\uFF4E]", RegexOptions.Compiled);
+        private static readonly Regex CssUrl = new Regex(@"[Uu][Rr\u0280][Ll\u029F]\s*\(\s*(['""]?)\s*([^'"")\s]+)\s*(['""]?)\s*", RegexOptions.Compiled);
         private static readonly IConfiguration defaultConfiguration = Configuration.Default.WithCss(new CssParserOptions
         {
             IsIncludingUnknownDeclarations = true,
             IsIncludingUnknownRules = true,
             IsToleratingInvalidSelectors = true,
         });
-        
+
+        private static readonly HtmlParser defaultHtmlParser = new HtmlParser(new HtmlParserOptions(), BrowsingContext.New(defaultConfiguration));
+
         /// <summary>
         /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class.
         /// </summary>
@@ -65,8 +73,8 @@ namespace Ganss.XSS
         /// <param name="allowedAttributes">The allowed HTML attributes such as "href" and "alt". When <c>null</c>, uses <see cref="DefaultAllowedAttributes"/></param>
         /// <param name="uriAttributes">The HTML attributes that can contain a URI such as "href". When <c>null</c>, uses <see cref="DefaultUriAttributes"/></param>
         /// <param name="allowedCssProperties">The allowed CSS properties such as "font" and "margin". When <c>null</c>, uses <see cref="DefaultAllowedCssProperties"/></param>
-        public HtmlSanitizer(IEnumerable<string> allowedTags = null, IEnumerable<string> allowedSchemes = null,
-            IEnumerable<string> allowedAttributes = null, IEnumerable<string> uriAttributes = null, IEnumerable<string> allowedCssProperties = null)
+        public HtmlSanitizer(IEnumerable<string>? allowedTags = null, IEnumerable<string>? allowedSchemes = null,
+            IEnumerable<string>? allowedAttributes = null, IEnumerable<string>? uriAttributes = null, IEnumerable<string>? allowedCssProperties = null)
         {
             AllowedTags = new HashSet<string>(allowedTags ?? DefaultAllowedTags, StringComparer.OrdinalIgnoreCase);
             AllowedSchemes = new HashSet<string>(allowedSchemes ?? DefaultAllowedSchemes, StringComparer.OrdinalIgnoreCase);
@@ -90,7 +98,7 @@ namespace Ganss.XSS
         /// <summary>
         /// Gets or sets the default <see cref="Func{HtmlParser}"/> object that creates the parser used for parsing the input.
         /// </summary>
-        public static Func<HtmlParser> DefaultHtmlParserFactory { get; set; } = CreateParser;
+        public static Func<HtmlParser> DefaultHtmlParserFactory { get; set; } = () => defaultHtmlParser;
 
         /// <summary>
         /// Gets or sets the <see cref="Func{HtmlParser}"/> object the creates the parser used for parsing the input.
@@ -386,19 +394,13 @@ namespace Ganss.XSS
             "z-index"
         };
 
-        private Regex _disallowedCssPropertyValue;
-
         /// <summary>
         /// Gets or sets a regex that must not match for legal CSS property values.
         /// </summary>
         /// <value>
         /// The regex.
         /// </value>
-        public Regex DisallowCssPropertyValue
-        {
-            get { return _disallowedCssPropertyValue ?? DefaultDisallowedCssPropertyValue; }
-            set { _disallowedCssPropertyValue = value; }
-        }
+        public Regex DisallowCssPropertyValue { get; set; } = DefaultDisallowedCssPropertyValue;
 
         /// <summary>
         /// The default allowed CSS classes.
@@ -416,39 +418,39 @@ namespace Ganss.XSS
         /// <summary>
         /// Occurs after sanitizing the document and post processing nodes.
         /// </summary>
-        public event EventHandler<PostProcessDomEventArgs> PostProcessDom;
+        public event EventHandler<PostProcessDomEventArgs>? PostProcessDom;
         /// <summary>
         /// Occurs for every node after sanitizing.
         /// </summary>
-        public event EventHandler<PostProcessNodeEventArgs> PostProcessNode;
+        public event EventHandler<PostProcessNodeEventArgs>? PostProcessNode;
         /// <summary>
         /// Occurs before a tag is removed.
         /// </summary>
-        public event EventHandler<RemovingTagEventArgs> RemovingTag;
+        public event EventHandler<RemovingTagEventArgs>? RemovingTag;
         /// <summary>
         /// Occurs before an attribute is removed.
         /// </summary>
-        public event EventHandler<RemovingAttributeEventArgs> RemovingAttribute;
+        public event EventHandler<RemovingAttributeEventArgs>? RemovingAttribute;
         /// <summary>
         /// Occurs before a style is removed.
         /// </summary>
-        public event EventHandler<RemovingStyleEventArgs> RemovingStyle;
+        public event EventHandler<RemovingStyleEventArgs>? RemovingStyle;
         /// <summary>
         /// Occurs before an at-rule is removed.
         /// </summary>
-        public event EventHandler<RemovingAtRuleEventArgs> RemovingAtRule;
+        public event EventHandler<RemovingAtRuleEventArgs>? RemovingAtRule;
         /// <summary>
         /// Occurs before a comment is removed.
         /// </summary>
-        public event EventHandler<RemovingCommentEventArgs> RemovingComment;
+        public event EventHandler<RemovingCommentEventArgs>? RemovingComment;
         /// <summary>
         /// Occurs before a CSS class is removed.
         /// </summary>
-        public event EventHandler<RemovingCssClassEventArgs> RemovingCssClass;
+        public event EventHandler<RemovingCssClassEventArgs>? RemovingCssClass;
         /// <summary>
         /// Occurs when a URL is being sanitized.
         /// </summary>
-        public event EventHandler<FilterUrlEventArgs> FilterUrl;
+        public event EventHandler<FilterUrlEventArgs>? FilterUrl;
 
         /// <summary>
         /// Raises the <see cref="E:PostProcessDom" /> event.
@@ -541,7 +543,7 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="dom">The root node.</param>
         /// <returns>All nested subnodes.</returns>
-        private static IEnumerable<INode> GetAllNodes(INode dom)
+        private static IEnumerable<INode> GetAllNodes(INode? dom)
         {
             if (dom == null) yield break;
 
@@ -562,13 +564,11 @@ namespace Ganss.XSS
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
         /// <param name="outputFormatter">The formatter used to render the DOM. Using the <see cref="OutputFormatter"/> if null.</param>
         /// <returns>The sanitized HTML body fragment.</returns>
-        public string Sanitize(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
+        public string Sanitize(string html, string baseUrl = "", IMarkupFormatter? outputFormatter = null)
         {
-            using (var dom = SanitizeDom(html, baseUrl))
-            {
-                var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
-                return output;
-            }
+            using var dom = SanitizeDom(html, baseUrl);
+            var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
+            return output;
         }
 
         /// <summary>
@@ -595,7 +595,7 @@ namespace Ganss.XSS
         /// <param name="context">The node within which to sanitize.</param>
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
         /// <returns>The sanitized HTML document.</returns>
-        public IHtmlDocument SanitizeDom(IHtmlDocument document, IHtmlElement context = null, string baseUrl = "")
+        public IHtmlDocument SanitizeDom(IHtmlDocument document, IHtmlElement? context = null, string baseUrl = "")
         {
             DoSanitize(document, context ?? (IParentNode) document, baseUrl);
             return document;
@@ -608,7 +608,7 @@ namespace Ganss.XSS
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
         /// <param name="outputFormatter">The formatter used to render the DOM. Using the <see cref="OutputFormatter"/> if null.</param>
         /// <returns>The sanitized HTML document.</returns>
-        public string SanitizeDocument(string html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
+        public string SanitizeDocument(string html, string baseUrl = "", IMarkupFormatter? outputFormatter = null)
         {
             var parser = HtmlParserFactory();
             var dom = parser.ParseDocument(html);
@@ -627,7 +627,7 @@ namespace Ganss.XSS
         /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
         /// <param name="outputFormatter">The formatter used to render the DOM. Using the <see cref="OutputFormatter"/> if null.</param>
         /// <returns>The sanitized HTML document.</returns>
-        public string SanitizeDocument(Stream html, string baseUrl = "", IMarkupFormatter outputFormatter = null)
+        public string SanitizeDocument(Stream html, string baseUrl = "", IMarkupFormatter? outputFormatter = null)
         {
             var parser = HtmlParserFactory();
             var dom = parser.ParseDocument(html);
@@ -640,24 +640,15 @@ namespace Ganss.XSS
         }
 
         /// <summary>
-        /// Creeates an instance of <see cref="HtmlParser"/>.
-        /// </summary>
-        /// <returns>An instance of <see cref="HtmlParser"/>.</returns>
-        private static HtmlParser CreateParser()
-        {
-            return new HtmlParser(new HtmlParserOptions(), BrowsingContext.New(defaultConfiguration));
-        }
-
-        /// <summary>
         /// Removes all comment nodes from a list of nodes.
         /// </summary>
         /// <param name="context">The node within which to remove comments.</param>
         /// <returns><c>true</c> if any comments were removed; otherwise, <c>false</c>.</returns>
-        private void RemoveComments(INode context)
+        private void RemoveComments(INode? context)
         {
             foreach (var comment in GetAllNodes(context).OfType<IComment>().ToList())
             {
-                var e = new RemovingCommentEventArgs { Comment = comment };
+                var e = new RemovingCommentEventArgs(comment);
                 OnRemovingComment(e);
                 if (!e.Cancel)
                     comment.Remove();
@@ -795,7 +786,7 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="dom">The HTML document.</param>
         /// <param name="context">The node within which to post process all nodes.</param>
-        private void DoPostProcess(IHtmlDocument dom, INode context)
+        private void DoPostProcess(IHtmlDocument dom, INode? context)
         {
             if (PostProcessNode != null)
             {
@@ -804,7 +795,7 @@ namespace Ganss.XSS
 
                 foreach (var node in nodes)
                 {
-                    var e = new PostProcessNodeEventArgs { Document = dom, Node = node };
+                    var e = new PostProcessNodeEventArgs(dom, node);
                     OnPostProcessNode(e);
                     if (e.ReplacementNodes.Any())
                     {
@@ -815,7 +806,7 @@ namespace Ganss.XSS
 
             if (PostProcessDom != null)
             {
-                var e = new PostProcessDomEventArgs { Document = dom };
+                var e = new PostProcessDomEventArgs(dom);
                 OnPostProcessDom(e);
             }
         }
@@ -851,13 +842,6 @@ namespace Ganss.XSS
                 // test html5 data- attributes
                 || (AllowDataAttributes && attribute.Name != null && attribute.Name.StartsWith("data-", StringComparison.OrdinalIgnoreCase));
         }
-
-        // from http://genshi.edgewall.org/
-        private static readonly Regex CssUnicodeEscapes = new Regex(@"\\([0-9a-fA-F]{1,6})\s?|\\([^\r\n\f0-9a-fA-F'""{};:()#*])", RegexOptions.Compiled);
-        private static readonly Regex CssComments = new Regex(@"/\*.*?\*/", RegexOptions.Compiled);
-        // IE6 <http://heideri.ch/jso/#80>
-        private static readonly Regex CssExpression = new Regex(@"[eE\uFF25\uFF45][xX\uFF38\uFF58][pP\uFF30\uFF50][rR\u0280\uFF32\uFF52][eE\uFF25\uFF45][sS\uFF33\uFF53]{2}[iI\u026A\uFF29\uFF49][oO\uFF2F\uFF4F][nN\u0274\uFF2E\uFF4E]", RegexOptions.Compiled);
-        private static readonly Regex CssUrl = new Regex(@"[Uu][Rr\u0280][Ll\u029F]\s*\(\s*(['""]?)\s*([^'"")\s]+)\s*(['""]?)\s*", RegexOptions.Compiled);
 
         /// <summary>
         /// Sanitizes the style.
@@ -964,17 +948,17 @@ namespace Ganss.XSS
         /// </summary>
         /// <param name="url">The URL.</param>
         /// <returns>The <see cref="Iri"/> object or null if no safe <see cref="Iri"/> can be created.</returns>
-        protected Iri GetSafeIri(string url)
+        protected Iri? GetSafeIri(string url)
         {
             var schemeMatch = SchemeRegex.Match(url);
 
             if (schemeMatch.Success)
             {
                 var scheme = schemeMatch.Groups[1].Value;
-                return AllowedSchemes.Contains(scheme, StringComparer.OrdinalIgnoreCase) ? new Iri { Value = url, Scheme = scheme } : null;
+                return AllowedSchemes.Contains(scheme, StringComparer.OrdinalIgnoreCase) ? new Iri(url, scheme) : null;
             }
 
-            return new Iri { Value = url };
+            return new Iri(url);
         }
 
         /// <summary>
@@ -983,7 +967,7 @@ namespace Ganss.XSS
         /// <param name="url">The URL.</param>
         /// <param name="baseUrl">The base URL relative URLs are resolved against (empty or null for no resolution).</param>
         /// <returns>The sanitized URL or null if no safe URL can be created.</returns>
-        protected virtual string SanitizeUrl(string url, string baseUrl)
+        protected virtual string? SanitizeUrl(string url, string baseUrl)
         {
             var iri = GetSafeIri(url);
 
@@ -1006,7 +990,7 @@ namespace Ganss.XSS
                 else iri = null;
             }
 
-            var e = new FilterUrlEventArgs { OriginalUrl = url, SanitizedUrl = iri?.Value };
+            var e = new FilterUrlEventArgs(url, iri?.Value);
             OnFilteringUrl(e);
 
             return e.SanitizedUrl;
@@ -1019,7 +1003,7 @@ namespace Ganss.XSS
         /// <param name="reason">Reason for removal</param>
         private void RemoveTag(IElement tag, RemoveReason reason)
         {
-            var e = new RemovingTagEventArgs { Tag = tag, Reason = reason };
+            var e = new RemovingTagEventArgs(tag, reason);
             OnRemovingTag(e);
             if (!e.Cancel)
             {
@@ -1038,7 +1022,7 @@ namespace Ganss.XSS
         /// <param name="reason">Reason for removal</param>
         private void RemoveAttribute(IElement tag, IAttr attribute, RemoveReason reason)
         {
-            var e = new RemovingAttributeEventArgs { Tag = tag, Attribute = attribute, Reason = reason };
+            var e = new RemovingAttributeEventArgs(tag, attribute, reason);
             OnRemovingAttribute(e);
             if (!e.Cancel) tag.RemoveAttribute(attribute.Name);
         }
@@ -1052,7 +1036,7 @@ namespace Ganss.XSS
         /// <param name="reason">Reason for removal</param>
         private void RemoveStyle(IElement tag, ICssStyleDeclaration styles, ICssProperty style, RemoveReason reason)
         {
-            var e = new RemovingStyleEventArgs { Tag = tag, Style = style, Reason = reason };
+            var e = new RemovingStyleEventArgs(tag, style, reason);
             OnRemovingStyle(e);
             if (!e.Cancel) styles.RemoveProperty(style.Name);
         }
@@ -1065,7 +1049,7 @@ namespace Ganss.XSS
         /// <returns>true, if the rule can be removed; false, otherwise.</returns>
         private bool RemoveAtRule(IElement tag, ICssRule rule)
         {
-            var e = new RemovingAtRuleEventArgs { Tag = tag, Rule = rule };
+            var e = new RemovingAtRuleEventArgs(tag, rule);
             OnRemovingAtRule(e);
             return !e.Cancel;
         }
@@ -1078,7 +1062,7 @@ namespace Ganss.XSS
         /// <param name="reason">Reason for removal</param>
         private void RemoveCssClass(IElement tag, string cssClass, RemoveReason reason)
         {
-            var e = new RemovingCssClassEventArgs { Tag = tag, CssClass = cssClass, Reason = reason };
+            var e = new RemovingCssClassEventArgs(tag, cssClass, reason);
             OnRemovingCssClass(e);
             if (!e.Cancel) tag.ClassList.Remove(cssClass);
         }
