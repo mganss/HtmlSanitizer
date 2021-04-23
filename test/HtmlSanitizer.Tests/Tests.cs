@@ -3211,6 +3211,29 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         }
 
         [Fact]
+        public void Number260Test()
+        {
+            // see https://github.com/mganss/HtmlSanitizer/issues/260
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowedCssProperties.Clear();
+            var removingStyleTriggered = false;
+            sanitizer.RemovingStyle += (s, e) => removingStyleTriggered = true;
+            var html = @"<section style='background: none'></section>";
+            var sanitized = sanitizer.Sanitize(html);
+            Assert.Equal("<section></section>", sanitized);
+            Assert.True(removingStyleTriggered);
+        }
+
+        [Fact]
+        public void Number263Test()
+        {
+            // see https://github.com/mganss/HtmlSanitizer/issues/263
+            var html = @"<div style=""width: calc((600px - 300px) / 2)"">Test</div>";
+            var sanitized = Sanitizer.Sanitize(html);
+            Assert.Equal(@"<div style=""width: calc((600px - 300px) / 2)"">Test</div>", sanitized);
+        }
+
+        [Fact]
         public void Number272Test()
         {
             // see https://github.com/mganss/HtmlSanitizer/issues/272
