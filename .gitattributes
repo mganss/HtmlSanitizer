@@ -20,3 +20,5 @@
 *.PDF	 diff=astextplain
 *.rtf	 diff=astextplain
 *.RTF	 diff=astextplain
+
+test/HtmlSanitizer.Benchmark/*.html linguist-vendored
