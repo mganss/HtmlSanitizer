@@ -309,14 +309,24 @@ namespace Ganss.XSS
         public string? SanitizedUrl { get; set; }
 
         /// <summary>
+        /// Gets or sets the tag containing the URI being sanitized.
+        /// </summary>
+        /// <value>
+        /// The tag.
+        /// </value>
+        public IElement Tag { get; private set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="FilterUrlEventArgs"/> class.
         /// </summary>
+        /// <param name="tag">The tag containing the URI being sanitized.</param>
         /// <param name="originalUrl">The original URL.</param>
         /// <param name="sanitizedUrl">The sanitized URL.</param>
-        public FilterUrlEventArgs(string originalUrl, string? sanitizedUrl = null)
+        public FilterUrlEventArgs(IElement tag, string originalUrl, string? sanitizedUrl = null)
         {
             OriginalUrl = originalUrl;
             SanitizedUrl = sanitizedUrl;
+            Tag = tag;
         }
     }
 }

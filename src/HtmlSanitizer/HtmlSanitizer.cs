@@ -679,7 +679,7 @@ namespace Ganss.XSS
                 // sanitize URLs in URL-marked attributes
                 foreach (var attribute in tag.Attributes.Where(IsUriAttribute).ToList())
                 {
-                    var url = SanitizeUrl(attribute.Value, baseUrl);
+                    var url = SanitizeUrl(tag, attribute.Value, baseUrl);
                     if (url == null)
                         RemoveAttribute(tag, attribute, RemoveReason.NotAllowedUrlValue);
                     else
@@ -895,11 +895,11 @@ namespace Ganss.XSS
 
                 if (urls.Count > 0)
                 {
-                    if (urls.Cast<Match>().Any(m => SanitizeUrl(m.Groups[2].Value, baseUrl) == null))
+                    if (urls.Cast<Match>().Any(m => SanitizeUrl(element, m.Groups[2].Value, baseUrl) == null))
                         removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedUrlValue));
                     else
                     {
-                        var s = CssUrl.Replace(val, m => "url(" + m.Groups[1].Value + SanitizeUrl(m.Groups[2].Value, baseUrl) + m.Groups[3].Value);
+                        var s = CssUrl.Replace(val, m => "url(" + m.Groups[1].Value + SanitizeUrl(element, m.Groups[2].Value, baseUrl) + m.Groups[3].Value);
                         if (s != val)
                         {
                             if (key != style.Name)
@@ -966,10 +966,11 @@ namespace Ganss.XSS
         /// <summary>
         /// Sanitizes a URL.
         /// </summary>
+        /// <param name="element">The tag containing the URL being sanitized</param>
         /// <param name="url">The URL.</param>
         /// <param name="baseUrl">The base URL relative URLs are resolved against (empty or null for no resolution).</param>
         /// <returns>The sanitized URL or null if no safe URL can be created.</returns>
-        protected virtual string? SanitizeUrl(string url, string baseUrl)
+        protected virtual string? SanitizeUrl(IElement element, string url, string baseUrl)
         {
             var iri = GetSafeIri(url);
 
@@ -992,7 +993,7 @@ namespace Ganss.XSS
                 else iri = null;
             }
 
-            var e = new FilterUrlEventArgs(url, iri?.Value);
+            var e = new FilterUrlEventArgs(element, url, iri?.Value);
             OnFilteringUrl(e);
 
             return e.SanitizedUrl;
