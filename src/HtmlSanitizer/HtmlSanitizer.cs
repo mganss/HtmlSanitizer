@@ -569,6 +569,7 @@ namespace Ganss.XSS
         public string Sanitize(string html, string baseUrl = "", IMarkupFormatter? outputFormatter = null)
         {
             using var dom = SanitizeDom(html, baseUrl);
+            if (dom.Body == null) return string.Empty;
             var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
             return output;
         }
@@ -584,7 +585,8 @@ namespace Ganss.XSS
             var parser = HtmlParserFactory();
             var dom = parser.ParseDocument("<html><body>" + html);
 
-            DoSanitize(dom, dom.Body, baseUrl);
+            if (dom.Body != null)
+                DoSanitize(dom, dom.Body, baseUrl);
 
             return dom;
         }
@@ -983,12 +985,10 @@ namespace Ganss.XSS
                     {
                         return new Uri(baseUri, iri.Value).AbsoluteUri;
                     }
-#pragma warning disable CA1031 // Do not catch general exception types
                     catch (UriFormatException)
                     {
                         iri = null;
                     }
-#pragma warning restore CA1031 // Do not catch general exception types
                 }
                 else iri = null;
             }
