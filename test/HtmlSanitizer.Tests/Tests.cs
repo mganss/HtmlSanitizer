@@ -30,7 +30,7 @@ namespace Ganss.XSS.Tests
     /// <summary>
     /// Tests for <see cref="HtmlSanitizer"/>.
     /// </summary>
-    public class HtmlSanitizerTests: IClassFixture<HtmlSanitizerFixture>
+    public class HtmlSanitizerTests : IClassFixture<HtmlSanitizerFixture>
     {
         public HtmlSanitizer Sanitizer { get; set; }
 
@@ -2370,7 +2370,7 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void RemoveEventForNotAllowedTag()
         {
-            var allowedTags = new[] {"a"};
+            var allowedTags = new[] { "a" };
             RemoveReason? actual = null;
 
             var s = new HtmlSanitizer(allowedTags);
@@ -2388,7 +2388,7 @@ rl(javascript:alert(""foo""))'>";
         public void RemoveEventForNotAllowedAttribute()
         {
             var allowedTags = new[] { "a" };
-            var allowedAttributes = new[] {"id"};
+            var allowedAttributes = new[] { "id" };
             RemoveReason? actual = null;
 
             var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes);
@@ -3236,6 +3236,25 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var html = @"<span style='grid-template-areas: none; grid-template-columns: none; grid-template-rows: none'>";
             var sanitized = Sanitizer.Sanitize(html);
             Assert.Equal("<span></span>", sanitized);
+        }
+
+        [Fact]
+        public void Number307StrictModeValidHtmlTest()
+        {
+            // see https://github.com/mganss/HtmlSanitizer/issues/307
+            var html = @"<div>This is <p>Paragraph</p></div>";
+            var s = new HtmlSanitizer { HtmlParserFactory = () => new HtmlParser(new HtmlParserOptions { IsStrictMode = true }) };
+            var sanitized = s.Sanitize(html);
+            Assert.Equal("<div>This is <p>Paragraph</p></div>", sanitized);
+        }
+
+        [Fact]
+        public void Number307StrictModeIllHtmlTest()
+        {
+            // see https://github.com/mganss/HtmlSanitizer/issues/307
+            var html = @"<div>This is <p>Paragraph/div>";
+            var s = new HtmlSanitizer { HtmlParserFactory = () => new HtmlParser(new HtmlParserOptions { IsStrictMode = true }) };
+            Assert.Throws<HtmlParseException>(() => s.Sanitize(html));
         }
     }
 }

@@ -194,7 +194,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed HTML attributes.
         /// </summary>
-        public static ISet<string> DefaultAllowedAttributes { get; }  = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
+        public static ISet<string> DefaultAllowedAttributes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase) {
             // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
             "abbr", "accept", "accept-charset", "accesskey",
             "action", "align", "alt", "axis", "bgcolor", "border", "cellpadding",
@@ -583,7 +583,7 @@ namespace Ganss.XSS
         public IHtmlDocument SanitizeDom(string html, string baseUrl = "")
         {
             var parser = HtmlParserFactory();
-            var dom = parser.ParseDocument("<html><body>" + html);
+            var dom = parser.ParseDocument("<!doctype html><html><body>" + html);
 
             if (dom.Body != null)
                 DoSanitize(dom, dom.Body, baseUrl);
@@ -601,7 +601,7 @@ namespace Ganss.XSS
         /// <returns>The sanitized HTML document.</returns>
         public IHtmlDocument SanitizeDom(IHtmlDocument document, IHtmlElement? context = null, string baseUrl = "")
         {
-            DoSanitize(document, context ?? (IParentNode) document, baseUrl);
+            DoSanitize(document, context ?? (IParentNode)document, baseUrl);
             return document;
         }
 
