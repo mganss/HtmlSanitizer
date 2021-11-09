@@ -41,7 +41,7 @@
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="[0.16.1]" />
     <PackageReference Include="AngleSharp.Css" Version="[0.16.2]" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.1.0" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net46'">
