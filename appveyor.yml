@@ -1,4 +1,4 @@
-version: 6.0.{build}
+version: 7.0.{build}
 skip_tags: true
 image: Visual Studio 2019
 environment:
