@@ -76,6 +76,20 @@ namespace Ganss.XSS
         public HtmlSanitizer(IEnumerable<string>? allowedTags = null, IEnumerable<string>? allowedSchemes = null,
             IEnumerable<string>? allowedAttributes = null, IEnumerable<string>? uriAttributes = null, IEnumerable<string>? allowedCssProperties = null)
         {
+            // if all arguments are empty, treat the same as if all nulls (special case to accommodate dependency injection, see #220 and #314).
+            if (allowedTags != null && !allowedTags.Any()
+                && allowedSchemes != null && !allowedSchemes.Any()
+                && allowedAttributes != null && !allowedAttributes.Any()
+                && uriAttributes != null && !uriAttributes.Any()
+                && allowedCssProperties != null && !allowedCssProperties.Any())
+            {
+                allowedTags = null;
+                allowedSchemes = null;
+                allowedAttributes = null;
+                uriAttributes = null;
+                allowedCssProperties = null;
+            }
+
             AllowedTags = new HashSet<string>(allowedTags ?? DefaultAllowedTags, StringComparer.OrdinalIgnoreCase);
             AllowedSchemes = new HashSet<string>(allowedSchemes ?? DefaultAllowedSchemes, StringComparer.OrdinalIgnoreCase);
             AllowedAttributes = new HashSet<string>(allowedAttributes ?? DefaultAllowedAttributes, StringComparer.OrdinalIgnoreCase);

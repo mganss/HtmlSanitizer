@@ -3258,5 +3258,16 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var s = new HtmlSanitizer { HtmlParserFactory = () => new HtmlParser(new HtmlParserOptions { IsStrictMode = true }) };
             Assert.Throws<HtmlParseException>(() => s.Sanitize(html));
         }
+
+        [Fact]
+        public void ConstructorTest()
+        {
+            // see https://github.com/mganss/HtmlSanitizer/issues/220
+            var html = @"<div>test</div>";
+            var empty = Array.Empty<string>();
+            var sanitizer = new HtmlSanitizer(empty, empty, empty, empty, empty);
+            var sanitized = sanitizer.Sanitize(html);
+            Assert.Equal(html, sanitized);
+        }
     }
 }
