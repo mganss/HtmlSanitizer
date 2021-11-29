@@ -260,7 +260,7 @@ namespace Ganss.XSS
         /// </summary>
         public static ISet<string> DefaultAllowedCssProperties { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
-            // CSS 3 properties <https://www.w3schools.com/cssref/>
+            // CSS 3 properties <http://www.w3.org/TR/CSS/#properties>
             "align-content",
             "align-items",
             "align-self",

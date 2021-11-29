@@ -1909,6 +1909,7 @@ rl(javascript:alert(""foo""))'>";
         public void SanitizeRemoveStylePhishingTest()
         {
             var sanitizer = Sanitizer;
+            sanitizer.AllowedCssProperties.Remove("position");
             // The position property is not allowed
             var html = @"<div style=""position:absolute;top:0""></div>";
             Assert.Equal(@"<div style=""top: 0""></div>", sanitizer.Sanitize(html), ignoreCase: true);
@@ -2000,6 +2001,7 @@ rl(javascript:alert(""foo""))'>";
         public void SanitizeUnsafePropsTest()
         {
             var sanitizer = Sanitizer;
+            sanitizer.AllowedCssProperties.Remove("position");
             var html = @"<div style=""POSITION:RELATIVE"">XSS</div>";
             Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
 
@@ -3235,7 +3237,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             // see https://github.com/mganss/HtmlSanitizer/issues/272
             var html = @"<span style='grid-template-areas: none; grid-template-columns: none; grid-template-rows: none'>";
             var sanitized = Sanitizer.Sanitize(html);
-            Assert.Equal("<span></span>", sanitized);
+            Assert.Equal("<span style=\"grid-template: none\"></span>", sanitized);
         }
 
         [Fact]
