@@ -3269,5 +3269,17 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var sanitized = sanitizer.Sanitize(html);
             Assert.Equal(html, sanitized);
         }
+
+        [Fact]
+        public void Number322Test()
+        {
+            // see https://github.com/mganss/HtmlSanitizer/issues/322
+            var html = @"<html><head><style>p::-webkit-scrollbar-thumb { background: rgba(136, 136, 136, 1) }</style></head><body><p>test</p></body></html>";
+            var sanitizer = new HtmlSanitizer();
+            sanitizer.AllowedTags.Add("style");
+            var sanitized = sanitizer.SanitizeDocument(html);
+
+            Assert.Equal(html, sanitized);
+        }
     }
 }
