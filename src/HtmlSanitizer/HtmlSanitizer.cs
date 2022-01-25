@@ -1,4 +1,5 @@
 using AngleSharp;
+using AngleSharp.Css;
 using AngleSharp.Css.Dom;
 using AngleSharp.Css.Parser;
 using AngleSharp.Dom;
@@ -128,6 +129,16 @@ namespace Ganss.XSS
         /// Gets or sets the <see cref="IMarkupFormatter"/> object used for generating output. Default is <see cref="DefaultOutputFormatter"/>.
         /// </summary>
         public IMarkupFormatter OutputFormatter { get; set; } = DefaultOutputFormatter;
+
+        /// <summary>
+        /// Gets or sets the default <see cref="IStyleFormatter"/> object used for generating CSS output. Default is <see cref="CssStyleFormatter.Instance"/>.
+        /// </summary>
+        public static IStyleFormatter DefaultStyleFormatter { get; set; } = CssStyleFormatter.Instance;
+
+        /// <summary>
+        /// Gets or sets the <see cref="IStyleFormatter"/> object used for generating CSS output. Default is <see cref="DefaultStyleFormatter"/>.
+        /// </summary>
+        public IStyleFormatter StyleFormatter { get; set; } = DefaultStyleFormatter;
 
         /// <summary>
         /// Gets or sets the allowed CSS at-rules such as "@media" and "@font-face".
@@ -860,7 +871,7 @@ namespace Ganss.XSS
                     else i++;
                 }
 
-                styleTag.InnerHtml = styleSheet.ToCss().Replace("<", "\\3c");
+                styleTag.InnerHtml = styleSheet.ToCss(StyleFormatter).Replace("<", "\\3c");
             }
         }
 
@@ -983,7 +994,7 @@ namespace Ganss.XSS
                 element.RemoveAttribute("style");
                 return;
             }
-            element.SetAttribute("style", element.GetStyle().ToCss());
+            element.SetAttribute("style", element.GetStyle().ToCss(StyleFormatter));
 
             var styles = element.GetStyle();
             if (styles == null || styles.Length == 0) return;

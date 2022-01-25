@@ -1,4 +1,5 @@
 using AngleSharp;
+using AngleSharp.Css;
 using AngleSharp.Css.Dom;
 using AngleSharp.Css.Parser;
 using AngleSharp.Dom;
@@ -3278,6 +3279,54 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var sanitizer = new HtmlSanitizer();
             sanitizer.AllowedTags.Add("style");
             var sanitized = sanitizer.SanitizeDocument(html);
+
+            Assert.Equal(html, sanitized);
+        }
+
+        class SemicolonStyleFormatter : IStyleFormatter
+        {
+            public string BlockDeclarations(IEnumerable<IStyleFormattable> declarations)
+            {
+                var sb = new StringBuilder().Append('{');
+
+                using (var writer = new StringWriter(sb))
+                {
+                    foreach (var declaration in declarations)
+                    {
+                        writer.Write(' ');
+                        declaration.ToCss(writer, this);
+                        writer.Write(';');
+                    }
+                }
+
+                return sb.Append(' ').Append('}').ToString();
+            }
+
+            public string BlockRules(IEnumerable<IStyleFormattable> rules) => CssStyleFormatter.Instance.BlockRules(rules);
+
+            public string Comment(string data) => CssStyleFormatter.Instance.Comment(data);
+
+            public string Declaration(string name, string value, bool important) => CssStyleFormatter.Instance.Declaration(name, value, important);
+
+            public string Rule(string name, string value) => CssStyleFormatter.Instance.Rule(name, value);
+
+            public string Rule(string name, string prelude, string rules) => CssStyleFormatter.Instance.Rule(name, prelude, rules);
+
+            public string Sheet(IEnumerable<IStyleFormattable> rules) => CssStyleFormatter.Instance.Sheet(rules);
+        }
+
+        [Fact]
+        public void StyleFormatterTest()
+        {
+            // see https://github.com/mganss/HtmlSanitizer/issues/112
+            var html = @"<p style=""text-align: left;"">Text</p>";
+            var sanitizer = new HtmlSanitizer();
+            var styleFormatter = new SemicolonStyleFormatter();
+
+            sanitizer.StyleFormatter = styleFormatter;
+            sanitizer.AllowedTags.Add("style");
+
+            var sanitized = sanitizer.Sanitize(html);
 
             Assert.Equal(html, sanitized);
         }

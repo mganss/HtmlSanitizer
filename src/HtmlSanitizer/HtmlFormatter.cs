@@ -18,7 +18,7 @@ namespace Ganss.XSS
         /// <summary>
         /// An instance of <see cref="HtmlFormatter"/>.
         /// </summary>
-        new public static readonly HtmlFormatter Instance = new HtmlFormatter();
+        new public static readonly HtmlFormatter Instance = new ();
 
         // disable XML comments warnings
         #pragma warning disable 1591
