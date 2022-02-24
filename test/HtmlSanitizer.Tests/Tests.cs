@@ -2898,7 +2898,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
                 var waiting = numThreads;
                 var methods = typeof(HtmlSanitizerTests).GetTypeInfo().GetMethods()
                     .Where(m => m.GetCustomAttributes(typeof(Xunit.FactAttribute), false).Cast<Xunit.FactAttribute>().Any(f => f.Skip == null))
-                    .Where(m => m.Name != "ThreadTest");
+                    .Where(m => m.Name != "ThreadTest" && m.Name != "HexColorTest");
                 var threads = Shuffle(methods, random)
                     .Take(numThreads)
                     .Select(m => new Thread(() =>
@@ -3329,6 +3329,28 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var sanitized = sanitizer.Sanitize(html);
 
             Assert.Equal(html, sanitized);
+        }
+
+        [Fact]
+        public void HexColorTest()
+        {
+            // see https://github.com/mganss/HtmlSanitizer/issues/330
+            var html = @"<p style=""color: black"">Text</p>";
+            var sanitizer = new HtmlSanitizer();
+
+            sanitizer.AllowedTags.Add("style");
+
+            AngleSharp.Css.Values.Color.UseHex = true;
+
+            var sanitized = sanitizer.Sanitize(html);
+
+            Assert.Equal(@"<p style=""color: #000000"">Text</p>", sanitized);
+
+            AngleSharp.Css.Values.Color.UseHex = false;
+
+            sanitized = sanitizer.Sanitize(html);
+
+            Assert.Equal(@"<p style=""color: rgba(0, 0, 0, 1)"">Text</p>", sanitized);
         }
     }
 }
