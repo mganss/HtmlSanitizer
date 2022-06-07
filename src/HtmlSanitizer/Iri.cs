@@ -6,7 +6,7 @@ using System.Text;
 namespace Ganss.XSS
 {
     /// <summary>
-    /// Represents an Internationalized Resource Identifier
+    /// Represents an Internationalized Resource Identifier.
     /// </summary>
     public class Iri
     {
@@ -27,7 +27,7 @@ namespace Ganss.XSS
         public bool IsAbsolute => !string.IsNullOrEmpty(Scheme);
 
         /// <summary>
-        /// Gets or sets the scheme of the IRI, e.g. http.
+        /// Gets or sets the scheme of the IRI, e.g. "https".
         /// </summary>
         /// <value>
         /// The scheme of the IRI.
