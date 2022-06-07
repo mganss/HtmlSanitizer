@@ -83,7 +83,7 @@ namespace Ganss.XSS
         public IElement Tag { get; private set; }
 
         /// <summary>
-        /// Gets or sets the reason why the tag will be removed
+        /// Gets or sets the reason why the tag will be removed.
         /// </summary>
         /// <value>
         /// The reason.
@@ -124,7 +124,7 @@ namespace Ganss.XSS
         public IAttr Attribute { get; private set; }
 
         /// <summary>
-        /// Gets or sets the reason why the attribute will be removed
+        /// Gets or sets the reason why the attribute will be removed.
         /// </summary>
         /// <value>
         /// The reason.
@@ -167,7 +167,7 @@ namespace Ganss.XSS
         public ICssProperty Style { get; private set; }
 
         /// <summary>
-        /// Gets or sets the reason why the style will be removed
+        /// Gets or sets the reason why the style will be removed.
         /// </summary>
         /// <value>
         /// The reason.
