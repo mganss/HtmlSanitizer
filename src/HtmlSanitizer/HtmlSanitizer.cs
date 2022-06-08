@@ -20,7 +20,7 @@ namespace Ganss.XSS
     /// <remarks>
     /// XSS attacks can occur at several levels within an HTML document or fragment:
     /// <list type="bullet">
-    /// <item>HTML Tags (e.g. the &lt;script&gt; tag)</item>
+    /// <item>HTML tags (e.g. the &lt;script&gt; tag)</item>
     /// <item>HTML attributes (e.g. the "onload" attribute)</item>
     /// <item>CSS styles (url property values)</item>
     /// <item>malformed HTML or HTML that exploits parser bugs in specific browsers</item>
@@ -70,7 +70,7 @@ namespace Ganss.XSS
         /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class.
         /// </summary>
         /// <param name="allowedTags">The allowed tag names such as "a" and "div". When <c>null</c>, uses <see cref="DefaultAllowedTags"/></param>
-        /// <param name="allowedSchemes">The allowed HTTP schemes such as "http" and "https". When <c>null</c>, uses <see cref="DefaultAllowedSchemes"/></param>
+        /// <param name="allowedSchemes">The allowed URI schemes such as "http" and "https". When <c>null</c>, uses <see cref="DefaultAllowedSchemes"/></param>
         /// <param name="allowedAttributes">The allowed HTML attributes such as "href" and "alt". When <c>null</c>, uses <see cref="DefaultAllowedAttributes"/></param>
         /// <param name="uriAttributes">The HTML attributes that can contain a URI such as "href". When <c>null</c>, uses <see cref="DefaultUriAttributes"/></param>
         /// <param name="allowedCssProperties">The allowed CSS properties such as "font" and "margin". When <c>null</c>, uses <see cref="DefaultAllowedCssProperties"/></param>
@@ -154,10 +154,10 @@ namespace Ganss.XSS
         public static ISet<CssRuleType> DefaultAllowedAtRules { get; } = new HashSet<CssRuleType>() { CssRuleType.Style, CssRuleType.Namespace };
 
         /// <summary>
-        /// Gets or sets the allowed HTTP schemes such as "http" and "https".
+        /// Gets or sets the allowed URI schemes such as "http" and "https".
         /// </summary>
         /// <value>
-        /// The allowed HTTP schemes.
+        /// The allowed URI schemes.
         /// </value>
         public ISet<string> AllowedSchemes { get; private set; }
 
@@ -212,7 +212,7 @@ namespace Ganss.XSS
         public ISet<string> AllowedAttributes { get; private set; }
 
         /// <summary>
-        /// Allow all HTML5 data attributes; the attributes prefixed with data-
+        /// Allow all HTML5 data attributes; the attributes prefixed with <c>data-</c>.
         /// </summary>
         public bool AllowDataAttributes { get; set; }
 
@@ -1099,7 +1099,7 @@ namespace Ganss.XSS
         /// <summary>
         /// Sanitizes a URL.
         /// </summary>
-        /// <param name="element">The tag containing the URL being sanitized</param>
+        /// <param name="element">The tag containing the URL being sanitized.</param>
         /// <param name="url">The URL.</param>
         /// <param name="baseUrl">The base URL relative URLs are resolved against (empty or null for no resolution).</param>
         /// <returns>The sanitized URL or null if no safe URL can be created.</returns>
@@ -1133,8 +1133,8 @@ namespace Ganss.XSS
         /// <summary>
         /// Removes a tag from the document.
         /// </summary>
-        /// <param name="tag">Tag to be removed</param>
-        /// <param name="reason">Reason for removal</param>
+        /// <param name="tag">Tag to be removed.</param>
+        /// <param name="reason">Reason for removal.</param>
         private void RemoveTag(IElement tag, RemoveReason reason)
         {
             var e = new RemovingTagEventArgs(tag, reason);
@@ -1151,9 +1151,9 @@ namespace Ganss.XSS
         /// <summary>
         /// Removes an attribute from the document.
         /// </summary>
-        /// <param name="tag">Tag the attribute belongs to</param>
-        /// <param name="attribute">Attribute to be removed</param>
-        /// <param name="reason">Reason for removal</param>
+        /// <param name="tag">Tag the attribute belongs to.</param>
+        /// <param name="attribute">Attribute to be removed.</param>
+        /// <param name="reason">Reason for removal.</param>
         private void RemoveAttribute(IElement tag, IAttr attribute, RemoveReason reason)
         {
             var e = new RemovingAttributeEventArgs(tag, attribute, reason);
@@ -1164,10 +1164,10 @@ namespace Ganss.XSS
         /// <summary>
         /// Removes a style from the document.
         /// </summary>
-        /// <param name="tag">Tag the style belongs to</param>
-        /// <param name="styles">Style rule that contains the style to be removed</param>
-        /// <param name="style">Style to be removed</param>
-        /// <param name="reason">Reason for removal</param>
+        /// <param name="tag">Tag the style belongs to.</param>
+        /// <param name="styles">Style rule that contains the style to be removed.</param>
+        /// <param name="style">Style to be removed.</param>
+        /// <param name="reason">Reason for removal.</param>
         private void RemoveStyle(IElement tag, ICssStyleDeclaration styles, ICssProperty style, RemoveReason reason)
         {
             var e = new RemovingStyleEventArgs(tag, style, reason);
@@ -1178,9 +1178,9 @@ namespace Ganss.XSS
         /// <summary>
         /// Removes an at-rule from the document.
         /// </summary>
-        /// <param name="tag">Tag the style belongs to</param>
-        /// <param name="rule">Rule to be removed</param>
-        /// <returns>true, if the rule can be removed; false, otherwise.</returns>
+        /// <param name="tag">Tag the style belongs to.</param>
+        /// <param name="rule">Rule to be removed.</param>
+        /// <returns><c>true</c>, if the rule can be removed; <c>false</c>, otherwise.</returns>
         private bool RemoveAtRule(IElement tag, ICssRule rule)
         {
             var e = new RemovingAtRuleEventArgs(tag, rule);
@@ -1191,9 +1191,9 @@ namespace Ganss.XSS
         /// <summary>
         /// Removes a CSS class from a class attribute.
         /// </summary>
-        /// <param name="tag">Tag the style belongs to</param>
-        /// <param name="cssClass">Class to be removed</param>
-        /// <param name="reason">Reason for removal</param>
+        /// <param name="tag">Tag the style belongs to.</param>
+        /// <param name="cssClass">Class to be removed.</param>
+        /// <param name="reason">Reason for removal.</param>
         private void RemoveCssClass(IElement tag, string cssClass, RemoveReason reason)
         {
             var e = new RemovingCssClassEventArgs(tag, cssClass, reason);
