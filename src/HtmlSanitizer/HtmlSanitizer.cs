@@ -702,6 +702,7 @@ namespace Ganss.XSS
             using var dom = SanitizeDom(html, baseUrl);
             if (dom.Body == null) return string.Empty;
             var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
+
             return output;
         }
 
@@ -733,6 +734,7 @@ namespace Ganss.XSS
         public IHtmlDocument SanitizeDom(IHtmlDocument document, IHtmlElement? context = null, string baseUrl = "")
         {
             DoSanitize(document, context ?? (IParentNode)document, baseUrl);
+
             return document;
         }
 
@@ -785,6 +787,7 @@ namespace Ganss.XSS
             {
                 var e = new RemovingCommentEventArgs(comment);
                 OnRemovingComment(e);
+
                 if (!e.Cancel)
                     comment.Remove();
             }
@@ -813,6 +816,7 @@ namespace Ganss.XSS
                 foreach (var attribute in tag.Attributes.Where(IsUriAttribute).ToList())
                 {
                     var url = SanitizeUrl(tag, attribute.Value, baseUrl);
+
                     if (url == null)
                         RemoveAttribute(tag, attribute, RemoveReason.NotAllowedUrlValue);
                     else
@@ -988,16 +992,20 @@ namespace Ganss.XSS
             // filter out invalid CSS declarations
             // see https://github.com/AngleSharp/AngleSharp/issues/101
             var attribute = element.GetAttribute("style");
-            if (attribute == null) return;
+            if (attribute == null)
+                return;
+
             if (element.GetStyle() == null)
             {
                 element.RemoveAttribute("style");
                 return;
             }
+
             element.SetAttribute("style", element.GetStyle().ToCss(StyleFormatter));
 
             var styles = element.GetStyle();
-            if (styles == null || styles.Length == 0) return;
+            if (styles == null || styles.Length == 0)
+                return;
 
             SanitizeStyleDeclaration(element, styles, baseUrl);
         }
@@ -1057,7 +1065,7 @@ namespace Ganss.XSS
         }
 
         /// <summary>
-        /// Decodes CSS unicode escapes and removes comments.
+        /// Decodes CSS Unicode escapes and removes comments.
         /// </summary>
         /// <param name="css">The CSS string.</param>
         /// <returns>The decoded CSS string.</returns>
@@ -1102,14 +1110,14 @@ namespace Ganss.XSS
         /// <param name="element">The tag containing the URL being sanitized.</param>
         /// <param name="url">The URL.</param>
         /// <param name="baseUrl">The base URL relative URLs are resolved against (empty or null for no resolution).</param>
-        /// <returns>The sanitized URL or null if no safe URL can be created.</returns>
+        /// <returns>The sanitized URL or <c>null</c> if no safe URL can be created.</returns>
         protected virtual string? SanitizeUrl(IElement element, string url, string baseUrl)
         {
             var iri = GetSafeIri(url);
 
             if (iri != null && !iri.IsAbsolute && !string.IsNullOrEmpty(baseUrl))
             {
-                // resolve relative uri
+                // resolve relative URI
                 if (Uri.TryCreate(baseUrl, UriKind.Absolute, out Uri baseUri))
                 {
                     try
@@ -1139,6 +1147,7 @@ namespace Ganss.XSS
         {
             var e = new RemovingTagEventArgs(tag, reason);
             OnRemovingTag(e);
+
             if (!e.Cancel)
             {
                 if (KeepChildNodes && tag.HasChildNodes)
@@ -1158,7 +1167,9 @@ namespace Ganss.XSS
         {
             var e = new RemovingAttributeEventArgs(tag, attribute, reason);
             OnRemovingAttribute(e);
-            if (!e.Cancel) tag.RemoveAttribute(attribute.Name);
+
+            if (!e.Cancel)
+                tag.RemoveAttribute(attribute.Name);
         }
 
         /// <summary>
@@ -1172,7 +1183,9 @@ namespace Ganss.XSS
         {
             var e = new RemovingStyleEventArgs(tag, style, reason);
             OnRemovingStyle(e);
-            if (!e.Cancel) styles.RemoveProperty(style.Name);
+
+            if (!e.Cancel)
+                styles.RemoveProperty(style.Name);
         }
 
         /// <summary>
@@ -1185,6 +1198,7 @@ namespace Ganss.XSS
         {
             var e = new RemovingAtRuleEventArgs(tag, rule);
             OnRemovingAtRule(e);
+
             return !e.Cancel;
         }
 
@@ -1198,7 +1212,9 @@ namespace Ganss.XSS
         {
             var e = new RemovingCssClassEventArgs(tag, cssClass, reason);
             OnRemovingCssClass(e);
-            if (!e.Cancel) tag.ClassList.Remove(cssClass);
+
+            if (!e.Cancel)
+                tag.ClassList.Remove(cssClass);
         }
     }
 }
