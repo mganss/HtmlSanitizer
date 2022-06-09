@@ -13,7 +13,7 @@ namespace Ganss.XSS
     public class PostProcessDomEventArgs : EventArgs
     {
         /// <summary>
-        /// Gets or sets the document.
+        /// Gets the document.
         /// </summary>
         /// <value>
         /// The document.
@@ -35,7 +35,7 @@ namespace Ganss.XSS
     public class PostProcessNodeEventArgs : EventArgs
     {
         /// <summary>
-        /// Gets or sets the document.
+        /// Gets the document.
         /// </summary>
         /// <value>
         /// The document.
@@ -43,7 +43,7 @@ namespace Ganss.XSS
         public IHtmlDocument Document { get; private set; }
 
         /// <summary>
-        /// Gets or sets the DOM node to be processed.
+        /// Gets the DOM node to be processed.
         /// </summary>
         /// <value>
         /// The DOM node.
@@ -75,7 +75,7 @@ namespace Ganss.XSS
     public class RemovingTagEventArgs : CancelEventArgs
     {
         /// <summary>
-        /// Gets or sets the tag to be removed.
+        /// Gets the tag to be removed.
         /// </summary>
         /// <value>
         /// The tag.
@@ -83,7 +83,7 @@ namespace Ganss.XSS
         public IElement Tag { get; private set; }
 
         /// <summary>
-        /// Gets or sets the reason why the tag will be removed.
+        /// Gets the reason why the tag will be removed.
         /// </summary>
         /// <value>
         /// The reason.
@@ -108,7 +108,7 @@ namespace Ganss.XSS
     public class RemovingAttributeEventArgs : CancelEventArgs
     {
         /// <summary>
-        /// Gets or sets the tag containing the attribute to be removed.
+        /// Gets the tag containing the attribute to be removed.
         /// </summary>
         /// <value>
         /// The tag.
@@ -116,7 +116,7 @@ namespace Ganss.XSS
         public IElement Tag { get; private set; }
 
         /// <summary>
-        /// Gets or sets the attribute to be removed.
+        /// Gets the attribute to be removed.
         /// </summary>
         /// <value>
         /// The attribute.
@@ -124,7 +124,7 @@ namespace Ganss.XSS
         public IAttr Attribute { get; private set; }
 
         /// <summary>
-        /// Gets or sets the reason why the attribute will be removed.
+        /// Gets the reason why the attribute will be removed.
         /// </summary>
         /// <value>
         /// The reason.
@@ -151,7 +151,7 @@ namespace Ganss.XSS
     public class RemovingStyleEventArgs : CancelEventArgs
     {
         /// <summary>
-        /// Gets or sets the tag containing the style to be removed.
+        /// Gets the tag containing the style to be removed.
         /// </summary>
         /// <value>
         /// The tag.
@@ -159,7 +159,7 @@ namespace Ganss.XSS
         public IElement Tag { get; private set; }
 
         /// <summary>
-        /// Gets or sets the style to be removed.
+        /// Gets the style to be removed.
         /// </summary>
         /// <value>
         /// The style.
@@ -167,7 +167,7 @@ namespace Ganss.XSS
         public ICssProperty Style { get; private set; }
 
         /// <summary>
-        /// Gets or sets the reason why the style will be removed.
+        /// Gets the reason why the style will be removed.
         /// </summary>
         /// <value>
         /// The reason.
@@ -194,7 +194,7 @@ namespace Ganss.XSS
     public class RemovingAtRuleEventArgs : CancelEventArgs
     {
         /// <summary>
-        /// Gets or sets the tag containing the at-rule to be removed.
+        /// Gets the tag containing the at-rule to be removed.
         /// </summary>
         /// <value>
         /// The tag.
@@ -202,7 +202,7 @@ namespace Ganss.XSS
         public IElement Tag { get; private set; }
 
         /// <summary>
-        /// Gets or sets the rule to be removed.
+        /// Gets the rule to be removed.
         /// </summary>
         /// <value>
         /// The rule.
@@ -227,7 +227,7 @@ namespace Ganss.XSS
     public class RemovingCommentEventArgs : CancelEventArgs
     {
         /// <summary>
-        /// Gets or sets the comment node to be removed.
+        /// Gets the comment node to be removed.
         /// </summary>
         /// <value>
         /// The comment node.
@@ -250,7 +250,7 @@ namespace Ganss.XSS
     public class RemovingCssClassEventArgs : CancelEventArgs
     {
         /// <summary>
-        /// Gets or sets the tag containing the CSS class to be removed.
+        /// Gets the tag containing the CSS class to be removed.
         /// </summary>
         /// <value>
         /// The tag.
@@ -258,7 +258,7 @@ namespace Ganss.XSS
         public IElement Tag { get; private set; }
 
         /// <summary>
-        /// Gets or sets the CSS class to be removed.
+        /// Gets the CSS class to be removed.
         /// </summary>
         /// <value>
         /// The CSS class.
@@ -266,7 +266,7 @@ namespace Ganss.XSS
         public string CssClass { get; private set; }
 
         /// <summary>
-        /// Gets or sets the reason why the CSS class will be removed.
+        /// Gets the reason why the CSS class will be removed.
         /// </summary>
         /// <value>
         /// The reason.
@@ -293,7 +293,7 @@ namespace Ganss.XSS
     public class FilterUrlEventArgs: EventArgs
     {
         /// <summary>
-        /// Gets or sets the original URL.
+        /// Gets the original URL.
         /// </summary>
         /// <value>
         /// The original URL.
@@ -309,7 +309,7 @@ namespace Ganss.XSS
         public string? SanitizedUrl { get; set; }
 
         /// <summary>
-        /// Gets or sets the tag containing the URI being sanitized.
+        /// Gets the tag containing the URI being sanitized.
         /// </summary>
         /// <value>
         /// The tag.
