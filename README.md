@@ -1,7 +1,7 @@
 HtmlSanitizer
 =============
 
-[![NuGet version](https://badge.fury.io/nu/HtmlSanitizer.svg)](http://badge.fury.io/nu/HtmlSanitizer)
+[![NuGet version](https://badge.fury.io/nu/HtmlSanitizer.svg)](https://badge.fury.io/nu/HtmlSanitizer)
 [![Build status](https://ci.appveyor.com/api/projects/status/418bmfx643iae00c/branch/master?svg=true)](https://ci.appveyor.com/project/mganss/htmlsanitizer/branch/master)
 [![codecov.io](https://codecov.io/github/mganss/HtmlSanitizer/coverage.svg?branch=master)](https://codecov.io/github/mganss/HtmlSanitizer?branch=master)
 [![Sonarcloud Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=mganss_HtmlSanitizer&metric=alert_status)](https://sonarcloud.io/dashboard?id=mganss_HtmlSanitizer)
@@ -34,14 +34,14 @@ Install the [HtmlSanitizer NuGet package](https://www.nuget.org/packages/HtmlSan
 ```C#
 var sanitizer = new HtmlSanitizer();
 var html = @"<script>alert('xss')</script><div onload=""alert('xss')"""
-    + @"style=""background-color: test"">Test<img src=""test.gif"""
+    + @"style=""background-color: test"">Test<img src=""test.png"""
     + @"style=""background-image: url(javascript:alert('xss')); margin: 10px""></div>";
-var sanitized = sanitizer.Sanitize(html, "http://www.example.com");
+var sanitized = sanitizer.Sanitize(html, "https://www.example.com");
 Assert.That(sanitized, Is.EqualTo(@"<div style=""background-color: test"">"
-    + @"Test<img style=""margin: 10px"" src=""http://www.example.com/test.gif""></div>"));
+    + @"Test<img style=""margin: 10px"" src=""https://www.example.com/test.png""></div>"));
 ```
 
-There's an [online demo](http://xss.ganss.org/), plus there's also a [.NET Fiddle](https://dotnetfiddle.net/892nOk) you can play with.
+There's an [online demo](https://xss.ganss.org/), plus there's also a [.NET Fiddle](https://dotnetfiddle.net/892nOk) you can play with.
 
 More example code and a description of possible options can be found in the [Wiki](https://github.com/mganss/HtmlSanitizer/wiki).
 
@@ -73,7 +73,7 @@ _Note:_ the `style` tag is disallowed by default.
 ### URI schemes allowed by default
 ``http, https``
 
-_Note:_ [Protocol-relative URLs](http://en.wikipedia.org/wiki/Wikipedia:Protocol-relative_URL)  (e.g. <a href="//github.com">//github.com</a>) are allowed by default (as are other relative URLs).
+_Note:_ [Protocol-relative URLs](https://en.wikipedia.org/wiki/Wikipedia:Protocol-relative_URL)  (e.g. <a href="//github.com">//github.com</a>) are allowed by default (as are other relative URLs).
 
 to allow `mailto:` links: 
 
@@ -105,4 +105,4 @@ On the other hand, although some broken HTML is fixed by the parser, the output 
 License
 -------
 
-[MIT X11](http://en.wikipedia.org/wiki/MIT_License)
+[MIT X11](https://en.wikipedia.org/wiki/MIT_License)
