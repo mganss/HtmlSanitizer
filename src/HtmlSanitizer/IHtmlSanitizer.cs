@@ -30,7 +30,7 @@ namespace Ganss.XSS
         IMarkupFormatter OutputFormatter { get; set; }
 
         /// <summary>
-        /// Gets or sets the allowed CSS at-rules such as "@media" and "@font-face".
+        /// Gets the allowed CSS at-rules such as "@media" and "@font-face".
         /// </summary>
         /// <value>
         /// The allowed CSS at-rules.
@@ -38,15 +38,15 @@ namespace Ganss.XSS
         ISet<CssRuleType> AllowedAtRules { get; }
 
         /// <summary>
-        /// Gets or sets the allowed HTTP schemes such as "http" and "https".
+        /// Gets the allowed URI schemes such as "http" and "https".
         /// </summary>
         /// <value>
-        /// The allowed HTTP schemes.
+        /// The allowed URI schemes.
         /// </value>
         ISet<string> AllowedSchemes { get; }
 
         /// <summary>
-        /// Gets or sets the allowed HTML tag names such as "a" and "div".
+        /// Gets the allowed HTML tag names such as "a" and "div".
         /// </summary>
         /// <value>
         /// The allowed tag names.
@@ -54,7 +54,7 @@ namespace Ganss.XSS
         ISet<string> AllowedTags { get; }
 
         /// <summary>
-        /// Gets or sets the allowed HTML attributes such as "href" and "alt".
+        /// Gets the allowed HTML attributes such as "href" and "alt".
         /// </summary>
         /// <value>
         /// The allowed HTML attributes.
