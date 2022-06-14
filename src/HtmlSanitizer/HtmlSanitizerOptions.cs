@@ -19,7 +19,7 @@ namespace Ganss.XSS
         /// </summary>
         public ISet<string> AllowedAttributes { get; set; } = new HashSet<string>();
         
-        // <summary>
+        /// <summary>
         /// Gets or sets the allowed CSS classes.
         /// </summary>
         public ISet<string> AllowedCssClasses { get; set; } = new HashSet<string>();
