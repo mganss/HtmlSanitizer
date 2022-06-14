@@ -76,9 +76,9 @@ namespace Ganss.XSS
             AllowedSchemes = options.AllowedSchemes;
             AllowedAttributes = options.AllowedAttributes;
             UriAttributes = options.UriAttributes;
+            AllowedCssClasses = options.AllowedCssClasses;
             AllowedCssProperties = options.AllowedCssProperties;
             AllowedAtRules = options.AllowedAtRules;
-            AllowedClasses = options.AllowedClasses;
         }
 
         /// <summary>
