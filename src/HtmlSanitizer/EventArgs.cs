@@ -56,7 +56,7 @@ namespace Ganss.XSS
         /// <value>
         /// The replacement nodes.
         /// </value>
-        public IList<INode> ReplacementNodes { get; private set; }
+        public ICollection<INode> ReplacementNodes { get; private set; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PostProcessNodeEventArgs"/> class.
