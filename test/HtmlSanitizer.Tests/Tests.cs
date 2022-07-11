@@ -3359,8 +3359,8 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             // Arrange
             var options = new HtmlSanitizerOptions
             {
-                AllowedTags = new HashSet<string> { "strong", "em", "p" },
-                AllowedAttributes = new HashSet<string> { "title" },
+                AllowedTags = new HashSet<string>() { "strong", "em", "p" },
+                AllowedAttributes = new HashSet<string>() { "title" },
                 AllowedCssClasses = new HashSet<string>(),
                 AllowedCssProperties = new HashSet<string>(),
                 AllowedAtRules = new HashSet<CssRuleType>(),

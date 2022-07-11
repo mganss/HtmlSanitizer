@@ -72,13 +72,13 @@ namespace Ganss.XSS
         /// <param name="options">Options to control the sanitizing.</param>
         public HtmlSanitizer(HtmlSanitizerOptions options)
         {
-            AllowedTags = options.AllowedTags;
-            AllowedSchemes = options.AllowedSchemes;
-            AllowedAttributes = options.AllowedAttributes;
-            UriAttributes = options.UriAttributes;
-            AllowedClasses = options.AllowedCssClasses;
-            AllowedCssProperties = options.AllowedCssProperties;
-            AllowedAtRules = options.AllowedAtRules;
+            AllowedTags = new HashSet<string>(options.AllowedTags, StringComparer.OrdinalIgnoreCase);
+            AllowedSchemes = new HashSet<string>(options.AllowedSchemes, StringComparer.OrdinalIgnoreCase);
+            AllowedAttributes = new HashSet<string>(options.AllowedAttributes, StringComparer.OrdinalIgnoreCase);
+            UriAttributes = new HashSet<string>(options.UriAttributes, StringComparer.OrdinalIgnoreCase);
+            AllowedClasses = new HashSet<string>(options.AllowedCssClasses, StringComparer.OrdinalIgnoreCase);
+            AllowedCssProperties = new HashSet<string>(options.AllowedCssProperties, StringComparer.OrdinalIgnoreCase);
+            AllowedAtRules = new HashSet<CssRuleType>(options.AllowedAtRules);
         }
 
         /// <summary>
