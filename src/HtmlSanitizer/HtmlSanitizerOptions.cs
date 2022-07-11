@@ -32,7 +32,7 @@ namespace Ganss.XSS
         /// <summary>
         /// Gets or sets the allowed CSS at-rules such as "@media" and "@font-face".
         /// </summary>
-        public ISet<CssRuleType> AllowedAtRules { get; set; } = new HashSet<CssRuleType>(StringComparer.OrdinalIgnoreCase);
+        public ISet<CssRuleType> AllowedAtRules { get; set; } = new HashSet<CssRuleType>();
         
         /// <summary>
         /// Gets or sets the allowed URI schemes such as "http" and "https".
