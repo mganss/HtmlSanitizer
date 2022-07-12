@@ -3352,5 +3352,30 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             Assert.Equal(@"<p style=""color: rgba(0, 0, 0, 1)"">Text</p>", sanitized);
         }
+        
+        [Fact]
+        public void WithOptions()
+        {
+            // Arrange
+            var options = new HtmlSanitizerOptions
+            {
+                AllowedTags = new HashSet<string>() { "strong", "em", "p" },
+                AllowedAttributes = new HashSet<string>() { "title" },
+                AllowedCssClasses = new HashSet<string>(),
+                AllowedCssProperties = new HashSet<string>(),
+                AllowedAtRules = new HashSet<CssRuleType>(),
+                AllowedSchemes = new HashSet<string>() { "https" },
+                UriAttributes = new HashSet<string>()
+            };
+            var sanitizer = new HtmlSanitizer(options);
+
+            // Act
+            var htmlFragment = "<strong>Lorem ipsum</strong>";
+            var actual = sanitizer.Sanitize(htmlFragment);
+
+            // Assert
+            var expected = "<strong>Lorem ipsum</strong>";
+            Assert.Equal(expected, actual);
+        }
     }
 }

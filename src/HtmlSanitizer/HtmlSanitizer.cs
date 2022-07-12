@@ -69,6 +69,21 @@ namespace Ganss.XSS
         /// <summary>
         /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class.
         /// </summary>
+        /// <param name="options">Options to control the sanitizing.</param>
+        public HtmlSanitizer(HtmlSanitizerOptions options)
+        {
+            AllowedTags = new HashSet<string>(options.AllowedTags, StringComparer.OrdinalIgnoreCase);
+            AllowedSchemes = new HashSet<string>(options.AllowedSchemes, StringComparer.OrdinalIgnoreCase);
+            AllowedAttributes = new HashSet<string>(options.AllowedAttributes, StringComparer.OrdinalIgnoreCase);
+            UriAttributes = new HashSet<string>(options.UriAttributes, StringComparer.OrdinalIgnoreCase);
+            AllowedClasses = new HashSet<string>(options.AllowedCssClasses, StringComparer.OrdinalIgnoreCase);
+            AllowedCssProperties = new HashSet<string>(options.AllowedCssProperties, StringComparer.OrdinalIgnoreCase);
+            AllowedAtRules = new HashSet<CssRuleType>(options.AllowedAtRules);
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class.
+        /// </summary>
         /// <param name="allowedTags">The allowed tag names such as "a" and "div". When <c>null</c>, uses <see cref="DefaultAllowedTags"/></param>
         /// <param name="allowedSchemes">The allowed URI schemes such as "http" and "https". When <c>null</c>, uses <see cref="DefaultAllowedSchemes"/></param>
         /// <param name="allowedAttributes">The allowed HTML attributes such as "href" and "alt". When <c>null</c>, uses <see cref="DefaultAllowedAttributes"/></param>
