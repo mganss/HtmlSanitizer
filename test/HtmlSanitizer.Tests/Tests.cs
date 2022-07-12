@@ -42,10 +42,10 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Xss locator
+        /// A test for XSS locator
         /// </summary>
         [Fact]
-        public void XSSLocatorTest()
+        public void XssLocatorTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
@@ -60,15 +60,14 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Image Xss vector
+        /// A test for Image XSS vector
         /// Example <!-- <IMG SRC="javascript:alert('XSS');"> -->
         /// </summary>
         [Fact]
-        public void ImageXSS1Test()
+        public void ImageXss1Test()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Action
             string htmlFragment = "<IMG SRC=\"javascript:alert('XSS');\">";
@@ -80,15 +79,14 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Image Xss vector without quotes and semicolon.
+        /// A test for Image XSS vector without quotes and semicolon.
         /// Example <!-- <IMG SRC=javascript:alert('XSS')> -->
         /// </summary>
         [Fact]
-        public void ImageXSS2Test()
+        public void ImageXss2Test()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=javascript:alert('XSS')>";
@@ -100,15 +98,14 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Image xss vector with case insensitive.
+        /// A test for Image XSS vector with case insensitive.
         /// Example <!-- <IMG SRC=JaVaScRiPt:alert('XSS')> -->
         /// </summary>
         [Fact]
-        public void ImageCaseInsensitiveXSSTest()
+        public void ImageCaseInsensitiveXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=JaVaScRiPt:alert('XSS')>";
@@ -120,15 +117,14 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Image Xss vector with Html entities
+        /// A test for Image XSS vector with Html entities
         /// Example <!-- <IMG SRC=javascript:alert(&quot;XSS&quot;)> -->
         /// </summary>
         [Fact]
-        public void ImageHtmlEntitiesXSSTest()
+        public void ImageHtmlEntitiesXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=javascript:alert(&quot;XSS&quot;)>";
@@ -140,15 +136,14 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Image Xss vector with grave accent
+        /// A test for Image XSS vector with grave accent
         /// Example <!-- <IMG SRC=`javascript:alert("RSnake says, 'XSS'")`> -->
         /// </summary>
         [Fact]
-        public void ImageGraveAccentXSSTest()
+        public void ImageGraveAccentXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=`javascript:alert(\"RSnake says, 'XSS'\")`>";
@@ -160,15 +155,14 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Image Xss vector with malformed
+        /// A test for Image XSS vector with malformed
         /// Example <!-- <IMG \"\"\"><SCRIPT>alert(\"XSS\")</SCRIPT>\"> -->
         /// </summary>
         [Fact]
-        public void ImageMalformedXSSTest()
+        public void ImageMalformedXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG \"\"\"><SCRIPT>alert(\"XSS\")</SCRIPT>\">";
@@ -180,15 +174,14 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Image Xss vector with ImageFromCharCode
+        /// A test for Image XSS vector with ImageFromCharCode
         /// Example <!-- <IMG SRC=javascript:alert(String.fromCharCode(88,83,83))> -->
         /// </summary>
         [Fact]
-        public void ImageFromCharCodeXSSTest()
+        public void ImageFromCharCodeXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=javascript:alert(String.fromCharCode(88,83,83))>";
@@ -200,15 +193,14 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Image Xss vector with UTF-8 Unicode
+        /// A test for Image XSS vector with UTF-8 Unicode
         /// Example <!-- <IMG SRC=&#106;&#97;&#118;&#97;&#115;&#99;&#114;&#105;&#112;&#116;&#58;&#97;&#108;&#101;&#114;&#116;&#40;&#39;&#88;&#83;&#83;&#39;&#41;> -->
         /// </summary>
         [Fact]
-        public void ImageUTF8UnicodeXSSTest()
+        public void ImageUTF8UnicodeXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=&#106;&#97;&#118;&#97;&#115;&#99;&#114;&#105;&#112;&#116;&#58;&#97;&#108;&#101;&#114;&#116;&#40;&#39;&#88;&#83;&#83;&#39;&#41;>";
@@ -220,15 +212,14 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Image Xss vector with Long UTF-8 Unicode
+        /// A test for Image XSS vector with Long UTF-8 Unicode
         /// Example <!-- <IMG SRC=&#0000106&#0000097&#0000118&#0000097&#0000115&#0000099&#0000114&#0000105&#0000112&#0000116&#0000058&#0000097&#0000108&#0000101&#0000114&#0000116&#0000040&#0000039&#0000088&#0000083&#0000083&#0000039&#0000041> -->
         /// </summary>
         [Fact]
-        public void ImageLongUTF8UnicodeXSSTest()
+        public void ImageLongUTF8UnicodeXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=&#0000106&#0000097&#0000118&#0000097&#0000115&#0000099&#0000114&#0000105&#0000112&#0000116&#0000058&#0000097&#0000108&#0000101&#0000114&#0000116&#0000040&#0000039&#0000088&#0000083&#0000083&#0000039&#0000041>";
@@ -240,15 +231,14 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Image Xss vector with Hex encoding without semicolon
+        /// A test for Image XSS vector with Hex encoding without semicolon
         /// Example <!-- <IMG SRC=&#x6A&#x61&#x76&#x61&#x73&#x63&#x72&#x69&#x70&#x74&#x3A&#x61&#x6C&#x65&#x72&#x74&#x28&#x27&#x58&#x53&#x53&#x27&#x29> -->
         /// </summary>
         [Fact]
-        public void ImageHexEncodeXSSTest()
+        public void ImageHexEncodeXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=&#x6A&#x61&#x76&#x61&#x73&#x63&#x72&#x69&#x70&#x74&#x3A&#x61&#x6C&#x65&#x72&#x74&#x28&#x27&#x58&#x53&#x53&#x27&#x29>";
@@ -260,15 +250,14 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Image Xss vector with embedded tab
+        /// A test for Image XSS vector with embedded tab
         /// Example <!-- <IMG SRC=\"jav	ascript:alert('XSS');\"> -->
         /// </summary>
         [Fact]
-        public void ImageEmbeddedTabXSSTest()
+        public void ImageEmbeddedTabXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=\"jav	ascript:alert('XSS');\">";
@@ -280,15 +269,14 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Image Xss vector with embedded encoded tab
+        /// A test for Image XSS vector with embedded encoded tab
         /// Example <!-- <IMG SRC="jav&#x09;ascript:alert('XSS');"> -->
         /// </summary>
         [Fact]
-        public void ImageEmbeddedEncodedTabXSSTest()
+        public void ImageEmbeddedEncodedTabXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=\"jav&#x09;ascript:alert('XSS');\">";
@@ -300,15 +288,14 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Image Xss vector with embedded new line
+        /// A test for Image XSS vector with embedded new line
         /// Example <!-- <IMG SRC="jav&#x0A;ascript:alert('XSS');"> -->
         /// </summary>
         [Fact]
-        public void ImageEmbeddedNewLineXSSTest()
+        public void ImageEmbeddedNewLineXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=\"jav&#x0A;ascript:alert('XSS');\">";
@@ -320,15 +307,14 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Image Xss vector with embedded carriage return
+        /// A test for Image XSS vector with embedded carriage return
         /// Example <!-- <IMG SRC=\"jav&#x0D;ascript:alert('XSS');\"> -->
         /// </summary>
         [Fact]
-        public void ImageEmbeddedCarriageReturnXSSTest()
+        public void ImageEmbeddedCarriageReturnXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=\"jav&#x0D;ascript:alert('XSS');\">";
@@ -340,7 +326,7 @@ namespace Ganss.XSS.Tests
         }
 
         /// <summary>
-        /// A test for Image Xss vector with Multiline using ASCII carriage return
+        /// A test for Image XSS vector with Multiline using ASCII carriage return
         /// Example <!-- <IMG
         /// SRC
         /// =
@@ -372,11 +358,10 @@ namespace Ganss.XSS.Tests
         ///> -->
         /// </summary>
         [Fact]
-        public void ImageMultilineInjectedXSSTest()
+        public void ImageMultilineInjectedXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = @"<IMG
@@ -418,15 +403,14 @@ S
         }
 
         /// <summary>
-        /// A test for Image Xss vector with Null breaks up Javascript directive
+        /// A test for Image XSS vector with Null breaks up Javascript directive
         /// Example <!-- perl -e 'print "<IMG SRC=java\0script:alert(\"XSS\")>";' > out -->
         /// </summary>
         [Fact]
-        public void ImageNullBreaksUpXSSTest1()
+        public void ImageNullBreaksUpXssTest1()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=java\0script:alert(\"XSS\")>";
@@ -438,15 +422,14 @@ S
         }
 
         /// <summary>
-        /// A test for Image Xss vector with Null breaks up cross site scripting vector
+        /// A test for Image XSS vector with Null breaks up cross site scripting vector
         /// Example <!-- <image src=" perl -e 'print "<SCR\0IPT>alert(\"XSS\")</SCR\0IPT>";' > out "> -->
         /// </summary>
         [Fact]
-        public void ImageNullBreaksUpXSSTest2()
+        public void ImageNullBreaksUpXssTest2()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<SCR\0IPT>alert(\"XSS\")</SCR\0IPT>";
@@ -458,15 +441,14 @@ S
         }
 
         /// <summary>
-        /// A test for Image Xss vector with spaces and Meta characters
+        /// A test for Image XSS vector with spaces and Meta characters
         /// Example <!-- <IMG SRC=" &#14;  javascript:alert('XSS');"> -->
         /// </summary>
         [Fact]
-        public void ImageSpaceAndMetaCharXSSTest()
+        public void ImageSpaceAndMetaCharXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=\" &#14;  javascript:alert('XSS');\">";
@@ -478,15 +460,14 @@ S
         }
 
         /// <summary>
-        /// A test for Image Xss vector with half open html
+        /// A test for Image XSS vector with half open html
         /// Example <!-- <IMG SRC="javascript:alert('XSS')" -->
         /// </summary>
         [Fact]
-        public void ImageHalfOpenHtmlXSSTest()
+        public void ImageHalfOpenHtmlXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=\"javascript:alert('XSS')\"";
@@ -498,11 +479,11 @@ S
         }
 
         /// <summary>
-        /// A test for Image Xss vector with double open angle bracket
+        /// A test for Image XSS vector with double open angle bracket
         /// Example <!-- <image src=http://ha.ckers.org/scriptlet.html < -->
         /// </summary>
         [Fact]
-        public void ImageDoubleOpenAngleBracketXSSTest()
+        public void ImageDoubleOpenAngleBracketXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
@@ -517,15 +498,14 @@ S
         }
 
         /// <summary>
-        /// A test for Dic Xss vector with Javascript escaping
+        /// A test for Dic XSS vector with Javascript escaping
         /// Example <!-- <div style="\";alert('XSS');//"> -->
         /// </summary>
         [Fact]
-        public void DivJavascriptEscapingXSSTest()
+        public void DivJavascriptEscapingXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<div style=\"\";alert('XSS');//\">";
@@ -537,15 +517,14 @@ S
         }
 
         /// <summary>
-        /// A test for Image Xss vector with input image
+        /// A test for Image XSS vector with input image
         /// Example <!-- <INPUT TYPE="IMAGE" SRC="javascript:alert('XSS');"> -->
         /// </summary>
         [Fact]
-        public void ImageInputXSSTest()
+        public void ImageInputXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<INPUT TYPE=\"IMAGE\" SRC=\"javascript:alert('XSS');\">";
@@ -557,15 +536,14 @@ S
         }
 
         /// <summary>
-        /// A test for Image Xss vector with Dynsrc
+        /// A test for Image XSS vector with Dynsrc
         /// Example <!-- <IMG DYNSRC="javascript:alert('XSS')"> -->
         /// </summary>
         [Fact]
-        public void ImageDynsrcXSSTest()
+        public void ImageDynsrcXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG DYNSRC=\"javascript:alert('XSS')\">";
@@ -577,15 +555,14 @@ S
         }
 
         /// <summary>
-        /// A test for Image Xss vector with Lowsrc
+        /// A test for Image XSS vector with Lowsrc
         /// Example <!-- <IMG LOWSRC="javascript:alert('XSS')"> -->
         /// </summary>
         [Fact]
-        public void ImageLowsrcXSSTest()
+        public void ImageLowsrcXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG LOWSRC=\"javascript:alert('XSS')\">";
@@ -597,15 +574,14 @@ S
         }
 
         /// <summary>
-        /// A test for Xss vector with BGSound
+        /// A test for XSS vector with BGSound
         /// Example <!-- <BGSOUND SRC="javascript:alert('XSS');"> -->
         /// </summary>
         [Fact]
-        public void BGSoundXSSTest()
+        public void BGSoundXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<BGSOUND SRC=\"javascript:alert('XSS');\">";
@@ -617,15 +593,14 @@ S
         }
 
         /// <summary>
-        /// A test for BR with Javascript Include
+        /// A test for BR with JavaScript Include
         /// Example <!-- <BR SIZE="&{alert('XSS')}"> -->
         /// </summary>
         [Fact]
-        public void BRJavascriptIncludeXSSTest()
+        public void BRJavascriptIncludeXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<BR SIZE=\"&{alert('XSS')}\">";
@@ -641,11 +616,10 @@ S
         /// Example <!-- <p STYLE="behavior: url(www.ha.ckers.org);"> -->
         /// </summary>
         [Fact]
-        public void PWithUrlInStyleXSSTest()
+        public void PWithUrlInStyleXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<p STYLE=\"behavior: url(www.ha.ckers.org);\">";
@@ -658,15 +632,14 @@ S
         }
 
         /// <summary>
-        /// A test for Image with vbscript
+        /// A test for Image with VBScript
         /// Example <!-- <IMG SRC='vbscript:msgbox("XSS")'> -->
         /// </summary>
         [Fact]
-        public void ImageWithVBScriptXSSTest()
+        public void ImageWithVBScriptXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC='vbscript:msgbox(\"XSS\")'>";
@@ -682,11 +655,10 @@ S
         /// Example <!-- <IMG SRC="mocha:[code]"> -->
         /// </summary>
         [Fact]
-        public void ImageWithMochaXSSTest()
+        public void ImageWithMochaXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=\"mocha:[code]\">";
@@ -698,15 +670,14 @@ S
         }
 
         /// <summary>
-        /// A test for Image with Livescript
+        /// A test for Image with LiveScript
         /// Example <!-- <IMG SRC="Livescript:[code]"> -->
         /// </summary>
         [Fact]
-        public void ImageWithLivescriptXSSTest()
+        public void ImageWithLivescriptXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG SRC=\"Livescript:[code]\">";
@@ -722,11 +693,10 @@ S
         /// Example <!-- <IFRAME SRC="javascript:alert('XSS');"></IFRAME> -->
         /// </summary>
         [Fact]
-        public void IframeXSSTest()
+        public void IframeXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IFRAME SRC=\"javascript:alert('XSS');\"></IFRAME>";
@@ -742,11 +712,10 @@ S
         /// Example <!-- <FRAMESET><FRAME SRC="javascript:alert('XSS');"></FRAMESET> -->
         /// </summary>
         [Fact]
-        public void FrameXSSTest()
+        public void FrameXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<FRAMESET><FRAME SRC=\"javascript:alert('XSS');\"></FRAMESET>";
@@ -762,11 +731,10 @@ S
         /// Example <!-- <TABLE BACKGROUND="javascript:alert('XSS')"> -->
         /// </summary>
         [Fact]
-        public void TableXSSTest()
+        public void TableXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<TABLE BACKGROUND=\"javascript:alert('XSS')\">";
@@ -782,11 +750,10 @@ S
         /// Example <!-- <TABLE><TD BACKGROUND="javascript:alert('XSS')"> -->
         /// </summary>
         [Fact]
-        public void TDXSSTest()
+        public void TDXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<TABLE><TD BACKGROUND=\"javascript:alert('XSS')\">";
@@ -802,11 +769,10 @@ S
         /// Example <!-- <DIV STYLE="background-image: url(javascript:alert('XSS'))"> -->
         /// </summary>
         [Fact]
-        public void DivBackgroundImageXSSTest()
+        public void DivBackgroundImageXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<DIV STYLE=\"background-image: url(javascript:alert('XSS'))\">";
@@ -818,15 +784,14 @@ S
         }
 
         /// <summary>
-        /// A test for Div Background Image  with unicoded XSS
+        /// A test for Div Background Image with unicoded XSS
         /// Example <!-- <DIV STYLE="background-image:\0075\0072\006C\0028'\006a\0061\0076\0061\0073\0063\0072\0069\0070\0074\003a\0061\006c\0065\0072\0074\0028.1027\0058.1053\0053\0027\0029'\0029"> -->
         /// </summary>
         [Fact]
-        public void DivBackgroundImageWithUnicodedXSSTest()
+        public void DivBackgroundImageWithUnicodedXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = @"<DIV STYLE=""background-image:\0075\0072\006C\0028'\006a\0061\0076\0061\0073\0063\0072\0069\0070\0074\003a\0061\006c\0065\0072\0074\0028\0027\0058\0053\0053\0027\0029'\0029"">";
@@ -838,15 +803,14 @@ S
         }
 
         /// <summary>
-        /// A test for Div Background Image  with extra characters
+        /// A test for Div Background Image with extra characters
         /// Example <!-- <DIV STYLE="background-image: url(&#1;javascript:alert('XSS'))"> -->
         /// </summary>
         [Fact]
-        public void DivBackgroundImageWithExtraCharactersXSSTest()
+        public void DivBackgroundImageWithExtraCharactersXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<DIV STYLE=\"background-image: url(&#1;javascript:alert('XSS'))\">";
@@ -862,11 +826,10 @@ S
         /// Example <!-- <DIV STYLE="width: expression(alert('XSS'));"> -->
         /// </summary>
         [Fact]
-        public void DivExpressionXSSTest()
+        public void DivExpressionXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<DIV STYLE=\"width: expression(alert('XSS'));\">";
@@ -882,11 +845,10 @@ S
         /// Example <!-- <IMG STYLE="xss:expr/*XSS*/ession(alert('XSS'))"> -->
         /// </summary>
         [Fact]
-        public void ImageStyleExpressionXSSTest()
+        public void ImageStyleExpressionXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<IMG STYLE=\"xss:expr/*XSS*/ession(alert('XSS'))\">";
@@ -898,15 +860,14 @@ S
         }
 
         /// <summary>
-        /// A test for AnchorTag with break up expression
+        /// A test for Anchor Tag with break up expression
         /// Example <!-- exp/*<A STYLE='no\xss:noxss("*//*");xss:&#101;x&#x2F;*XSS*//*/*/pression(alert("XSS"))'> -->
         /// </summary>
         [Fact]
-        public void AnchorTagStyleExpressionXSSTest()
+        public void AnchorTagStyleExpressionXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "exp/*<A STYLE='no\\xss:noxss(\"*//*\");xss:&#101;x&#x2F;*XSS*//*/*/pression(alert(\"XSS\"))'>";
@@ -918,15 +879,14 @@ S
         }
 
         /// <summary>
-        /// A test for BaseTag
+        /// A test for Base tag
         /// Example <!-- <BASE HREF="javascript:alert('XSS');//"> -->
         /// </summary>
         [Fact]
-        public void BaseTagXSSTest()
+        public void BaseTagXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<BASE HREF=\"javascript:alert('XSS');//\">";
@@ -938,15 +898,14 @@ S
         }
 
         /// <summary>
-        /// A test for EMBEDTag
+        /// A test for EMBED tag
         /// Example <!-- <EMBED SRC="http://ha.ckers.org/xss.swf" AllowScriptAccess="always"></EMBED> -->
         /// </summary>
         [Fact]
-        public void EmbedTagXSSTest()
+        public void EmbedTagXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<EMBED SRC=\"http://ha.ckers.org/xss.swf\" AllowScriptAccess=\"always\"></EMBED>";
@@ -958,15 +917,14 @@ S
         }
 
         /// <summary>
-        /// A test for EMBEDSVG
+        /// A test for EMBED SVG
         /// Example <!-- <EMBED SRC="data:image/svg+xml;base64,PHN2ZyB4bWxuczpzdmc9Imh0dH A6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcv MjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hs aW5rIiB2ZXJzaW9uPSIxLjAiIHg9IjAiIHk9IjAiIHdpZHRoPSIxOTQiIGhlaWdodD0iMjAw IiBpZD0ieHNzIj48c2NyaXB0IHR5cGU9InRleHQvZWNtYXNjcmlwdCI+YWxlcnQoIlh TUyIpOzwvc2NyaXB0Pjwvc3ZnPg==" type="image/svg+xml" AllowScriptAccess="always"></EMBED> -->
         /// </summary>
         [Fact]
-        public void EmbedSVGXSSTest()
+        public void EmbedSVGXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<EMBED SRC=\"data:image/svg+xml;base64,PHN2ZyB4bWxuczpzdmc9Imh0dH A6Ly93d3cudzMub3JnLzIwMDAvc3ZnIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcv MjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hs aW5rIiB2ZXJzaW9uPSIxLjAiIHg9IjAiIHk9IjAiIHdpZHRoPSIxOTQiIGhlaWdodD0iMjAw IiBpZD0ieHNzIj48c2NyaXB0IHR5cGU9InRleHQvZWNtYXNjcmlwdCI+YWxlcnQoIlh TUyIpOzwvc2NyaXB0Pjwvc3ZnPg==\" type=\"image/svg+xml\" AllowScriptAccess=\"always\"></EMBED>";
@@ -982,11 +940,10 @@ S
         /// Example <!-- <HTML xmlns:xss>  <?import namespace="xss" implementation="http://ha.ckers.org/xss.htc">  <xss:xss>XSS</xss:xss></HTML> -->
         /// </summary>
         [Fact]
-        public void XmlNamespaceXSSTest()
+        public void XmlNamespaceXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<HTML xmlns:xss><?import namespace=\"xss\" implementation=\"http://ha.ckers.org/xss.htc\"><xss:xss>XSS</xss:xss></HTML>";
@@ -998,15 +955,14 @@ S
         }
 
         /// <summary>
-        /// A test for XML with CData
+        /// A test for XML with CDATA
         /// Example <!-- <XML ID=I><X><C><![CDATA[<IMG SRC="javas]]><![CDATA[cript:alert('XSS');">]]></C></X></xml><SPAN DATASRC=#I DATAFLD=C DATAFORMATAS=HTML></SPAN> -->
         /// </summary>
         [Fact]
-        public void XmlWithCDataXSSTest()
+        public void XmlWithCDataXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<XML ID=I><X><C><![CDATA[<IMG SRC=\"javas]]><![CDATA[cript:alert('XSS');\">]]></C></X></xml><SPAN DATASRC=#I DATAFLD=C DATAFORMATAS=HTML></SPAN>";
@@ -1021,11 +977,10 @@ S
         /// A test for XML with Comment obfuscation
         /// </summary>
         [Fact]
-        public void XmlWithCommentObfuscationXSSTest()
+        public void XmlWithCommentObfuscationXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<XML ID=\"xss\"><I><B>&lt;IMG SRC=\"javas<!-- -->cript:alert('XSS')\"&gt;</B></I></XML><SPAN DATASRC=\"#xss\" DATAFLD=\"B\" DATAFORMATAS=\"HTML\"></SPAN>";
@@ -1041,11 +996,10 @@ S
         /// Example <!-- <XML SRC="xsstest.xml" ID=I></XML><SPAN DATASRC=#I DATAFLD=C DATAFORMATAS=HTML></SPAN> -->
         /// </summary>
         [Fact]
-        public void XmlWithEmbeddedScriptXSSTest()
+        public void XmlWithEmbeddedScriptXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<XML SRC=\"xsstest.xml\" ID=I></XML><SPAN DATASRC=#I DATAFLD=C DATAFORMATAS=HTML></SPAN>";
@@ -1061,11 +1015,10 @@ S
         /// Example <!-- <HTML><BODY><?xml:namespace prefix="t" ns="urn:schemas-microsoft-com:time"><?import namespace="t" implementation="#default#time2"><t:set attributeName="innerHTML" to="XSS&lt;SCRIPT DEFER&gt;alert(&quot;XSS&quot;)&lt;/SCRIPT&gt;"></BODY></HTML> -->
         /// </summary>
         [Fact]
-        public void HtmlPlusTimeXSSTest()
+        public void HtmlPlusTimeXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<HTML><BODY><?xml:namespace prefix=\"t\" ns=\"urn:schemas-microsoft-com:time\"><?import namespace=\"t\" implementation=\"#default#time2\"><t:set attributeName=\"innerHTML\" to=\"XSS&lt;SCRIPT DEFER&gt;alert(&quot;XSS&quot;)&lt;/SCRIPT&gt;\"></BODY></HTML>";
@@ -1081,11 +1034,10 @@ S
         /// Example <!-- <A HREF="javascript:document.location='http://www.google.com/'">XSS</A> -->
         /// </summary>
         [Fact]
-        public void AnchorTagJavascriptLinkLocationXSSTest()
+        public void AnchorTagJavascriptLinkLocationXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<A HREF=\"javascript:document.location='http://www.google.com/'\">XSS</A>";
@@ -1101,11 +1053,10 @@ S
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<SCRIPT SRC=http://ha.ckers.org/xss.js></SCRIPT>"> -->
         /// </summary>
         [Fact]
-        public void DivNoFilterEvasionXSSTest()
+        public void DivNoFilterEvasionXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<Div style=\"background-color: http://www.codeplex.com?url=<SCRIPT SRC=http://ha.ckers.org/xss.js></SCRIPT>\">";
@@ -1121,11 +1072,10 @@ S
         /// Example <!-- <Div style="background-color: expression(<SCRIPT SRC=http://ha.ckers.org/xss.js></SCRIPT>)"> -->
         /// </summary>
         [Fact]
-        public void DivStyleExpressionNoFilterEvasionXSSTest()
+        public void DivStyleExpressionNoFilterEvasionXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<Div style=\"background-color: expression(<SCRIPT SRC=http://ha.ckers.org/xss.js></SCRIPT>)\">";
@@ -1137,15 +1087,14 @@ S
         }
 
         /// <summary>
-        /// A test for AnchorTag with non alpha non digit xss
+        /// A test for Anchor tag with non-alpha non-digit XSS
         /// Example <!-- <A HREF="http://www.codeplex.com?url=<SCRIPT/XSS SRC="http://ha.ckers.org/xss.js"></SCRIPT>">XSS</A> -->
         /// </summary>
         [Fact]
-        public void AnchorTagNonAlphaNonDigitXSSTest()
+        public void AnchorTagNonAlphaNonDigitXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<A HREF=\"http://www.codeplex.com?url=<SCRIPT/XSS SRC=\"http://ha.ckers.org/xss.js\"></SCRIPT>\">XSS</A>";
@@ -1157,15 +1106,14 @@ S
         }
 
         /// <summary>
-        /// A test for Div with non alpha non digit xss
+        /// A test for Div with non-alpha non-digit XSS
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<SCRIPT/XSS SRC=http://ha.ckers.org/xss.js></SCRIPT>"> -->
         /// </summary>
         [Fact]
-        public void DivNonAlphaNonDigitXSSTest()
+        public void DivNonAlphaNonDigitXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<Div style=\"background-color: http://www.codeplex.com?url=<SCRIPT/XSS SRC=\"http://ha.ckers.org/xss.js\"></SCRIPT>\">";
@@ -1177,15 +1125,14 @@ S
         }
 
         /// <summary>
-        /// A test for Div with style expression and non alpha non digit xss
+        /// A test for Div with style expression and non-alpha non-digit XSS
         /// Example <!-- <Div style="background-color: expression(<SCRIPT/XSS SRC="http://ha.ckers.org/xss.js"></SCRIPT>)"> -->
         /// </summary>
         [Fact]
-        public void DivStyleExpressionNonAlphaNonDigitXSSTest()
+        public void DivStyleExpressionNonAlphaNonDigitXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<Div style=\"background-color: expression(<SCRIPT/XSS SRC=\"http://ha.ckers.org/xss.js\"></SCRIPT>)\">";
@@ -1197,15 +1144,14 @@ S
         }
 
         /// <summary>
-        /// A test for Div with non alpha non digit part 3 xss
+        /// A test for Div with non-alpha non-digit part 3 XSS
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<SCRIPT/SRC=http://ha.ckers.org/xss.js></SCRIPT>"> -->
         /// </summary>
         [Fact]
-        public void DivNonAlphaNonDigit3XSSTest()
+        public void DivNonAlphaNonDigit3XssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<Div style=\"background-color: http://www.codeplex.com?url=<SCRIPT/SRC=\"http://ha.ckers.org/xss.js\"></SCRIPT>\">";
@@ -1217,15 +1163,14 @@ S
         }
 
         /// <summary>
-        /// A test for Div with style expression and non alpha non digit part 3 xss
+        /// A test for Div with style expression and non-alpha non-digit part 3 XSS
         /// Example <!-- <Div style="background-color: expression(<SCRIPT/SRC="http://ha.ckers.org/xss.js"></SCRIPT>)"> -->
         /// </summary>
         [Fact]
-        public void DivStyleExpressionNonAlphaNonDigit3XSSTest()
+        public void DivStyleExpressionNonAlphaNonDigit3XssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<Div style=\"background-color: expression(<SCRIPT/SRC=\"http://ha.ckers.org/xss.js\"></SCRIPT>)\">";
@@ -1237,15 +1182,14 @@ S
         }
 
         /// <summary>
-        /// A test for AnchorTag with Extraneous open brackets xss
+        /// A test for Anchor tag with extraneous open brackets XSS
         /// Example <!-- <A HREF="http://www.codeplex.com?url=<<SCRIPT>alert("XSS");//<</SCRIPT>">XSS</A> -->
         /// </summary>
         [Fact]
-        public void AnchorTagExtraneousOpenBracketsXSSTest()
+        public void AnchorTagExtraneousOpenBracketsXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<A HREF=\"http://www.codeplex.com?url=<<SCRIPT>alert(\"XSS\");//<</SCRIPT>\">XSS</A>";
@@ -1257,15 +1201,14 @@ S
         }
 
         /// <summary>
-        /// A test for Div with Extraneous open brackets xss
+        /// A test for Div with extraneous open brackets XSS
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<<SCRIPT>alert("XSS");//<</SCRIPT>"> -->
         /// </summary>
         [Fact]
-        public void DivExtraneousOpenBracketsXSSTest()
+        public void DivExtraneousOpenBracketsXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<Div style=\"background-color: http://www.codeplex.com?url=<<SCRIPT>alert(\"XSS\");//<</SCRIPT>\">";
@@ -1277,11 +1220,11 @@ S
         }
 
         /// <summary>
-        /// A test for Div with style expression and Extraneous open brackets xss
+        /// A test for Div with style expression and extraneous open brackets XSS
         /// Example <!-- <Div style="background-color: expression(<<SCRIPT>alert("XSS");//<</SCRIPT>)"> -->
         /// </summary>
         [Fact]
-        public void DivStyleExpressionExtraneousOpenBracketsXSSTest()
+        public void DivStyleExpressionExtraneousOpenBracketsXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
@@ -1296,15 +1239,14 @@ S
         }
 
         /// <summary>
-        /// A test for Div with No closing script tags xss
+        /// A test for Div with no closing script tags XSS
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<SCRIPT SRC=http://ha.ckers.org/xss.js?<B>"> -->
         /// </summary>
         [Fact]
-        public void DivNoClosingScriptTagsXSSTest()
+        public void DivNoClosingScriptTagsXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<Div style=\"background-color: http://www.codeplex.com?url=<SCRIPT SRC=http://ha.ckers.org/xss.js?<B>\">";
@@ -1316,15 +1258,14 @@ S
         }
 
         /// <summary>
-        /// A test for Div with style expression and No closing script tags xss
+        /// A test for Div with style expression and no closing script tags XSS
         /// Example <!-- <Div style="background-color: expression(<SCRIPT SRC=http://ha.ckers.org/xss.js?<B>)"> -->
         /// </summary>
         [Fact]
-        public void DivStyleExpressionNoClosingScriptTagsXSSTest()
+        public void DivStyleExpressionNoClosingScriptTagsXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<Div style=\"background-color: expression(<SCRIPT SRC=http://ha.ckers.org/xss.js?<B>)\">";
@@ -1336,15 +1277,14 @@ S
         }
 
         /// <summary>
-        /// A test for AnchorTag with Protocol resolution in script tags xss
+        /// A test for Anchor tag withprotocol resolution in script tags XSS
         /// Example <!-- <A HREF="http://www.codeplex.com?url=<SCRIPT SRC=//ha.ckers.org/.j>">XSS</A> -->
         /// </summary>
         [Fact]
-        public void AnchorTagProtocolResolutionScriptXSSTest()
+        public void AnchorTagProtocolResolutionScriptXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<A HREF=\"http://www.codeplex.com?url=<SCRIPT SRC=//ha.ckers.org/.j>\">XSS</A>";
@@ -1356,15 +1296,14 @@ S
         }
 
         /// <summary>
-        /// A test for Div with Protocol resolution in script tags xss
+        /// A test for Div with protocol resolution in script tags XSS
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<SCRIPT SRC=//ha.ckers.org/.j>"> -->
         /// </summary>
         [Fact]
-        public void DivProtocolResolutionScriptXSSTest()
+        public void DivProtocolResolutionScriptXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<Div style=\"background-color: http://www.codeplex.com?url=<SCRIPT SRC=//ha.ckers.org/.j>\">";
@@ -1376,15 +1315,14 @@ S
         }
 
         /// <summary>
-        /// A test for Div with style expression and Protocol resolution in script tags xss
+        /// A test for Div with style expression and protocol resolution in script tags XSS
         /// Example <!-- <Div style="background-color: expression(<SCRIPT SRC=//ha.ckers.org/.j>)"> -->
         /// </summary>
         [Fact]
-        public void DivStyleExpressionProtocolResolutionScriptXSSTest()
+        public void DivStyleExpressionProtocolResolutionScriptXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<Div style=\"background-color: expression(<SCRIPT SRC=//ha.ckers.org/.j>)\">";
@@ -1396,15 +1334,14 @@ S
         }
 
         /// <summary>
-        /// A test for AnchorTag with no single quotes or double quotes or semicolons xss
+        /// A test for Anchor tag with no single quotes or double quotes or semicolons XSS
         /// Example <!-- <A HREF="http://www.codeplex.com?url=<SCRIPT>a=/XSS/alert(a.source)</SCRIPT>">XSS</A> -->
         /// </summary>
         [Fact]
-        public void AnchorTagNoQuotesXSSTest()
+        public void AnchorTagNoQuotesXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<A HREF=\"http://www.codeplex.com?url=<SCRIPT>a=/XSS/alert(a.source)</SCRIPT>\">XSS</A>";
@@ -1416,15 +1353,14 @@ S
         }
 
         /// <summary>
-        /// A test for Div with no single quotes or double quotes or semicolons xss
+        /// A test for Div with no single quotes or double quotes or semicolons XSS
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<SCRIPT>a=/XSS/alert(a.source)</SCRIPT>"> -->
         /// </summary>
         [Fact]
-        public void DivNoQuotesXSSTest()
+        public void DivNoQuotesXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<Div style=\"background-color: http://www.codeplex.com?url=<SCRIPT>a=/XSS/alert(a.source)</SCRIPT>\">";
@@ -1436,15 +1372,14 @@ S
         }
 
         /// <summary>
-        /// A test for Div with style expression and no single quotes or double quotes or semicolons xss
+        /// A test for Div with style expression and no single quotes or double quotes or semicolons XSS
         /// Example <!-- <Div style="background-color: expression(<SCRIPT>a=/XSS/alert(a.source)</SCRIPT>)"> -->
         /// </summary>
         [Fact]
-        public void DivStyleExpressionNoQuotesXSSTest()
+        public void DivStyleExpressionNoQuotesXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<Div style=\"background-color: expression(<SCRIPT>a=/XSS/alert(a.source)</SCRIPT>)\">";
@@ -1456,15 +1391,14 @@ S
         }
 
         /// <summary>
-        /// A test for AnchorTag with US-ASCII encoding xss
+        /// A test for Anchor tag with US-ASCII encoding XSS
         /// Example <!-- <A HREF="http://www.codeplex.com?url=¼script¾alert(¢XSS¢)¼/script¾">XSS</A> -->
         /// </summary>
         [Fact]
-        public void AnchorTagUSASCIIEncodingXSSTest()
+        public void AnchorTagUSASCIIEncodingXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<A HREF=\"http://www.codeplex.com?url=¼script¾alert(¢XSS¢)¼/script¾\">XSS</A>";
@@ -1476,14 +1410,13 @@ S
         }
 
         /// <summary>
-        /// A test for AnchorTag with Downlevel-Hidden block xss
+        /// A test for Anchor tag with Downlevel-Hidden block XSS
         /// </summary>
         [Fact]
-        public void AnchorTagDownlevelHiddenBlockXSSTest()
+        public void AnchorTagDownlevelHiddenBlockXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<A HREF=\"http://www.codeplex.com?url=<!--[if gte IE 4]><SCRIPT>alert('XSS');</SCRIPT><![endif]-->\">XSS</A>";
@@ -1498,10 +1431,9 @@ S
             }
             catch (Exception)
             {
-
-                //in .net 3.5 there is a bug with URI, and so this test would otherwise fail on .net 3.5 in Appveyor / nunit:
-                //http://help.appveyor.com/discussions/problems/1625-nunit-not-picking-up-net-framework-version
-                //http://stackoverflow.com/questions/27019061/forcing-nunit-console-runner-to-use-clr-4-5
+                // In .NET 3.5 there is a bug with URI, and so this test would otherwise fail on .NET 3.5 in Appveyor / NUnit:
+                // http://help.appveyor.com/discussions/problems/1625-nunit-not-picking-up-net-framework-version
+                // http://stackoverflow.com/questions/27019061/forcing-nunit-console-runner-to-use-clr-4-5
                 string expectedNet35 = @"<a href=""http://www.codeplex.com/?url=%3C!--%5Bif%20gte%20IE%204%5D%3E%3CSCRIPT%3Ealert('XSS');%3C/SCRIPT%3E%3C!%5Bendif%5D--%3E"">XSS</a>";
 
 
@@ -1510,14 +1442,13 @@ S
         }
 
         /// <summary>
-        /// A test for Div with Downlevel-Hidden block xss
+        /// A test for Div with Downlevel-Hidden block XSS
         /// </summary>
         [Fact]
-        public void DivDownlevelHiddenBlockXSSTest()
+        public void DivDownlevelHiddenBlockXssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<Div style=\"background-color: http://www.codeplex.com?url=<!--[if gte IE 4]><SCRIPT>alert('XSS');</SCRIPT><![endif]-->\">";
@@ -1529,15 +1460,14 @@ S
         }
 
         /// <summary>
-        /// A test for AnchorTag with Html Quotes Encapsulation 1 xss
+        /// A test for Anchor tag with Html Quotes Encapsulation 1 XSS
         /// Example <!-- <A HREF="http://www.codeplex.com?url=<SCRIPT a=">" SRC="http://ha.ckers.org/xss.js"></SCRIPT>">XSS</A> -->
         /// </summary>
         [Fact]
-        public void AnchorTagHtmlQuotesEncapsulation1XSSTest()
+        public void AnchorTagHtmlQuotesEncapsulation1XssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<A HREF=\"http://www.codeplex.com?url=<SCRIPT a=\">\" SRC=\"http://ha.ckers.org/xss.js\"></SCRIPT>\">XSS</A>";
@@ -1549,15 +1479,14 @@ S
         }
 
         /// <summary>
-        /// A test for Div with Html Quotes Encapsulation 1 xss
+        /// A test for Div with Html Quotes Encapsulation 1 XSS
         /// Example <!-- <Div style="background-color: http://www.codeplex.com?url=<SCRIPT a=">" SRC="http://ha.ckers.org/xss.js"></SCRIPT>"> -->
         /// </summary>
         [Fact]
-        public void DivHtmlQuotesEncapsulation1XSSTest()
+        public void DivHtmlQuotesEncapsulation1XssTest()
         {
             // Arrange
             var sanitizer = Sanitizer;
-
 
             // Act
             string htmlFragment = "<Div style=\"background-color: http://www.codeplex.com?url=<SCRIPT a=\">\" SRC=\"http://ha.ckers.org/xss.js\"></SCRIPT>\">";
@@ -1714,6 +1643,7 @@ S
             var html = @"<bla>Hallo</bla>";
             var actual = sanitizer.Sanitize(html);
             var expected = "";
+
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -1728,6 +1658,7 @@ S
             var html = @"<div bla=""test"">Test</div>";
             var actual = sanitizer.Sanitize(html);
             var expected = @"<div>Test</div>";
+
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -1766,6 +1697,7 @@ S
             var html = @"<div style=""margin: 8px; bla: 1px"">test</div>";
             var actual = sanitizer.Sanitize(html);
             var expected = @"<div style=""margin: 8px"">test</div>";
+
             Assert.Equal(expected, actual, ignoreCase: true);
         }
 
@@ -1794,6 +1726,7 @@ S
         public void SanitizeUnchangedTest()
         {
             var sanitizer = Sanitizer;
+
             var html = @"<a href=""#"">fo<br />o</a>";
             Assert.Equal(@"<a href=""#"">fo<br>o</a>", sanitizer.Sanitize(html), ignoreCase: true);
 
@@ -1805,6 +1738,7 @@ S
         public void SanitizeEscapeTextTest()
         {
             var sanitizer = Sanitizer;
+
             var html = @"<a href=""#"">fo&amp;</a>";
             Assert.Equal(@"<a href=""#"">fo&amp;</a>", sanitizer.Sanitize(html), ignoreCase: true);
 
@@ -1891,7 +1825,7 @@ S
             html = @"<DIV STYLE='background-image: url(javascript:alert(""foo""));color: #fff'>";
             Assert.Equal(@"<div style=""color: rgba(255, 255, 255, 1)""></div>", sanitizer.Sanitize(html), ignoreCase: true);
 
-            // Inline style with url() using javascript: scheme, using unicode
+            // Inline style with url() using javascript: scheme, using Unicode
             // escapes
             html = @"<DIV STYLE='background-image: \75rl(javascript:alert(""foo""))'>";
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
@@ -2136,6 +2070,8 @@ rl(javascript:alert(""foo""))'>";
                 AllowDataAttributes = true
             };
             var html = @"<div data-test1=""value x""></div>";
+            
+            // Assert
             Assert.Equal(html, sanitizer.Sanitize(html), ignoreCase: true);
         }
 
@@ -2147,6 +2083,8 @@ rl(javascript:alert(""foo""))'>";
                 AllowDataAttributes = true
             };
             var html = @"<div DAta-test1=""value x""></div>";
+            
+            // Assert
             Assert.Equal(html, sanitizer.Sanitize(html), ignoreCase: true);
         }
 
@@ -2158,6 +2096,8 @@ rl(javascript:alert(""foo""))'>";
                 AllowDataAttributes = false
             };
             var html = @"<div data-test1=""value x""></div>";
+            
+            // Assert
             Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
 
@@ -2166,6 +2106,8 @@ rl(javascript:alert(""foo""))'>";
         {
             var sanitizer = Sanitizer;
             var html = @"<div>Hallo <p><b>Bold<br>Ballo";
+            
+            // Assert
             Assert.Equal(@"<div>Hallo <p><b>Bold<br>Ballo</b></p></div>", sanitizer.Sanitize(html), ignoreCase: true);
         }
 
@@ -2185,6 +2127,8 @@ rl(javascript:alert(""foo""))'>";
             };
             var html = @"<div>Hallo</div>";
             var sanitized = sanitizer.Sanitize(html);
+            
+            // Assert
             Assert.Equal(@"<div class=""test"">Hallo<b>Test</b></div>", sanitized, ignoreCase: true);
         }
 
@@ -2204,6 +2148,8 @@ rl(javascript:alert(""foo""))'>";
             };
             var html = @"<html><head></head><body><div>Hallo</div></body></html>";
             var sanitized = sanitizer.SanitizeDocument(html);
+            
+            // Assert
             Assert.Equal(@"<html><head></head><body><div class=""test"">Hallo<b>Test</b></div></body></html>", sanitized, ignoreCase: true);
         }
 
@@ -2220,6 +2166,8 @@ rl(javascript:alert(""foo""))'>";
 
             var html = @"<div>Hallo</div>";
             var sanitized = sanitizer.Sanitize(html);
+            
+            // Assert
             Assert.Equal(@"<div>Hallo</div><p>World</p>", sanitized, ignoreCase: true);
         }
 
@@ -2241,6 +2189,8 @@ rl(javascript:alert(""foo""))'>";
                 }
             };
             var html = @"<div>Click here: http://example.com/.</div>";
+            
+            // Assert
             Assert.Equal(@"<div>Click here: <a href=""http://example.com/"">http://example.com/</a>.</div>", sanitizer.Sanitize(html), ignoreCase: true);
             Assert.Equal(@"Check out <a href=""https://www.google.com"">https://www.google.com</a>.", sanitizer.Sanitize("Check out https://www.google.com."), ignoreCase: true);
         }
@@ -2384,6 +2334,7 @@ rl(javascript:alert(""foo""))'>";
 
             s.Sanitize("<span>just any content</span>");
 
+            // Assert
             Assert.Equal(RemoveReason.NotAllowedTag, actual);
         }
 
@@ -2402,6 +2353,7 @@ rl(javascript:alert(""foo""))'>";
 
             s.Sanitize("<a href=\"http://www.example.com\">just any content</a>");
 
+            // Assert
             Assert.Equal(RemoveReason.NotAllowedAttribute, actual);
         }
 
@@ -2421,6 +2373,7 @@ rl(javascript:alert(""foo""))'>";
 
             s.Sanitize("<a style=\"padding:5px\">just any content</a>");
 
+            // Assert
             Assert.Equal(RemoveReason.NotAllowedStyle, actual);
         }
 
@@ -2439,6 +2392,7 @@ rl(javascript:alert(""foo""))'>";
 
             s.Sanitize("<a id=\"anyId&{\">just any content</a>");
 
+            // Assert
             Assert.Equal(RemoveReason.NotAllowedValue, actual);
         }
 
@@ -2461,6 +2415,7 @@ rl(javascript:alert(""foo""))'>";
 
             s.Sanitize("<a style=\"margin-top:17px\">just any content</a>");
 
+            // Assert
             Assert.Equal(RemoveReason.NotAllowedValue, actual);
         }
 
@@ -2480,6 +2435,7 @@ rl(javascript:alert(""foo""))'>";
 
             s.Sanitize("<a href=\"javascript:(alert('xss'))\">just any content</a>");
 
+            // Assert
             Assert.Equal(RemoveReason.NotAllowedUrlValue, actual);
         }
 
@@ -2499,6 +2455,7 @@ rl(javascript:alert(""foo""))'>";
 
             var h = s.Sanitize("<a style=\"background-image:url(javascript:alert('xss'))\">just any content</a>");
 
+            // Assert
             Assert.Equal(RemoveReason.NotAllowedUrlValue, actual);
         }
 
@@ -2512,6 +2469,8 @@ rl(javascript:alert(""foo""))'>";
                 actual = args.Reason;
             };
             s.Sanitize("<script>alert('Hello world!')</script>");
+
+            // Assert
             Assert.Equal(RemoveReason.NotAllowedTag, actual);
         }
 
@@ -2525,6 +2484,8 @@ rl(javascript:alert(""foo""))'>";
                 actual = args.Reason;
             };
             s.Sanitize("<style> body {background-color:lightgrey;}</style>");
+
+            // Assert
             Assert.Equal(RemoveReason.NotAllowedTag, actual);
         }
 
@@ -2538,6 +2499,8 @@ rl(javascript:alert(""foo""))'>";
                 actual = args.Reason;
             };
             s.Sanitize("<span>Hi</span><script>alert('Hello world!')</script>");
+
+            // Assert
             Assert.Equal(RemoveReason.NotAllowedTag, actual);
         }
 
@@ -2556,6 +2519,7 @@ rl(javascript:alert(""foo""))'>";
 
             s.Sanitize(@"<div class=""good bad"">Test</div>");
 
+            // Assert
             Assert.Equal("bad", removedClass);
             Assert.Equal(RemoveReason.NotAllowedCssClass, reason);
         }
@@ -2575,6 +2539,7 @@ rl(javascript:alert(""foo""))'>";
 
             s.Sanitize(@"<div class=""good bad"">Test</div>");
 
+            // Assert
             Assert.Equal("class", attributeName);
             Assert.Equal(RemoveReason.ClassAttributeEmpty, reason);
         }
@@ -2588,6 +2553,7 @@ rl(javascript:alert(""foo""))'>";
 
             var actual = s.SanitizeDocument(html);
 
+            // Assert
             Assert.Equal(html, actual);
         }
 
@@ -2599,6 +2565,7 @@ rl(javascript:alert(""foo""))'>";
 
             var actual = s.SanitizeDocument(html);
 
+            // Assert
             Assert.Equal("<html><head></head><body><div>Test</div></body></html>", actual);
         }
 
@@ -2610,6 +2577,7 @@ rl(javascript:alert(""foo""))'>";
 
             var actual = s.Sanitize(html);
 
+            // Assert
             Assert.Equal("<div>Test</div>", actual);
         }
 
@@ -2622,6 +2590,7 @@ rl(javascript:alert(""foo""))'>";
 
             var actual = s.SanitizeDocument(html);
 
+            // Assert
             Assert.Equal("<html><head><style>body { background-color: rgba(255, 255, 255, 1) }</style></head><body><div>Test</div></body></html>", actual);
         }
 
@@ -2792,6 +2761,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             var actual = s.Sanitize(html);
 
+            // Assert
             Assert.Equal(html, actual);
         }
 
@@ -2803,6 +2773,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             var actual = s.Sanitize(html);
 
+            // Assert
             Assert.Equal("<p>Test</p>", actual);
         }
 
@@ -2816,6 +2787,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             var actual = s.Sanitize(html);
 
+            // Assert
             Assert.Equal("<p>abc</p>", actual);
         }
 
@@ -2829,6 +2801,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             var actual = s.Sanitize(html);
 
+            // Assert
             Assert.Equal("<p>xyz</p>", actual);
         }
 
@@ -2842,6 +2815,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             var actual = s.Sanitize(html);
 
+            // Assert
             Assert.Equal(@"<input type=""text"" name=""my_name"" value=""&lt;insert name&gt;"">", actual);
         }
 
@@ -2864,6 +2838,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var html = @"<html><head><style>@font-face { font-family: FrutigerLTStd; src: url(""https://example.com/FrutigerLTStd-Light.otf"") format(""opentype"") }</style></head><body></body></html>";
             var actual = s.SanitizeDocument(html);
 
+            // Assert
             Assert.Equal(html, actual);
         }
 
@@ -2933,6 +2908,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var html = @"<div class=""good bad"">Test</div>";
             var actual = sanitizer.Sanitize(html);
 
+            // Assert
             Assert.Equal(@"<div class=""good bad"">Test</div>", actual);
         }
 
@@ -2944,6 +2920,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var html = @"<div class=""good bad"">Test</div>";
             var actual = sanitizer.Sanitize(html);
 
+            // Assert
             Assert.Equal(@"<div class=""good"">Test</div>", actual);
         }
 
@@ -2963,6 +2940,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var html = @"<div class=""good bad"">Test</div>";
             var actual = sanitizer.Sanitize(html);
 
+            // Assert
             Assert.Equal(@"<div class=""good"">Test</div>", actual);
         }
 
@@ -2974,6 +2952,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var html = @"<div class=""good bad"">Test</div>";
             var actual = sanitizer.Sanitize(html);
 
+            // Assert
             Assert.Equal(@"<div>Test</div>", actual);
         }
 
@@ -2994,6 +2973,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var html = @"Test1 <div>Test2 <script>Test3</script> <b>Test4</b></div>";
             var actual = sanitizer.Sanitize(html);
 
+            // Assert
             Assert.Equal("Test1 Test2 Test3 <b>Test4</b>", actual);
         }
 
@@ -3006,6 +2986,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var html = @"Test1 <div>Test2 <script>Test3</script> <b>Test4</b></div>";
             var actual = sanitizer.Sanitize(html);
 
+            // Assert
             Assert.Equal("Test1 Test2 Test3 <b>Test4</b>", actual);
         }
 
@@ -3025,6 +3006,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             var actual = sanitizer.Sanitize(html);
 
+            // Assert
             Assert.Equal("Test1Test2", actual);
         }
 
@@ -3038,6 +3020,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             var actual = sanitizer.Sanitize(html);
 
+            // Assert
             Assert.Equal("<!-- good comment -->", actual);
         }
 
@@ -3051,6 +3034,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             var actual = sanitizer.Sanitize(html);
 
+            // Assert
             Assert.Equal(html, actual, ignoreCase: true);
         }
 
@@ -3064,6 +3048,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             var actual = sanitizer.Sanitize(html);
 
+            // Assert
             Assert.Equal(html, actual);
         }
 
@@ -3079,6 +3064,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             var actual = sanitizer.Sanitize(html);
 
+            // Assert
             Assert.Equal("<svg>123</svg>", actual);
         }
 
@@ -3094,6 +3080,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             var actual = sanitizer.Sanitize(html);
 
+            // Assert
             Assert.Equal(html, actual);
         }
 
@@ -3109,6 +3096,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             var actual = sanitizer.Sanitize(html);
 
+            // Assert
             Assert.Equal(@"<img src=""https://www.example.com/test.png"">", actual);
         }
 
@@ -3128,6 +3116,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             using var stream = new MemoryStream(Encoding.GetEncoding("iso-8859-1").GetBytes(html));
             var actual = sanitizer.SanitizeDocument(stream);
 
+            // Assert
             Assert.Equal(html, actual);
         }
 
@@ -3141,6 +3130,8 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             sanitizer.RemovingTag += (s, e) => anyNodeRemoved = true;
             var html = @"<html><frameset><frame src=""javascript:alert(1)""></frame></frameset></html>";
             var actual = sanitizer.SanitizeDocument(html);
+
+            // Assert
             Assert.True(anyNodeRemoved);
             Assert.Equal("<html><head></head></html>", actual);
         }
@@ -3155,6 +3146,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             var actual = sanitizer.SanitizeDocument(html);
 
+            // Assert
             Assert.Equal("<html><head></head><body></body></html>", actual);
         }
 
@@ -3174,6 +3166,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var document = parser.ParseDocument(html);
             var returnedDocument = sanitizer.SanitizeDom(document);
 
+            // Assert
             Assert.Equal("<html><head></head><body><div>hi</div></body></html>", returnedDocument.ToHtml());
         }
 
@@ -3193,6 +3186,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var document = parser.ParseDocument(html);
             var returnedDocument = sanitizer.SanitizeDom(document, document.Body);
 
+            // Assert
             Assert.Equal("<html><head></head><body><div>hi</div></body></html>", returnedDocument.ToHtml());
         }
 
@@ -3206,6 +3200,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var html = "aaabc<style>x[x='\\3c /style>\\3c img src onerror=alert(1)>']{}</style>";
             var sanitized = sanitizer.Sanitize(html, "http://www.example.com");
 
+            // Assert
             Assert.Equal("aaabc<style>x[x=\"\\3c/style>\\3cimg src onerror=alert(1)>\"] { }</style>", sanitized);
         }
 
@@ -3219,6 +3214,8 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             sanitizer.RemovingStyle += (s, e) => removingStyleTriggered = true;
             var html = @"<section style='background: none'></section>";
             var sanitized = sanitizer.Sanitize(html);
+
+            // Assert
             Assert.Equal("<section></section>", sanitized);
             Assert.True(removingStyleTriggered);
         }
@@ -3229,6 +3226,8 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             // see https://github.com/mganss/HtmlSanitizer/issues/263
             var html = @"<div style=""width: calc((600px - 300px) / 2)"">Test</div>";
             var sanitized = Sanitizer.Sanitize(html);
+
+            // Assert
             Assert.Equal(@"<div style=""width: calc((600px - 300px) / 2)"">Test</div>", sanitized);
         }
 
@@ -3238,6 +3237,8 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             // see https://github.com/mganss/HtmlSanitizer/issues/272
             var html = @"<span style='grid-template-areas: none; grid-template-columns: none; grid-template-rows: none'>";
             var sanitized = Sanitizer.Sanitize(html);
+
+            // Assert
             Assert.Equal("<span style=\"grid-template: none\"></span>", sanitized);
         }
 
@@ -3248,6 +3249,8 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var html = @"<div>This is <p>Paragraph</p></div>";
             var s = new HtmlSanitizer { HtmlParserFactory = () => new HtmlParser(new HtmlParserOptions { IsStrictMode = true }) };
             var sanitized = s.Sanitize(html);
+
+            // Assert
             Assert.Equal("<div>This is <p>Paragraph</p></div>", sanitized);
         }
 
@@ -3257,6 +3260,8 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             // see https://github.com/mganss/HtmlSanitizer/issues/307
             var html = @"<div>This is <p>Paragraph/div>";
             var s = new HtmlSanitizer { HtmlParserFactory = () => new HtmlParser(new HtmlParserOptions { IsStrictMode = true }) };
+
+            // Assert
             Assert.Throws<HtmlParseException>(() => s.Sanitize(html));
         }
 
@@ -3268,6 +3273,8 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var empty = Array.Empty<string>();
             var sanitizer = new HtmlSanitizer(empty, empty, empty, empty, empty);
             var sanitized = sanitizer.Sanitize(html);
+
+            // Assert
             Assert.Equal(html, sanitized);
         }
 
@@ -3280,6 +3287,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             sanitizer.AllowedTags.Add("style");
             var sanitized = sanitizer.SanitizeDocument(html);
 
+            // Assert
             Assert.Equal(html, sanitized);
         }
 
@@ -3328,6 +3336,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             var sanitized = sanitizer.Sanitize(html);
 
+            // Assert
             Assert.Equal(html, sanitized);
         }
 
@@ -3350,6 +3359,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             sanitized = sanitizer.Sanitize(html);
 
+            // Assert
             Assert.Equal(@"<p style=""color: rgba(0, 0, 0, 1)"">Text</p>", sanitized);
         }
         
