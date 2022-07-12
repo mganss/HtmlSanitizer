@@ -105,4 +105,4 @@ On the other hand, although some broken HTML is fixed by the parser, the output 
 License
 -------
 
-[MIT X11](https://en.wikipedia.org/wiki/MIT_License)
+[MIT License](https://en.wikipedia.org/wiki/MIT_License)
