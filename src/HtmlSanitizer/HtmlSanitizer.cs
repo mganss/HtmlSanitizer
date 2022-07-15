@@ -67,7 +67,23 @@ namespace Ganss.XSS
         private static readonly HtmlParser defaultHtmlParser = new(new HtmlParserOptions(), BrowsingContext.New(defaultConfiguration));
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class.
+        /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class
+        /// with the default options.
+        /// </summary>
+        public HtmlSanitizer()
+        {
+            AllowedTags = HtmlSanitizerDefaults.DefaultAllowedTags;
+            AllowedSchemes = HtmlSanitizerDefaults.DefaultAllowedSchemes;
+            AllowedAttributes = HtmlSanitizerDefaults.DefaultAllowedAttributes;
+            UriAttributes = HtmlSanitizerDefaults.DefaultUriAttributes;
+            AllowedCssProperties = HtmlSanitizerDefaults.DefaultAllowedCssProperties;
+            AllowedAtRules = HtmlSanitizerDefaults.DefaultAllowedAtRules;
+            AllowedClasses = HtmlSanitizerDefaults.DefaultAllowedClasses;
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class
+        /// with the given options.
         /// </summary>
         /// <param name="options">Options to control the sanitizing.</param>
         public HtmlSanitizer(HtmlSanitizerOptions options)
@@ -79,40 +95,6 @@ namespace Ganss.XSS
             AllowedClasses = new HashSet<string>(options.AllowedCssClasses, StringComparer.OrdinalIgnoreCase);
             AllowedCssProperties = new HashSet<string>(options.AllowedCssProperties, StringComparer.OrdinalIgnoreCase);
             AllowedAtRules = new HashSet<CssRuleType>(options.AllowedAtRules);
-        }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class.
-        /// </summary>
-        /// <param name="allowedTags">The allowed tag names such as "a" and "div". When <c>null</c>, uses <see cref="HtmlSanitizerDefaults.DefaultAllowedTags"/></param>
-        /// <param name="allowedSchemes">The allowed URI schemes such as "http" and "https". When <c>null</c>, uses <see cref="HtmlSanitizerDefaults.DefaultAllowedSchemes"/></param>
-        /// <param name="allowedAttributes">The allowed HTML attributes such as "href" and "alt". When <c>null</c>, uses <see cref="HtmlSanitizerDefaults.DefaultAllowedAttributes"/></param>
-        /// <param name="uriAttributes">The HTML attributes that can contain a URI such as "href". When <c>null</c>, uses <see cref="HtmlSanitizerDefaults.DefaultUriAttributes"/></param>
-        /// <param name="allowedCssProperties">The allowed CSS properties such as "font" and "margin". When <c>null</c>, uses <see cref="HtmlSanitizerDefaults.DefaultAllowedCssProperties"/></param>
-        public HtmlSanitizer(IEnumerable<string>? allowedTags = null, IEnumerable<string>? allowedSchemes = null,
-            IEnumerable<string>? allowedAttributes = null, IEnumerable<string>? uriAttributes = null, IEnumerable<string>? allowedCssProperties = null)
-        {
-            // if all arguments are empty, treat the same as if all nulls (special case to accommodate dependency injection, see #220 and #314).
-            if (allowedTags != null && !allowedTags.Any()
-                && allowedSchemes != null && !allowedSchemes.Any()
-                && allowedAttributes != null && !allowedAttributes.Any()
-                && uriAttributes != null && !uriAttributes.Any()
-                && allowedCssProperties != null && !allowedCssProperties.Any())
-            {
-                allowedTags = null;
-                allowedSchemes = null;
-                allowedAttributes = null;
-                uriAttributes = null;
-                allowedCssProperties = null;
-            }
-
-            AllowedTags = new HashSet<string>(allowedTags ?? HtmlSanitizerDefaults.DefaultAllowedTags, StringComparer.OrdinalIgnoreCase);
-            AllowedSchemes = new HashSet<string>(allowedSchemes ?? HtmlSanitizerDefaults.DefaultAllowedSchemes, StringComparer.OrdinalIgnoreCase);
-            AllowedAttributes = new HashSet<string>(allowedAttributes ?? HtmlSanitizerDefaults.DefaultAllowedAttributes, StringComparer.OrdinalIgnoreCase);
-            UriAttributes = new HashSet<string>(uriAttributes ?? HtmlSanitizerDefaults.DefaultUriAttributes, StringComparer.OrdinalIgnoreCase);
-            AllowedCssProperties = new HashSet<string>(allowedCssProperties ?? HtmlSanitizerDefaults.DefaultAllowedCssProperties, StringComparer.OrdinalIgnoreCase);
-            AllowedAtRules = new HashSet<CssRuleType>(HtmlSanitizerDefaults.DefaultAllowedAtRules);
-            AllowedClasses = new HashSet<string>(HtmlSanitizerDefaults.DefaultAllowedClasses, StringComparer.OrdinalIgnoreCase);
         }
 
         /// <summary>
