@@ -3444,21 +3444,5 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var expected = "<strong>Lorem ipsum</strong>";
             Assert.Equal(expected, actual);
         }
-   
-        [Fact]
-        public void WithPresetOptions()
-        {
-            // Arrange
-            var options = new HtmlSanitizerOptions(HtmlSanitizerPreset.Default);
-            var sanitizer = new HtmlSanitizer(options);
-
-            // Act
-            var htmlFragment = "<h1>Lorem ipsum</h1>";
-            var actual = sanitizer.Sanitize(htmlFragment);
-
-            // Assert
-            var expected = "<h1>Lorem ipsum</h1>";
-            Assert.Equal(expected, actual);
-        }
     }
 }
