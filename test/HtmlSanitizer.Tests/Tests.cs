@@ -2323,10 +2323,13 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void RemoveEventForNotAllowedTag()
         {
-            var allowedTags = new[] { "a" };
+            var options = new HtmlSanitizerOptions
+            {
+                AllowedTags = new HashSet<string> { "a" },
+            };
             RemoveReason? actual = null;
 
-            var s = new HtmlSanitizer(allowedTags);
+            var s = new HtmlSanitizer(options);
             s.RemovingTag += (sender, args) =>
             {
                 actual = args.Reason;
@@ -2341,11 +2344,16 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void RemoveEventForNotAllowedAttribute()
         {
+            var options = new HtmlSanitizerOptions
+            {
+                AllowedTags = new HashSet<string> { "a" },
+                AllowedAttributes = new HashSet<string> { "id" }
+            };
             var allowedTags = new[] { "a" };
             var allowedAttributes = new[] { "id" };
             RemoveReason? actual = null;
 
-            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes);
+            var s = new HtmlSanitizer(options);
             s.RemovingAttribute += (sender, args) =>
             {
                 actual = args.Reason;
@@ -2360,12 +2368,15 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void RemoveEventForNotAllowedStyle()
         {
-            var allowedTags = new[] { "a" };
-            var allowedAttributes = new[] { "style" };
-            var allowedStyles = new[] { "margin" };
+            var options = new HtmlSanitizerOptions
+            {
+                AllowedTags = new HashSet<string> { "a" },
+                AllowedAttributes = new HashSet<string> { "style" },
+                AllowedCssProperties = new HashSet<string> { "margin" }
+            };
             RemoveReason? actual = null;
 
-            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, allowedCssProperties: allowedStyles);
+            var s = new HtmlSanitizer(options);
             s.RemovingStyle += (sender, args) =>
             {
                 actual = args.Reason;
@@ -2380,11 +2391,14 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void RemoveEventForNotAllowedValueAtAttribute()
         {
-            var allowedTags = new[] { "a" };
-            var allowedAttributes = new[] { "id" };
+            var options = new HtmlSanitizerOptions
+            {
+                AllowedTags = new HashSet<string> { "a" },
+                AllowedAttributes = new HashSet<string> { "id" }
+            };
             RemoveReason? actual = null;
 
-            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes);
+            var s = new HtmlSanitizer(options);
             s.RemovingAttribute += (sender, args) =>
             {
                 actual = args.Reason;
@@ -2399,12 +2413,15 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void RemoveEventForNotAllowedValueAtStyle()
         {
-            var allowedTags = new[] { "a" };
-            var allowedAttributes = new[] { "style" };
-            var allowedStyles = new[] { "margin-top" };
+            var options = new HtmlSanitizerOptions
+            {
+                AllowedTags = new HashSet<string> { "a" },
+                AllowedAttributes = new HashSet<string> { "style" },
+                AllowedCssProperties = new HashSet<string> { "margin-top" }
+            };
             RemoveReason? actual = null;
 
-            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, allowedCssProperties: allowedStyles)
+            var s = new HtmlSanitizer(options)
             {
                 DisallowCssPropertyValue = new Regex(@"\d+.*")
             };
@@ -2422,12 +2439,15 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void RemoveEventForNotAllowedUrlAtUriAttribute()
         {
-            var allowedTags = new[] { "a" };
-            var allowedAttributes = new[] { "href" };
-            var uriAttributes = new[] { "href" };
+            var options = new HtmlSanitizerOptions
+            {
+                AllowedTags = new HashSet<string> { "a" },
+                AllowedAttributes = new HashSet<string> { "href" },
+                UriAttributes = new HashSet<string> { "href" }
+            };
             RemoveReason? actual = null;
 
-            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, uriAttributes: uriAttributes);
+            var s = new HtmlSanitizer(options);
             s.RemovingAttribute += (sender, args) =>
             {
                 actual = args.Reason;
@@ -2442,12 +2462,15 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void RemoveEventForNotAllowedUrlAtStyle()
         {
-            var allowedTags = new[] { "a" };
-            var allowedAttributes = new[] { "style" };
-            var allowedStyles = new[] { "background-image" };
+            var options = new HtmlSanitizerOptions
+            {
+                AllowedTags = new HashSet<string> { "a" },
+                AllowedAttributes = new HashSet<string> { "style" },
+                AllowedCssProperties = new HashSet<string> { "background-image" }
+            };
             RemoveReason? actual = null;
 
-            var s = new HtmlSanitizer(allowedTags: allowedTags, allowedAttributes: allowedAttributes, allowedCssProperties: allowedStyles);
+            var s = new HtmlSanitizer(options);
             s.RemovingStyle += (sender, args) =>
             {
                 actual = args.Reason;
@@ -2507,10 +2530,15 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void RemoveEventForNotAllowedCssClass()
         {
+            var options = new HtmlSanitizerOptions
+            {
+                AllowedAttributes = new HashSet<string> { "class" },
+                AllowedCssClasses  = new HashSet<string> { "good" },
+            };
             RemoveReason? reason = null;
             string removedClass = null;
 
-            var s = new HtmlSanitizer(allowedAttributes: new[] { "class" }) { AllowedClasses = { "good" } };
+            var s = new HtmlSanitizer(options);
             s.RemovingCssClass += (sender, args) =>
             {
                 reason = args.Reason;
@@ -2527,10 +2555,15 @@ rl(javascript:alert(""foo""))'>";
         [Fact]
         public void RemoveEventForEmptyClassAttributeAfterClassRemoval()
         {
+            var options = new HtmlSanitizerOptions
+            {
+                AllowedAttributes = new HashSet<string> { "class" },
+                AllowedCssClasses  = new HashSet<string> { "other" },
+            };
             RemoveReason? reason = null;
             string attributeName = null;
 
-            var s = new HtmlSanitizer(allowedAttributes: new[] { "class" }) { AllowedClasses = { "other" } };
+            var s = new HtmlSanitizer(options);
             s.RemovingAttribute += (sender, args) =>
             {
                 attributeName = args.Attribute.Name;
@@ -2903,7 +2936,11 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         [Fact]
         public void AllowAllClassesByDefaultTest()
         {
-            var sanitizer = new HtmlSanitizer(allowedAttributes: new[] { "class" });
+            var options = new HtmlSanitizerOptions
+            {
+                AllowedAttributes = new HashSet<string> { "class" },
+            };
+            var sanitizer = new HtmlSanitizer(options);
 
             var html = @"<div class=""good bad"">Test</div>";
             var actual = sanitizer.Sanitize(html);
@@ -2915,7 +2952,12 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         [Fact]
         public void AllowClassesTest()
         {
-            var sanitizer = new HtmlSanitizer(allowedAttributes: new[] { "class" }) { AllowedClasses = { "good" } };
+            var options = new HtmlSanitizerOptions
+            {
+                AllowedAttributes = new HashSet<string> { "class" },
+                AllowedCssClasses = new HashSet<string> { "good" },
+            };
+            var sanitizer = new HtmlSanitizer(options);
 
             var html = @"<div class=""good bad"">Test</div>";
             var actual = sanitizer.Sanitize(html);
@@ -2947,7 +2989,12 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         [Fact]
         public void RemoveClassAttributeIfEmptyTest()
         {
-            var sanitizer = new HtmlSanitizer(allowedAttributes: new[] { "class" }) { AllowedClasses = { "other" } };
+            var options = new HtmlSanitizerOptions
+            {
+                AllowedAttributes = new HashSet<string> { "class" },
+                AllowedCssClasses  = new HashSet<string> { "other" },
+            };
+            var sanitizer = new HtmlSanitizer(options);
 
             var html = @"<div class=""good bad"">Test</div>";
             var actual = sanitizer.Sanitize(html);
@@ -3268,10 +3315,20 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         [Fact]
         public void ConstructorTest()
         {
+            var options = new HtmlSanitizerOptions
+            {
+                AllowedCssClasses = new HashSet<string>(),
+                AllowedSchemes = new HashSet<string>(),
+                AllowedTags = new HashSet<string>(),
+                AllowedAttributes = new HashSet<string>(),
+                AllowedCssProperties = new HashSet<string>(),
+                UriAttributes = new HashSet<string>(),
+            };
+
             // see https://github.com/mganss/HtmlSanitizer/issues/220
             var html = @"<div>test</div>";
             var empty = Array.Empty<string>();
-            var sanitizer = new HtmlSanitizer(empty, empty, empty, empty, empty);
+            var sanitizer = new HtmlSanitizer(options);
             var sanitized = sanitizer.Sanitize(html);
 
             // Assert
@@ -3385,6 +3442,22 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             // Assert
             var expected = "<strong>Lorem ipsum</strong>";
+            Assert.Equal(expected, actual);
+        }
+   
+        [Fact]
+        public void WithPresetOptions()
+        {
+            // Arrange
+            var options = new HtmlSanitizerOptions(HtmlSanitizerPreset.Default);
+            var sanitizer = new HtmlSanitizer(options);
+
+            // Act
+            var htmlFragment = "<h1>Lorem ipsum</h1>";
+            var actual = sanitizer.Sanitize(htmlFragment);
+
+            // Assert
+            var expected = "<h1>Lorem ipsum</h1>";
             Assert.Equal(expected, actual);
         }
     }
