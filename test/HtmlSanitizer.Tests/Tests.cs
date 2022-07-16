@@ -2532,6 +2532,7 @@ rl(javascript:alert(""foo""))'>";
         {
             var options = new HtmlSanitizerOptions
             {
+                AllowedTags = new HashSet<string> { "div" },
                 AllowedAttributes = new HashSet<string> { "class" },
                 AllowedCssClasses  = new HashSet<string> { "good" },
             };
@@ -2557,6 +2558,7 @@ rl(javascript:alert(""foo""))'>";
         {
             var options = new HtmlSanitizerOptions
             {
+                AllowedTags = new HashSet<string> { "div" },
                 AllowedAttributes = new HashSet<string> { "class" },
                 AllowedCssClasses  = new HashSet<string> { "other" },
             };
@@ -2938,6 +2940,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             var options = new HtmlSanitizerOptions
             {
+                AllowedTags = new HashSet<string> { "div" },
                 AllowedAttributes = new HashSet<string> { "class" },
             };
             var sanitizer = new HtmlSanitizer(options);
@@ -2954,6 +2957,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             var options = new HtmlSanitizerOptions
             {
+                AllowedTags = new HashSet<string> { "div" },
                 AllowedAttributes = new HashSet<string> { "class" },
                 AllowedCssClasses = new HashSet<string> { "good" },
             };
@@ -2991,6 +2995,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             var options = new HtmlSanitizerOptions
             {
+                AllowedTags = new HashSet<string> { "div" },
                 AllowedAttributes = new HashSet<string> { "class" },
                 AllowedCssClasses  = new HashSet<string> { "other" },
             };
@@ -3315,20 +3320,9 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         [Fact]
         public void ConstructorTest()
         {
-            var options = new HtmlSanitizerOptions
-            {
-                AllowedCssClasses = new HashSet<string>(),
-                AllowedSchemes = new HashSet<string>(),
-                AllowedTags = new HashSet<string>(),
-                AllowedAttributes = new HashSet<string>(),
-                AllowedCssProperties = new HashSet<string>(),
-                UriAttributes = new HashSet<string>(),
-            };
-
             // see https://github.com/mganss/HtmlSanitizer/issues/220
             var html = @"<div>test</div>";
-            var empty = Array.Empty<string>();
-            var sanitizer = new HtmlSanitizer(options);
+            var sanitizer = new HtmlSanitizer();
             var sanitized = sanitizer.Sanitize(html);
 
             // Assert

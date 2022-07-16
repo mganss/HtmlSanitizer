@@ -72,13 +72,13 @@ namespace Ganss.XSS
         /// </summary>
         public HtmlSanitizer()
         {
-            AllowedTags = HtmlSanitizerDefaults.DefaultAllowedTags;
-            AllowedSchemes = HtmlSanitizerDefaults.DefaultAllowedSchemes;
-            AllowedAttributes = HtmlSanitizerDefaults.DefaultAllowedAttributes;
-            UriAttributes = HtmlSanitizerDefaults.DefaultUriAttributes;
-            AllowedCssProperties = HtmlSanitizerDefaults.DefaultAllowedCssProperties;
-            AllowedAtRules = HtmlSanitizerDefaults.DefaultAllowedAtRules;
-            AllowedClasses = HtmlSanitizerDefaults.DefaultAllowedClasses;
+            AllowedTags = new HashSet<string>(HtmlSanitizerDefaults.DefaultAllowedTags, StringComparer.OrdinalIgnoreCase);
+            AllowedSchemes = new HashSet<string>(HtmlSanitizerDefaults.DefaultAllowedSchemes, StringComparer.OrdinalIgnoreCase);
+            AllowedAttributes = new HashSet<string>(HtmlSanitizerDefaults.DefaultAllowedAttributes, StringComparer.OrdinalIgnoreCase);
+            UriAttributes = new HashSet<string>(HtmlSanitizerDefaults.DefaultUriAttributes, StringComparer.OrdinalIgnoreCase);
+            AllowedCssProperties = new HashSet<string>(HtmlSanitizerDefaults.DefaultAllowedCssProperties, StringComparer.OrdinalIgnoreCase);
+            AllowedAtRules = new HashSet<CssRuleType>(HtmlSanitizerDefaults.DefaultAllowedAtRules);
+            AllowedClasses = new HashSet<string>(HtmlSanitizerDefaults.DefaultAllowedClasses);
         }
 
         /// <summary>
