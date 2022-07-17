@@ -1,12 +1,4 @@
 using BenchmarkDotNet.Running;
+using Ganss.XSS.Benchmark;
 
-namespace Ganss.XSS.Benchmark
-{
-    public static class Program
-    {
-        public static void Main(string[] args)
-        {
-            BenchmarkSwitcher.FromAssembly(typeof(HtmlSanitizerBenchmark).Assembly).Run(args);
-        }
-    }
-}
+BenchmarkSwitcher.FromAssembly(typeof(HtmlSanitizerBenchmark).Assembly).Run(args);
