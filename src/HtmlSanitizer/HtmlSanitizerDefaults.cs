@@ -1,6 +1,7 @@
 using AngleSharp.Css.Dom;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace Ganss.XSS
 {
@@ -15,7 +16,7 @@ namespace Ganss.XSS
         public static ISet<CssRuleType> DefaultAllowedAtRules { get; } = new HashSet<CssRuleType>()
         {
             CssRuleType.Style, CssRuleType.Namespace
-        };
+        }.ToImmutableHashSet();
 
         /// <summary>
         /// The default allowed URI schemes.
@@ -23,7 +24,7 @@ namespace Ganss.XSS
         public static ISet<string> DefaultAllowedSchemes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "http", "https"
-        };
+        }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// The default allowed HTML tag names.
@@ -53,7 +54,7 @@ namespace Ganss.XSS
             "details", "summary", "menuitem",
             // document elements
             "html", "head", "body"
-        };
+        }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// The default allowed HTML attributes.
@@ -97,7 +98,7 @@ namespace Ganss.XSS
             "dropzone", // Global attribute
             "autocomplete", // <form>, <input>
             "autosave", // <input>
-        };
+        }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// The default URI attributes.
@@ -105,7 +106,7 @@ namespace Ganss.XSS
         public static ISet<string> DefaultUriAttributes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "action", "background", "dynsrc", "href", "lowsrc", "src"
-        };
+        }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// The default allowed CSS properties.
@@ -352,11 +353,12 @@ namespace Ganss.XSS
             "word-wrap",
             "writing-mode",
             "z-index"
-        };
+        }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>
         /// The default allowed CSS classes.
         /// </summary>
-        public static ISet<string> DefaultAllowedClasses { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        public static ISet<string> DefaultAllowedClasses { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            .ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
     }
 }
