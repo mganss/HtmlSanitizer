@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Ganss.XSS
+namespace Ganss.Xss
 {
     /// <summary>
     /// HTML5 markup formatter. Identical to <see cref="HtmlMarkupFormatter"/> except for &lt; and &gt; which are

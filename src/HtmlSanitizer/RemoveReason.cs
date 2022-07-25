@@ -1,4 +1,4 @@
-﻿namespace Ganss.XSS
+﻿namespace Ganss.Xss
 {
     /// <summary>
     /// List of reasons why something was identified to get removed from the HTML.

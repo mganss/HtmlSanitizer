@@ -6,7 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
-namespace Ganss.XSS
+namespace Ganss.Xss
 {
     /// <summary>
     /// Enables an inheriting class to implement an HtmlSanitizer class, which cleans HTML documents and fragments

@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 
-namespace Ganss.XSS
+namespace Ganss.Xss
 {
     /// <summary>
     /// Default options.

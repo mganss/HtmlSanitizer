@@ -2,7 +2,7 @@ using AngleSharp.Css.Dom;
 using System;
 using System.Collections.Generic;
 
-namespace Ganss.XSS
+namespace Ganss.Xss
 {
     /// <summary>
     /// Provides options to be used with <see cref="HtmlSanitizer"/>.
