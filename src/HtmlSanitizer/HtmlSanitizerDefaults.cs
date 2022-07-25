@@ -13,7 +13,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed CSS at-rules.
         /// </summary>
-        public static ISet<CssRuleType> DefaultAllowedAtRules { get; } = new HashSet<CssRuleType>()
+        public static ISet<CssRuleType> AllowedAtRules { get; } = new HashSet<CssRuleType>()
         {
             CssRuleType.Style, CssRuleType.Namespace
         }.ToImmutableHashSet();
@@ -21,7 +21,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed URI schemes.
         /// </summary>
-        public static ISet<string> DefaultAllowedSchemes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        public static ISet<string> AllowedSchemes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "http", "https"
         }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
@@ -29,7 +29,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed HTML tag names.
         /// </summary>
-        public static ISet<string> DefaultAllowedTags { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        public static ISet<string> AllowedTags { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             // https://developer.mozilla.org/en/docs/Web/Guide/HTML/HTML5/HTML5_element_list
             "a", "abbr", "acronym", "address", "area", "b",
@@ -59,7 +59,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed HTML attributes.
         /// </summary>
-        public static ISet<string> DefaultAllowedAttributes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        public static ISet<string> AllowedAttributes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             // https://developer.mozilla.org/en-US/docs/Web/HTML/Attributes
             "abbr", "accept", "accept-charset", "accesskey",
@@ -103,7 +103,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default URI attributes.
         /// </summary>
-        public static ISet<string> DefaultUriAttributes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        public static ISet<string> UriAttributes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             "action", "background", "dynsrc", "href", "lowsrc", "src"
         }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
@@ -111,7 +111,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed CSS properties.
         /// </summary>
-        public static ISet<string> DefaultAllowedCssProperties { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        public static ISet<string> AllowedCssProperties { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         {
             // CSS 3 properties <http://www.w3.org/TR/CSS/#properties>
             "align-content",
@@ -358,7 +358,7 @@ namespace Ganss.XSS
         /// <summary>
         /// The default allowed CSS classes.
         /// </summary>
-        public static ISet<string> DefaultAllowedClasses { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        public static ISet<string> AllowedClasses { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             .ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
     }
 }
