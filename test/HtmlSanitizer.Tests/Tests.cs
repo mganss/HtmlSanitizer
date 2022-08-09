@@ -3442,7 +3442,8 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             + @"style=""background-color: rgba(0, 0, 0, 1)"">Test<img src=""test.png"""
             + @"style=""background-image: url(javascript:alert('xss')); margin: 10px""></div>";
         var sanitized = sanitizer.Sanitize(html, "https://www.example.com");
-        var expected = @"<div style=""background-color: rgba(0, 0, 0, 1)"">Test<img src=""https://www.example.com/test.png"" style=""margin: 10px""></div>";
+        var expected = @"<div style=""background-color: rgba(0, 0, 0, 1)"">"
+            + @"Test<img src=""https://www.example.com/test.png"" style=""margin: 10px""></div>";
         Assert.Equal(expected, sanitized);
     }
 }
