@@ -2065,7 +2065,7 @@ rl(javascript:alert(""foo""))'>";
             AllowDataAttributes = true
         };
         var html = @"<div data-test1=""value x""></div>";
-        
+
         // Assert
         Assert.Equal(html, sanitizer.Sanitize(html), ignoreCase: true);
     }
@@ -2078,7 +2078,7 @@ rl(javascript:alert(""foo""))'>";
             AllowDataAttributes = true
         };
         var html = @"<div DAta-test1=""value x""></div>";
-        
+
         // Assert
         Assert.Equal(html, sanitizer.Sanitize(html), ignoreCase: true);
     }
@@ -2091,7 +2091,7 @@ rl(javascript:alert(""foo""))'>";
             AllowDataAttributes = false
         };
         var html = @"<div data-test1=""value x""></div>";
-        
+
         // Assert
         Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
     }
@@ -2101,7 +2101,7 @@ rl(javascript:alert(""foo""))'>";
     {
         var sanitizer = Sanitizer;
         var html = @"<div>Hallo <p><b>Bold<br>Ballo";
-        
+
         // Assert
         Assert.Equal(@"<div>Hallo <p><b>Bold<br>Ballo</b></p></div>", sanitizer.Sanitize(html), ignoreCase: true);
     }
@@ -2122,7 +2122,7 @@ rl(javascript:alert(""foo""))'>";
         };
         var html = @"<div>Hallo</div>";
         var sanitized = sanitizer.Sanitize(html);
-        
+
         // Assert
         Assert.Equal(@"<div class=""test"">Hallo<b>Test</b></div>", sanitized, ignoreCase: true);
     }
@@ -2143,7 +2143,7 @@ rl(javascript:alert(""foo""))'>";
         };
         var html = @"<html><head></head><body><div>Hallo</div></body></html>";
         var sanitized = sanitizer.SanitizeDocument(html);
-        
+
         // Assert
         Assert.Equal(@"<html><head></head><body><div class=""test"">Hallo<b>Test</b></div></body></html>", sanitized, ignoreCase: true);
     }
@@ -2161,7 +2161,7 @@ rl(javascript:alert(""foo""))'>";
 
         var html = @"<div>Hallo</div>";
         var sanitized = sanitizer.Sanitize(html);
-        
+
         // Assert
         Assert.Equal(@"<div>Hallo</div><p>World</p>", sanitized, ignoreCase: true);
     }
@@ -2184,7 +2184,7 @@ rl(javascript:alert(""foo""))'>";
             }
         };
         var html = @"<div>Click here: http://example.com/.</div>";
-        
+
         // Assert
         Assert.Equal(@"<div>Click here: <a href=""http://example.com/"">http://example.com/</a>.</div>", sanitizer.Sanitize(html), ignoreCase: true);
         Assert.Equal(@"Check out <a href=""https://www.google.com"">https://www.google.com</a>.", sanitizer.Sanitize("Check out https://www.google.com."), ignoreCase: true);
@@ -3408,7 +3408,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         // Assert
         Assert.Equal(@"<p style=""color: rgba(0, 0, 0, 1)"">Text</p>", sanitized);
     }
-    
+
     [Fact]
     public void WithOptions()
     {
@@ -3432,5 +3432,17 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         // Assert
         var expected = "<strong>Lorem ipsum</strong>";
         Assert.Equal(expected, actual);
+    }
+
+    [Fact]
+    public void ReadmeUsageTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        var html = @"<script>alert('xss')</script><div onload=""alert('xss')"""
+            + @"style=""background-color: rgba(0, 0, 0, 1)"">Test<img src=""test.png"""
+            + @"style=""background-image: url(javascript:alert('xss')); margin: 10px""></div>";
+        var sanitized = sanitizer.Sanitize(html, "https://www.example.com");
+        var expected = @"<div style=""background-color: rgba(0, 0, 0, 1)"">Test<img src=""https://www.example.com/test.png"" style=""margin: 10px""></div>";
+        Assert.Equal(expected, sanitized);
     }
 }

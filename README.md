@@ -34,11 +34,11 @@ Install the [HtmlSanitizer NuGet package](https://www.nuget.org/packages/HtmlSan
 ```C#
 var sanitizer = new HtmlSanitizer();
 var html = @"<script>alert('xss')</script><div onload=""alert('xss')"""
-    + @"style=""background-color: test"">Test<img src=""test.png"""
+    + @"style=""background-color: rgba(0, 0, 0, 1)"">Test<img src=""test.png"""
     + @"style=""background-image: url(javascript:alert('xss')); margin: 10px""></div>";
 var sanitized = sanitizer.Sanitize(html, "https://www.example.com");
-Assert.That(sanitized, Is.EqualTo(@"<div style=""background-color: test"">"
-    + @"Test<img style=""margin: 10px"" src=""https://www.example.com/test.png""></div>"));
+var expected = @"<div style=""background-color: rgba(0, 0, 0, 1)"">Test<img src=""https://www.example.com/test.png"" style=""margin: 10px""></div>";
+Assert.Equal(expected, sanitized);
 ```
 
 There's an [online demo](https://xss.ganss.org/), plus there's also a [.NET Fiddle](https://dotnetfiddle.net/892nOk) you can play with.
