@@ -21,7 +21,7 @@
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>git://github.com/mganss/HtmlSanitizer</RepositoryUrl>
-    <RootNamespace>Ganss.XSS</RootNamespace>
+    <RootNamespace>Ganss.Xss</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <DocumentationFile>bin\$(Configuration)\$(TargetFramework)\HtmlSanitizer.xml</DocumentationFile>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

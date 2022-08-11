@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 
-namespace Ganss.XSS
+namespace Ganss.Xss
 {
     /// <summary>
     /// Provides data for the <see cref="HtmlSanitizer.PostProcessDom"/> event.

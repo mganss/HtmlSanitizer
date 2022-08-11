@@ -1,6 +1,6 @@
 using BenchmarkDotNet.Attributes;
 
-namespace Ganss.XSS.Benchmark;
+namespace Ganss.Xss.Benchmark;
 
 [MemoryDiagnoser]
 public class HtmlSanitizerBenchmark

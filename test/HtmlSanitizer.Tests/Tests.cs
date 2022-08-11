@@ -16,7 +16,7 @@ using Xunit;
 // https://www.owasp.org/index.php/XSS_(Cross_Site_Scripting)_Prevention_Cheat_Sheet#RULE_.232_-_Attribute_Escape_Before_Inserting_Untrusted_Data_into_HTML_Common_Attributes
 // and http://ha.ckers.org/xss.html
 
-namespace Ganss.XSS.Tests;
+namespace Ganss.Xss.Tests;
 
 public class HtmlSanitizerFixture
 {
