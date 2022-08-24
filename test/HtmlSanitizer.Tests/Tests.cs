@@ -3446,4 +3446,23 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             + @"Test<img src=""https://www.example.com/test.png"" style=""margin: 10px""></div>";
         Assert.Equal(expected, sanitized);
     }
+
+    [Fact]
+    public void UseDefaultsTest()
+    {
+        var allowedAtRules = HtmlSanitizerDefaults.AllowedAtRules;
+        Assert.NotEmpty(allowedAtRules);
+        var allowedSchemes = HtmlSanitizerDefaults.AllowedSchemes;
+        Assert.NotEmpty(allowedSchemes);
+        var uriAttributes = HtmlSanitizerDefaults.UriAttributes;
+        Assert.NotEmpty(uriAttributes);
+        var allowedCssProperties = HtmlSanitizerDefaults.AllowedCssProperties;
+        Assert.NotEmpty(allowedCssProperties);
+        var allowedTags = HtmlSanitizerDefaults.AllowedTags;
+        Assert.NotEmpty(allowedTags);
+        var allowedAttributes = HtmlSanitizerDefaults.AllowedAttributes;
+        Assert.NotEmpty(allowedAttributes);
+        var allowedClasses = HtmlSanitizerDefaults.AllowedClasses;
+        Assert.Empty(allowedClasses);
+    }
 }
