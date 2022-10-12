@@ -406,7 +406,7 @@ namespace Ganss.Xss
         public string SanitizeDocument(string html, string baseUrl = "", IMarkupFormatter? outputFormatter = null)
         {
             var parser = HtmlParserFactory();
-            var dom = parser.ParseDocument(html);
+            using var dom = parser.ParseDocument(html);
 
             DoSanitize(dom, dom, baseUrl);
 
@@ -425,7 +425,7 @@ namespace Ganss.Xss
         public string SanitizeDocument(Stream html, string baseUrl = "", IMarkupFormatter? outputFormatter = null)
         {
             var parser = HtmlParserFactory();
-            var dom = parser.ParseDocument(html);
+            using var dom = parser.ParseDocument(html);
 
             DoSanitize(dom, dom, baseUrl);
 
