@@ -32,6 +32,9 @@ Usage
 Install the [HtmlSanitizer NuGet package](https://www.nuget.org/packages/HtmlSanitizer/). Then:
 
 ```C#
+using Ganss.Xss;
+...
+
 var sanitizer = new HtmlSanitizer();
 var html = @"<script>alert('xss')</script><div onload=""alert('xss')"""
     + @"style=""background-color: rgba(0, 0, 0, 1)"">Test<img src=""test.png"""
