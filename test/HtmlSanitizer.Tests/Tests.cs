@@ -3465,4 +3465,16 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var allowedClasses = HtmlSanitizerDefaults.AllowedClasses;
         Assert.Empty(allowedClasses);
     }
+
+    [Fact]
+    public void NoScriptTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("noscript");
+        sanitizer.AllowedTags.Remove("img");
+        var html = @"<noscript>&lt;/noscript&gt&lt;img src=x onerror=mxss(1)&gt;";
+        var sanitized = sanitizer.Sanitize(html);
+        var expected = @"<noscript>&lt;/noscript&gt&lt;img src=x onerror=mxss(1)&gt;</noscript>";
+        Assert.Equal(expected, sanitized);
+    }
 }

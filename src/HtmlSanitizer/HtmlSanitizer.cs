@@ -64,7 +64,7 @@ namespace Ganss.Xss
             IsToleratingInvalidSelectors = true,
         });
 
-        private static readonly HtmlParser defaultHtmlParser = new(new HtmlParserOptions(), BrowsingContext.New(defaultConfiguration));
+        private static readonly HtmlParser defaultHtmlParser = new(new HtmlParserOptions { IsScripting = true }, BrowsingContext.New(defaultConfiguration));
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class
