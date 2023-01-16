@@ -16,7 +16,7 @@
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <LangVersion>latest</LangVersion>
 	<CoverletOutputFormat>opencover</CoverletOutputFormat>
-	<CoverletOutput>../coverage.xml</CoverletOutput>
+	<CoverletOutput>../../coverage.xml</CoverletOutput>
 	<SonarQubeExclude>true</SonarQubeExclude>
   </PropertyGroup>
 
