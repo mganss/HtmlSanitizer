@@ -15,10 +15,9 @@
     <GenerateAssemblyCopyrightAttribute>false</GenerateAssemblyCopyrightAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <SonarQubeExclude>true</SonarQubeExclude>
+	<CoverletOutputFormat>opencover</CoverletOutputFormat>
+	<CoverletOutput>../coverage.xml</CoverletOutput>
+	<SonarQubeExclude>true</SonarQubeExclude>
   </PropertyGroup>
 
   <ItemGroup>
