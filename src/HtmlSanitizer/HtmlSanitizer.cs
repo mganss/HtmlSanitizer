@@ -330,20 +330,28 @@ namespace Ganss.Xss
         }
 
         /// <summary>
-        /// Return all nested subnodes of a node.
+        /// Return all nested subnodes of a node. The nodes are returned in DOM order.
         /// </summary>
         /// <param name="dom">The root node.</param>
         /// <returns>All nested subnodes.</returns>
         private static IEnumerable<INode> GetAllNodes(INode? dom)
         {
-            if (dom == null) yield break;
-
-            foreach (var node in dom.ChildNodes)
+            if (dom == null || dom.ChildNodes.Length == 0) yield break;
+            
+            var s = new Stack<INode>();
+            for (var i = dom.ChildNodes.Length - 1; i >= 0; i--)
             {
-                yield return node;
-                foreach (var child in GetAllNodes(node).Where(c => c != null))
+                s.Push(dom.ChildNodes[i]);
+            }
+
+            while (s.Count > 0)
+            {
+                var n = s.Pop();
+                yield return n;
+                
+                for (var i = n.ChildNodes.Length - 1; i >= 0; i--)
                 {
-                    yield return child;
+                    s.Push(n.ChildNodes[i]);
                 }
             }
         }
