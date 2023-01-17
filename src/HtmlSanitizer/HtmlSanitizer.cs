@@ -334,9 +334,9 @@ namespace Ganss.Xss
         /// </summary>
         /// <param name="dom">The root node.</param>
         /// <returns>All nested subnodes.</returns>
-        private static IEnumerable<INode> GetAllNodes(INode? dom)
+        private static IEnumerable<INode> GetAllNodes(INode dom)
         {
-            if (dom == null || dom.ChildNodes.Length == 0) yield break;
+            if (dom.ChildNodes.Length == 0) yield break;
             
             var s = new Stack<INode>();
             for (var i = dom.ChildNodes.Length - 1; i >= 0; i--)
@@ -447,7 +447,7 @@ namespace Ganss.Xss
         /// </summary>
         /// <param name="context">The node within which to remove comments.</param>
         /// <returns><c>true</c> if any comments were removed; otherwise, <c>false</c>.</returns>
-        private void RemoveComments(INode? context)
+        private void RemoveComments(INode context)
         {
             foreach (var comment in GetAllNodes(context).OfType<IComment>().ToList())
             {
@@ -522,7 +522,10 @@ namespace Ganss.Xss
                 }
             }
 
-            RemoveComments(context as INode);
+            if (context is INode node)
+            {
+                RemoveComments(node);
+            }
 
             DoPostProcess(dom, context as INode);
         }
@@ -596,16 +599,19 @@ namespace Ganss.Xss
             if (PostProcessNode != null)
             {
                 dom.Normalize();
-                var nodes = GetAllNodes(context).ToList();
-
-                foreach (var node in nodes)
+                
+                if (context != null)
                 {
-                    var e = new PostProcessNodeEventArgs(dom, node);
-                    OnPostProcessNode(e);
-                    if (e.ReplacementNodes.Any())
+                    var nodes = GetAllNodes(context).ToList();
+                    foreach (var node in nodes)
                     {
-                        ((IChildNode)node).Replace(e.ReplacementNodes.ToArray());
-                    }
+                        var e = new PostProcessNodeEventArgs(dom, node);
+                        OnPostProcessNode(e);
+                        if (e.ReplacementNodes.Any())
+                        {
+                            ((IChildNode)node).Replace(e.ReplacementNodes.ToArray());
+                        }
+                    }   
                 }
             }
 
