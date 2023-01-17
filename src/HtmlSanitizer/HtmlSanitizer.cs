@@ -56,7 +56,8 @@ namespace Ganss.Xss
         private static readonly Regex CssComments = new(@"/\*.*?\*/", RegexOptions.Compiled);
         // IE6 <http://heideri.ch/jso/#80>
         private static readonly Regex CssExpression = new(@"[eE\uFF25\uFF45][xX\uFF38\uFF58][pP\uFF30\uFF50][rR\u0280\uFF32\uFF52][eE\uFF25\uFF45][sS\uFF33\uFF53]{2}[iI\u026A\uFF29\uFF49][oO\uFF2F\uFF4F][nN\u0274\uFF2E\uFF4E]", RegexOptions.Compiled);
-        private static readonly Regex CssUrl = new(@"[Uu][Rr\u0280][Ll\u029F]\s*\(\s*(['""]?)\s*([^'"")\s]+)\s*(['""]?)\s*", RegexOptions.Compiled);
+        private static readonly Regex CssUrl = new(@"[Uu][Rr\u0280][Ll\u029F]\((['""]?)([^'"")]+)(['""]?)", RegexOptions.Compiled);
+        private static readonly Regex WhitespaceRegex = new(@"\s*", RegexOptions.Compiled);
         private static readonly IConfiguration defaultConfiguration = Configuration.Default.WithCss(new CssParserOptions
         {
             IsIncludingUnknownDeclarations = true,
@@ -690,6 +691,8 @@ namespace Ganss.Xss
                     continue;
                 }
 
+                val = WhitespaceRegex.Replace(val, string.Empty);
+
                 var urls = CssUrl.Matches(val);
 
                 if (urls.Count > 0)
@@ -742,7 +745,7 @@ namespace Ganss.Xss
             return r;
         }
 
-        private static readonly Regex SchemeRegex = new(@"^\s*([^\/#]*?)(?:\:|&#0*58|&#x0*3a)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private static readonly Regex SchemeRegex = new(@"^([^\/#]*?)(?:\:|&#0*58|&#x0*3a)", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
         /// <summary>
         /// Tries to create a safe <see cref="Iri"/> object from a string.
@@ -751,6 +754,8 @@ namespace Ganss.Xss
         /// <returns>The <see cref="Iri"/> object or null if no safe <see cref="Iri"/> can be created.</returns>
         protected Iri? GetSafeIri(string url)
         {
+            url = url.TrimStart();
+
             var schemeMatch = SchemeRegex.Match(url);
 
             if (schemeMatch.Success)
