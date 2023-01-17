@@ -331,20 +331,28 @@ namespace Ganss.Xss
         }
 
         /// <summary>
-        /// Return all nested subnodes of a node.
+        /// Return all nested subnodes of a node. The nodes are returned in DOM order.
         /// </summary>
         /// <param name="dom">The root node.</param>
         /// <returns>All nested subnodes.</returns>
-        private static IEnumerable<INode> GetAllNodes(INode? dom)
+        private static IEnumerable<INode> GetAllNodes(INode dom)
         {
-            if (dom == null) yield break;
-
-            foreach (var node in dom.ChildNodes)
+            if (dom.ChildNodes.Length == 0) yield break;
+            
+            var s = new Stack<INode>();
+            for (var i = dom.ChildNodes.Length - 1; i >= 0; i--)
             {
-                yield return node;
-                foreach (var child in GetAllNodes(node).Where(c => c != null))
+                s.Push(dom.ChildNodes[i]);
+            }
+
+            while (s.Count > 0)
+            {
+                var n = s.Pop();
+                yield return n;
+                
+                for (var i = n.ChildNodes.Length - 1; i >= 0; i--)
                 {
-                    yield return child;
+                    s.Push(n.ChildNodes[i]);
                 }
             }
         }
@@ -440,7 +448,7 @@ namespace Ganss.Xss
         /// </summary>
         /// <param name="context">The node within which to remove comments.</param>
         /// <returns><c>true</c> if any comments were removed; otherwise, <c>false</c>.</returns>
-        private void RemoveComments(INode? context)
+        private void RemoveComments(INode context)
         {
             foreach (var comment in GetAllNodes(context).OfType<IComment>().ToList())
             {
@@ -515,7 +523,10 @@ namespace Ganss.Xss
                 }
             }
 
-            RemoveComments(context as INode);
+            if (context is INode node)
+            {
+                RemoveComments(node);
+            }
 
             DoPostProcess(dom, context as INode);
         }
@@ -589,16 +600,19 @@ namespace Ganss.Xss
             if (PostProcessNode != null)
             {
                 dom.Normalize();
-                var nodes = GetAllNodes(context).ToList();
-
-                foreach (var node in nodes)
+                
+                if (context != null)
                 {
-                    var e = new PostProcessNodeEventArgs(dom, node);
-                    OnPostProcessNode(e);
-                    if (e.ReplacementNodes.Any())
+                    var nodes = GetAllNodes(context).ToList();
+                    foreach (var node in nodes)
                     {
-                        ((IChildNode)node).Replace(e.ReplacementNodes.ToArray());
-                    }
+                        var e = new PostProcessNodeEventArgs(dom, node);
+                        OnPostProcessNode(e);
+                        if (e.ReplacementNodes.Any())
+                        {
+                            ((IChildNode)node).Replace(e.ReplacementNodes.ToArray());
+                        }
+                    }   
                 }
             }
 
