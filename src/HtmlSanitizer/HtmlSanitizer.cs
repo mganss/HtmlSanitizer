@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Ganss.Xss
@@ -322,7 +323,7 @@ namespace Ganss.Xss
         }
 
         /// <summary>
-        /// Raises the <see cref="E:RemovingUrl" /> event.
+        /// Raises the <see cref="E:FilterUrl" /> event.
         /// </summary>
         /// <param name="e">The <see cref="FilterUrlEventArgs"/> instance containing the event data.</param>
         protected virtual void OnFilteringUrl(FilterUrlEventArgs e)
@@ -338,7 +339,7 @@ namespace Ganss.Xss
         private static IEnumerable<INode> GetAllNodes(INode dom)
         {
             if (dom.ChildNodes.Length == 0) yield break;
-            
+
             var s = new Stack<INode>();
             for (var i = dom.ChildNodes.Length - 1; i >= 0; i--)
             {
@@ -349,7 +350,7 @@ namespace Ganss.Xss
             {
                 var n = s.Pop();
                 yield return n;
-                
+
                 for (var i = n.ChildNodes.Length - 1; i >= 0; i--)
                 {
                     s.Push(n.ChildNodes[i]);
@@ -600,7 +601,7 @@ namespace Ganss.Xss
             if (PostProcessNode != null)
             {
                 dom.Normalize();
-                
+
                 if (context != null)
                 {
                     var nodes = GetAllNodes(context).ToList();
@@ -612,7 +613,7 @@ namespace Ganss.Xss
                         {
                             ((IChildNode)node).Replace(e.ReplacementNodes.ToArray());
                         }
-                    }   
+                    }
                 }
             }
 
@@ -707,15 +708,31 @@ namespace Ganss.Xss
 
                 val = WhitespaceRegex.Replace(val, string.Empty);
 
-                var urls = CssUrl.Matches(val);
+                var urls = CssUrl.Matches(val).Cast<Match>().Select(m => (Match: m, Url: SanitizeUrl(element, m.Groups[2].Value, baseUrl)));
 
-                if (urls.Count > 0)
+                if (urls.Any())
                 {
-                    if (urls.Cast<Match>().Any(m => SanitizeUrl(element, m.Groups[2].Value, baseUrl) == null))
+                    if (urls.Any(u => u.Url == null))
                         removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedUrlValue));
                     else
                     {
-                        var s = CssUrl.Replace(val, m => "url(" + m.Groups[1].Value + SanitizeUrl(element, m.Groups[2].Value, baseUrl) + m.Groups[3].Value);
+                        var sb = new StringBuilder();
+                        var ix = 0;
+
+                        foreach (var url in urls)
+                        {
+                            sb.Append(val, ix, url.Match.Index);
+                            sb.Append("url(");
+                            sb.Append(url.Match.Groups[1].Value);
+                            sb.Append(url.Url);
+                            sb.Append(url.Match.Groups[3].Value);
+                            ix = url.Match.Length;
+                        }
+
+                        sb.Append(val, ix, val.Length - ix);
+
+                        var s = sb.ToString();
+
                         if (s != val)
                         {
                             if (key != style.Name)
