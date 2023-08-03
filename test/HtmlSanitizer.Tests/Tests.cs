@@ -3528,4 +3528,13 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var sanitized = sanitizer.Sanitize(html);
         Assert.Equal(html, sanitized);
     }
+
+    [Fact]
+    public void ReplacementCharacterTest()
+    {
+        var html = @"<span style=""background-image: var(--urlSpellingErrorV2,url(&quot;https://www.example.com/))"">Ipsum</span>";
+        var sanitizer = new HtmlSanitizer();
+        var sanitized = sanitizer.Sanitize(html);
+        Assert.Equal(html, sanitized);
+    }
 }
