@@ -3477,4 +3477,14 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var expected = @"<noscript>&lt;/noscript&gt&lt;img src=x onerror=mxss(1)&gt;</noscript>";
         Assert.Equal(expected, sanitized);
     }
+
+    [Fact]
+    public void VarUrlTest()
+    {
+        var html = @"<span style=""background-image: var(--urlSpellingErrorV2,url(&quot;https://www.example.com/&quot;))"">Ipsum</span>";
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedAttributes.Add("style");
+        var sanitized = sanitizer.Sanitize(html);
+        Assert.Equal(html, sanitized);
+    }
 }
