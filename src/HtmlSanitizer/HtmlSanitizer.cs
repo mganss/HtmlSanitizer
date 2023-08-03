@@ -726,7 +726,7 @@ namespace Ganss.Xss
                             sb.Append(url.Match.Groups[1].Value);
                             sb.Append(url.Url);
                             sb.Append(url.Match.Groups[3].Value);
-                            ix = url.Match.Length;
+                            ix = url.Match.Index + url.Match.Length;
                         }
 
                         sb.Append(val, ix, val.Length - ix);
