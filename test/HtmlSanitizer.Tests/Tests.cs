@@ -3477,4 +3477,55 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var expected = @"<noscript>&lt;/noscript&gt&lt;img src=x onerror=mxss(1)&gt;</noscript>";
         Assert.Equal(expected, sanitized);
     }
+
+    [Fact]
+    public void PageRuleTest()
+    {
+        // see https://github.com/mganss/HtmlSanitizer/issues/438
+
+        var input = "<style>@page { margin: 25mm }</style>";
+
+        var sanitizer = new HtmlSanitizer
+        {
+            AllowedTags = { "style" },
+            AllowedAtRules = { CssRuleType.Page },
+        };
+
+        var output = sanitizer.Sanitize(input);
+
+        Assert.Equal(input, output);
+    }
+
+    [Fact]
+    public void CssExceptionTest()
+    {
+        // see https://github.com/mganss/HtmlSanitizer/issues/426
+
+        var ex = Record.Exception(() => Sanitizer.Sanitize("<div style=\"border-width:1px;border-right-width:px;\"></div>"));
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public void RgbTest()
+    {
+        // see https://github.com/mganss/HtmlSanitizer/issues/340
+
+        var sanitizer = new HtmlSanitizer();
+        var html = @"<p style='color: RGB(0,0,0)'>Text</p>";
+        var sanitized = sanitizer.Sanitize(html, "http://www.example.com");
+        Assert.Equal("<p style=\"color: rgba(0, 0, 0, 1)\">Text</p>", sanitized);
+        html = @"<p style='color: rgb(0,0,0)'>Text</p>";
+        sanitized = sanitizer.Sanitize(html, "http://www.example.com");
+        Assert.Equal("<p style=\"color: rgba(0, 0, 0, 1)\">Text</p>", sanitized);
+    }
+
+    [Fact]
+    public void InheritTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("style");
+        var html = @"<style>div { margin: inherit }</style>";
+        var sanitized = sanitizer.Sanitize(html);
+        Assert.Equal(html, sanitized);
+    }
 }
