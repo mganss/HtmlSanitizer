@@ -463,6 +463,14 @@ namespace Ganss.Xss
 
         private void DoSanitize(IHtmlDocument dom, IParentNode context, string baseUrl = "")
         {
+            // always encode text in raw data content
+            foreach (var tag in context.QuerySelectorAll("*").Where(t => t.Flags.HasFlag(NodeFlags.LiteralText) && !string.IsNullOrWhiteSpace(t.InnerHtml)))
+            {
+                var escapedHtml = tag.InnerHtml.Replace("<", "&lt;").Replace(">", "&gt;");
+                if (escapedHtml != tag.InnerHtml)
+                    tag.InnerHtml = escapedHtml;
+            }
+
             // remove disallowed tags
             foreach (var tag in context.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList())
             {

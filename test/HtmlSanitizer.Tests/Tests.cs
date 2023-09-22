@@ -3248,7 +3248,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var sanitized = sanitizer.Sanitize(html, "http://www.example.com");
 
         // Assert
-        Assert.Equal("aaabc<style>x[x=\"\\3c/style>\\3cimg src onerror=alert(1)>\"] { }</style>", sanitized);
+        Assert.Equal("aaabc<style>x[x=\"\\3c/style&gt;\\3cimg src onerror=alert(1)&gt;\"] { }</style>", sanitized);
     }
 
     [Fact]
@@ -3486,5 +3486,33 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         sanitizer.AllowedAttributes.Add("style");
         var sanitized = sanitizer.Sanitize(html);
         Assert.Equal(html, sanitized);
+    }
+
+    [Fact]
+    public void BypassTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("svg");
+        sanitizer.AllowedTags.Add("title");
+        sanitizer.AllowedTags.Add("xmp");
+        var bypass = @"<svg></p><title><xmp></title><img src=x onerror=alert(1)></xmp></title>";
+        var sanitized = sanitizer.Sanitize(bypass, "https://www.example.com");
+        var expected = @"<svg><p></p><title><xmp>&lt;/title&gt;&lt;img src=x onerror=alert(1)&gt;</xmp></title></svg>";
+        Assert.Equal(expected, sanitized);
+    }
+
+    [Fact]
+    public void Bypass2Test()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("form");
+        sanitizer.AllowedTags.Add("math");
+        sanitizer.AllowedTags.Add("mtext");
+        sanitizer.AllowedTags.Add("mglyph");
+        sanitizer.AllowedTags.Add("xmp");
+        var bypass = @"<form><math><mtext></form><form><mglyph><xmp></math><img src onerror=alert(1)>";
+        var sanitized = sanitizer.Sanitize(bypass, "https://www.example.com");
+        var expected = @"<form><math><mtext><form><mglyph><xmp>&lt;/math&gt;&lt;img src onerror=alert(1)&gt;</xmp></mglyph></form></mtext></math></form>";
+        Assert.Equal(expected, sanitized);
     }
 }
