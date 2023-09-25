@@ -3537,4 +3537,14 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var sanitized = sanitizer.Sanitize(html);
         Assert.Equal(html, sanitized);
     }
+
+    [Fact]
+    public void Number469Test()
+    {
+        // see https://github.com/mganss/HtmlSanitizer/issues/469
+        var html = @"<div style=""height: 0; background-image: url('https://example.com/1.jpg'), url('https://example.com/2.jpg'), url('https://example.com/3.jpg'); display: none;""/>";
+        var sanitizer = new HtmlSanitizer();
+        var sanitized = sanitizer.Sanitize(html);
+        Assert.Equal(@"<div style=""height: 0; background-image: url(&quot;https://example.com/1.jpg&quot;), url(&quot;https://example.com/2.jpg&quot;), url(&quot;https://example.com/3.jpg&quot;); display: none""></div>", sanitized);
+    }
 }
