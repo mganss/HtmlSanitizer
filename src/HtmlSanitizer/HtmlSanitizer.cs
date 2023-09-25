@@ -721,7 +721,7 @@ namespace Ganss.Xss
 
                         foreach (var url in urls)
                         {
-                            sb.Append(val, ix, url.Match.Index);
+                            sb.Append(val, ix, url.Match.Index - ix);
                             sb.Append("url(");
                             sb.Append(url.Match.Groups[1].Value);
                             sb.Append(url.Url);
