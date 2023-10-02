@@ -453,6 +453,10 @@ namespace Ganss.Xss
         {
             foreach (var comment in GetAllNodes(context).OfType<IComment>().ToList())
             {
+                var escapedText = comment.TextContent.Replace("<", "&lt;").Replace(">", "&gt;");
+                if (escapedText != comment.TextContent)
+                    comment.TextContent = escapedText;
+
                 var e = new RemovingCommentEventArgs(comment);
                 OnRemovingComment(e);
 

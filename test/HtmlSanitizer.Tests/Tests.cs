@@ -3528,4 +3528,18 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var expected = "<svg><p></p><title><noscript>&lt;/title&gt;&lt;img src=x onerror=alert(1)&gt;</noscript></title></svg>";
         Assert.Equal(expected, sanitized);
     }
+
+    [Fact]
+    public void Bypass4Test()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("svg");
+        sanitizer.AllowedTags.Add("p");
+        sanitizer.AllowedTags.Add("style");
+        sanitizer.RemovingComment += (s, e) => e.Cancel = true;
+        var bypass = @"<svg></p><style><!--</style><img src=x onerror=alert(1)>-->";
+        var sanitized = sanitizer.Sanitize(bypass, "https://www.example.com");
+        var expected = "<svg><p></p><style><!--&lt;/style&gt;&lt;img src=x onerror=alert(1)&gt;--></style></svg>";
+        Assert.Equal(expected, sanitized);
+    }
 }
