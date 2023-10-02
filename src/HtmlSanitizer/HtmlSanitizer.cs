@@ -469,6 +469,8 @@ namespace Ganss.Xss
                 var escapedHtml = tag.InnerHtml.Replace("<", "&lt;").Replace(">", "&gt;");
                 if (escapedHtml != tag.InnerHtml)
                     tag.InnerHtml = escapedHtml;
+                if (tag.InnerHtml != escapedHtml) // setting InnerHtml does not work for noscript
+                    tag.SetInnerText(escapedHtml);
             }
 
             // remove disallowed tags
