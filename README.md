@@ -59,7 +59,7 @@ More example code and a description of possible options can be found in the [Wik
 `bdi`,
 `big`,
 `blockquote`,
-`body`
+`body`,
 `br`,
 `button`,
 `caption`,
