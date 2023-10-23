@@ -468,7 +468,10 @@ namespace Ganss.Xss
         private void DoSanitize(IHtmlDocument dom, IParentNode context, string baseUrl = "")
         {
             // always encode text in raw data content
-            foreach (var tag in context.QuerySelectorAll("*").Where(t => t.Flags.HasFlag(NodeFlags.LiteralText) && !string.IsNullOrWhiteSpace(t.InnerHtml)))
+            foreach (var tag in context.QuerySelectorAll("*")
+                .Where(t => t is not IHtmlStyleElement
+                    && t.Flags.HasFlag(NodeFlags.LiteralText)
+                    && !string.IsNullOrWhiteSpace(t.InnerHtml)))
             {
                 var escapedHtml = tag.InnerHtml.Replace("<", "&lt;").Replace(">", "&gt;");
                 if (escapedHtml != tag.InnerHtml)
@@ -560,7 +563,7 @@ namespace Ganss.Xss
                     else i++;
                 }
 
-                styleTag.InnerHtml = styleSheet.ToCss(StyleFormatter).Replace("<", "\\3c");
+                styleTag.InnerHtml = styleSheet.ToCss(StyleFormatter).Replace("<", "\\3c ").Replace(">", "\\3e ");
             }
         }
 
