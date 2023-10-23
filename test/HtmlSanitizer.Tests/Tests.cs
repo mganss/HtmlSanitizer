@@ -3248,7 +3248,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var sanitized = sanitizer.Sanitize(html, "http://www.example.com");
 
         // Assert
-        Assert.Equal("aaabc<style>x[x=\"\\3c/style&gt;\\3cimg src onerror=alert(1)&gt;\"] { }</style>", sanitized);
+        Assert.Equal("aaabc<style>x[x=\"\\3c /style\\3e \\3c img src onerror=alert(1)\\3e \"] { }</style>", sanitized);
     }
 
     [Fact]
@@ -3551,5 +3551,17 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var sanitized = sanitizer.Sanitize(bypass, "https://www.example.com");
         var expected = "<svg><p></p><style><!--&lt;/style&gt;&lt;img src=x onerror=alert(1)&gt;--></style></svg>";
         Assert.Equal(expected, sanitized);
+    }
+
+    [Fact]
+    public void InlineCssTest()
+    {
+        // see https://github.com/mganss/HtmlSanitizer/issues/483
+
+        var input = "<style>span>p { font-size: 2em }</style><span><p>I am safe</p></span>";
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.RemovingTag += (sender, args) => args.Cancel = true;
+        var output = sanitizer.Sanitize(input);
+        Assert.Equal(@"<style>span\3e p { font-size: 2em }</style><span><p>I am safe</p></span>", output);
     }
 }
