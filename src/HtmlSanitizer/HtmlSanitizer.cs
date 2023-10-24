@@ -563,7 +563,7 @@ namespace Ganss.Xss
                     else i++;
                 }
 
-                styleTag.InnerHtml = styleSheet.ToCss(StyleFormatter).Replace("<", "\\3c ").Replace(">", "\\3e ");
+                styleTag.InnerHtml = styleSheet.ToCss(StyleFormatter).Replace("<", "\\3c ");
             }
         }
 
