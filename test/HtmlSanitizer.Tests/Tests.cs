@@ -3248,7 +3248,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var sanitized = sanitizer.Sanitize(html, "http://www.example.com");
 
         // Assert
-        Assert.Equal("aaabc<style>x[x=\"\\3c /style\\3e \\3c img src onerror=alert(1)\\3e \"] { }</style>", sanitized);
+        Assert.Equal("aaabc<style>x[x=\"\\3c /style>\\3c img src onerror=alert(1)>\"] { }</style>", sanitized);
     }
 
     [Fact]
@@ -3612,6 +3612,6 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var sanitizer = new HtmlSanitizer();
         sanitizer.RemovingTag += (sender, args) => args.Cancel = true;
         var output = sanitizer.Sanitize(input);
-        Assert.Equal(@"<style>span\3e p { font-size: 2em }</style><span><p>I am safe</p></span>", output);
+        Assert.Equal(@"<style>span>p { font-size: 2em }</style><span><p>I am safe</p></span>", output);
     }
 }
