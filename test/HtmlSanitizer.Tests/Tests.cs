@@ -3557,7 +3557,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         sanitizer.AllowedTags.Add("xmp");
         var bypass = @"<svg></p><title><xmp></title><img src=x onerror=alert(1)></xmp></title>";
         var sanitized = sanitizer.Sanitize(bypass, "https://www.example.com");
-        var expected = @"<svg><p></p><title><xmp>&lt;/title&gt;&lt;img src=x onerror=alert(1)&gt;</xmp></title></svg>";
+        var expected = "<svg></svg><p></p><title>&lt;xmp&gt;</title><img src=\"https://www.example.com/x\">";
         Assert.Equal(expected, sanitized);
     }
 
@@ -3585,7 +3585,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         sanitizer.AllowedTags.Add("noscript");
         var bypass = @"<svg></p><title><noscript></title><img src=x onerror=alert(1)></noscript></title>";
         var sanitized = sanitizer.Sanitize(bypass, "https://www.example.com");
-        var expected = "<svg><p></p><title><noscript>&lt;/title&gt;&lt;img src=x onerror=alert(1)&gt;</noscript></title></svg>";
+        var expected = "<svg></svg><p></p><title>&lt;noscript&gt;</title><img src=\"https://www.example.com/x\">";
         Assert.Equal(expected, sanitized);
     }
 
@@ -3599,7 +3599,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         sanitizer.RemovingComment += (s, e) => e.Cancel = true;
         var bypass = @"<svg></p><style><!--</style><img src=x onerror=alert(1)>-->";
         var sanitized = sanitizer.Sanitize(bypass, "https://www.example.com");
-        var expected = "<svg><p></p><style><!--&lt;/style&gt;&lt;img src=x onerror=alert(1)&gt;--></style></svg>";
+        var expected = "<svg></svg><p></p><style></style><img src=\"https://www.example.com/x\">--&gt;";
         Assert.Equal(expected, sanitized);
     }
 
