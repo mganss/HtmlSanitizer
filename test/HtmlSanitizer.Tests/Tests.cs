@@ -3012,7 +3012,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             if (e.Tag.HasChildNodes)
             {
-                e.Tag.Replace(e.Tag.ChildNodes.ToArray());
+                e.Tag.Replace([.. e.Tag.ChildNodes]);
                 e.Cancel = true;
             }
         };
@@ -3613,5 +3613,15 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         sanitizer.RemovingTag += (sender, args) => args.Cancel = true;
         var output = sanitizer.Sanitize(input);
         Assert.Equal(@"<style>span>p { font-size: 2em }</style><span><p>I am safe</p></span>", output);
+    }
+
+    [Fact]
+    public void KeepChildNodesTextTest()
+    {
+        var input = "<iframe><img></iframe><iframe>&lt;img&gt;</iframe>";
+        var sanitizer = new HtmlSanitizer { KeepChildNodes = true };
+        sanitizer.AllowedTags.Remove("iframe");
+        var sanitized = sanitizer.Sanitize(input);
+        Assert.Equal("&lt;img&gt;&amp;lt;img&amp;gt;", sanitized);
     }
 }
