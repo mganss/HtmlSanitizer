@@ -6,7 +6,7 @@ environment:
     secure: Eq6BjtZ80BXKLwFMg76IjuQAvbLjbojIF/X/ARouGVhxPneJtgDfCXMPNgJ7KBKq
   sonar_token:
     secure: W7pHKhuTW6Lh8WlXJNTOIaOzeuxLi+H6Nqmnm4pr28jM6jyIpOZ+1r10lIQi0eCA
-  JAVA_HOME: C:\Program Files\Java\jdk15
+  JAVA_HOME: C:\Program Files\Java\jdk19
 nuget:
   disable_publish_on_pr: true
 build_script:
