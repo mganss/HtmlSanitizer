@@ -3554,6 +3554,21 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
     }
 
     [Fact]
+    public void OverrideLiteralTextElementContentEncoderTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("script");
+        sanitizer.EncodeLiteralTextElementContent = (e) =>
+        {
+            // Do nothing - we do not want to encode the custom element inside the <script> element
+        };
+        var bypass = @"<script><custom-element>abc</custom-element></script>";
+        var sanitized = sanitizer.Sanitize(bypass);
+        var expected = @"<script><custom-element>abc</custom-element></script>";
+        Assert.Equal(expected, sanitized);
+    }
+
+    [Fact]
     public void InlineCssTest()
     {
         // see https://github.com/mganss/HtmlSanitizer/issues/483
