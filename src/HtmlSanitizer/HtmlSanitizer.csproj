@@ -19,7 +19,8 @@
     <PackageTags>xss;anti;antixss;html;security</PackageTags>
     <PackageProjectUrl>https://github.com/mganss/HtmlSanitizer</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <RepositoryType>git</RepositoryType>
+	<PackageReadmeFile>README.md</PackageReadmeFile>
+	<RepositoryType>git</RepositoryType>
     <RepositoryUrl>git://github.com/mganss/HtmlSanitizer</RepositoryUrl>
     <RootNamespace>Ganss.Xss</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
