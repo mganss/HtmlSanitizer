@@ -26,7 +26,7 @@
 
   <ItemGroup>
     <PackageReference Include="AngleSharp.Xml" Version="0.17.0" />
-    <PackageReference Include="coverlet.msbuild" Version="6.0.1">
+    <PackageReference Include="coverlet.msbuild" Version="6.0.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
