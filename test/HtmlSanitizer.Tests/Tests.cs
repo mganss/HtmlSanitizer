@@ -3395,13 +3395,13 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
         sanitizer.AllowedTags.Add("style");
 
-        AngleSharp.Css.Values.Color.UseHex = true;
+        AngleSharp.Css.Values.CssColorValue.UseHex = true;
 
         var sanitized = sanitizer.Sanitize(html);
 
         Assert.Equal(@"<p style=""color: #000000"">Text</p>", sanitized);
 
-        AngleSharp.Css.Values.Color.UseHex = false;
+        AngleSharp.Css.Values.CssColorValue.UseHex = false;
 
         sanitized = sanitizer.Sanitize(html);
 
