@@ -853,7 +853,12 @@ namespace Ganss.Xss
                 {
                     try
                     {
-                        return new Uri(baseUri, iri.Value).AbsoluteUri;
+                        var sanitizedUrl = new Uri(baseUri, iri.Value).AbsoluteUri;
+                        var ev = new FilterUrlEventArgs(element, url, sanitizedUrl);
+
+                        OnFilteringUrl(ev);
+
+                        return ev.SanitizedUrl;
                     }
                     catch (UriFormatException)
                     {
