@@ -1,4 +1,4 @@
-version: 8.0.{build}
+version: 8.1.{build}
 skip_tags: true
 image: Visual Studio 2022
 environment:
