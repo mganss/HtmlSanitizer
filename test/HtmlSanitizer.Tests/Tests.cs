@@ -2903,7 +2903,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var waiting = numThreads;
             var methods = typeof(HtmlSanitizerTests).GetTypeInfo().GetMethods()
                 .Where(m => m.GetCustomAttributes(typeof(Xunit.FactAttribute), false).Cast<Xunit.FactAttribute>().Any(f => f.Skip == null))
-                .Where(m => m.Name != "ThreadTest" && m.Name != "HexColorTest");
+                .Where(m => m.Name != nameof(ThreadTest) && m.Name != nameof(HexColorTest));
             var threads = Shuffle(methods, random)
                 .Take(numThreads)
                 .Select(m => new Thread(() =>
@@ -3588,5 +3588,45 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         sanitizer.AllowedTags.Remove("iframe");
         var sanitized = sanitizer.Sanitize(input);
         Assert.Equal("&lt;img&gt;&amp;lt;img&amp;gt;", sanitized);
+    }
+
+    [Fact]
+    public void AllowStyleAttributeCssCustomPropertiesTest()
+    {
+        var input = "<div style=\"--my-var: 1px\"></div>";
+        var sanitizer = new HtmlSanitizer { AllowCssCustomProperties = true };
+        sanitizer.AllowedTags.Remove("iframe");
+        var sanitized = sanitizer.Sanitize(input);
+        Assert.Equal("<div style=\"--my-var: 1px\"></div>", sanitized);
+    }
+
+    [Fact]
+    public void AllowStyleTagCssCustomPropertiesTest()
+    {
+        var input = "<style>:root { --my-var: 1px }</style>";
+        var sanitizer = new HtmlSanitizer { AllowCssCustomProperties = true };
+        sanitizer.AllowedTags.Add("style");
+        var sanitized = sanitizer.Sanitize(input);
+        Assert.Equal("<style>:root { --my-var: 1px }</style>", sanitized);
+    }
+
+    [Fact]
+    public void DisallowStyleAttributeCssCustomPropertiesTest()
+    {
+        var input = "<div style=\"--my-var: 1px\"></div>";
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Remove("iframe");
+        var sanitized = sanitizer.Sanitize(input);
+        Assert.Equal("<div></div>", sanitized);
+    }
+
+    [Fact]
+    public void DisallowStyleTagCssCustomPropertiesTest()
+    {
+        var input = "<style>:root { --my-var: 1px }</style>";
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("style");
+        var sanitized = sanitizer.Sanitize(input);
+        Assert.Equal("<style>:root { }</style>", sanitized);
     }
 }
