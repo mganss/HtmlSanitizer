@@ -99,6 +99,8 @@ namespace Ganss.Xss
             AllowedClasses = new HashSet<string>(options.AllowedCssClasses, StringComparer.OrdinalIgnoreCase);
             AllowedCssProperties = new HashSet<string>(options.AllowedCssProperties, StringComparer.OrdinalIgnoreCase);
             AllowedAtRules = new HashSet<CssRuleType>(options.AllowedAtRules);
+            AllowCssCustomProperties = options.AllowCssCustomProperties;
+            AllowDataAttributes = options.AllowDataAttributes;
         }
 
         /// <summary>
