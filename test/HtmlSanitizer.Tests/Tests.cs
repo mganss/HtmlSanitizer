@@ -2973,8 +2973,8 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             if (e.Attribute.Name == "class")
             {
-                e.Tag.ClassList.Remove(e.Tag.ClassList.Except(new[] { "good", "oktoo" }, StringComparer.OrdinalIgnoreCase).ToArray());
-                e.Cancel = e.Tag.ClassList.Any();
+                e.Tag.ClassList.Remove(e.Tag.ClassList.Except(["good", "oktoo"], StringComparer.OrdinalIgnoreCase).ToArray());
+                e.Cancel = e.Tag.ClassList.Length != 0;
             }
         };
 
