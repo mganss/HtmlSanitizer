@@ -16,7 +16,7 @@ test_script:
   - ps: |
       if (-not $env:APPVEYOR_PULL_REQUEST_NUMBER) {
           dotnet tool install --global dotnet-sonarscanner
-          dotnet sonarscanner begin /k:"mganss_HtmlSanitizer" /v:$env:APPVEYOR_BUILD_VERSION /o:"mganss-github" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.login="$env:sonar_token" /d:sonar.cs.opencover.reportsPaths="$($env:APPVEYOR_BUILD_FOLDER)\coverage.xml" /d:sonar.coverage.exclusions="**/Program.cs"
+          dotnet sonarscanner begin /k:"mganss_HtmlSanitizer" /v:$env:APPVEYOR_BUILD_VERSION /o:"mganss-github" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.token="$env:sonar_token" /d:sonar.cs.opencover.reportsPaths="$($env:APPVEYOR_BUILD_FOLDER)\coverage.xml" /d:sonar.coverage.exclusions="**/Program.cs" /d:sonar.exclusions="**/*.html"
           dotnet build
       }
   - dotnet test /p:CollectCoverage=true test\HtmlSanitizer.Tests\HtmlSanitizer.Tests.csproj -f net8.0
