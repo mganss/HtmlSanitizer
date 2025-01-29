@@ -2010,7 +2010,7 @@ rl(javascript:alert(""foo""))'>";
     public void RemovingAttributeEventTagTest()
     {
         var sanitizer = new HtmlSanitizer();
-        sanitizer.RemovingAttribute += (s, e) => Assert.IsAssignableFrom<IHtmlDivElement>(e.Tag);
+        sanitizer.RemovingAttribute += (s, e) => Assert.IsType<IHtmlDivElement>(e.Tag, exactMatch: false);
         var html = @"<div alt=""alt"" onclick=""test"" onload=""test""></div>";
         sanitizer.Sanitize(html);
     }
@@ -2028,7 +2028,7 @@ rl(javascript:alert(""foo""))'>";
     public void RemovingStyleEventTagTest()
     {
         var sanitizer = new HtmlSanitizer();
-        sanitizer.RemovingStyle += (s, e) => Assert.IsAssignableFrom<IHtmlDivElement>(e.Tag);
+        sanitizer.RemovingStyle += (s, e) => Assert.IsType<IHtmlDivElement>(e.Tag, exactMatch: false);
         var html = @"<div style=""background: 0; test: xyz; bad: bad;""></div>";
         sanitizer.Sanitize(html);
     }
