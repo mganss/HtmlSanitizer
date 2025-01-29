@@ -5,7 +5,7 @@
     <Copyright>Copyright 2013-$([System.DateTime]::Now.Year) Michael Ganss</Copyright>
     <AssemblyTitle>HtmlSanitizer</AssemblyTitle>
     <AppVeyor_Build_Version Condition="'$(APPVEYOR_BUILD_VERSION)' == ''">1.0.0</AppVeyor_Build_Version>
-    <AssemblyVersion>8.0.0.0</AssemblyVersion>
+    <AssemblyVersion>9.0.0.0</AssemblyVersion>
     <InformationalVersion>$(AppVeyor_Build_Version)</InformationalVersion>
     <FileVersion>$(AppVeyor_Build_Version).0</FileVersion>
     <PackageVersion>$(AppVeyor_Build_Version)</PackageVersion>
@@ -41,8 +41,6 @@
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="[0.17.1]" />
     <PackageReference Include="AngleSharp.Css" Version="[0.17.0]" />
-    <PackageReference Include="AngleSharp" Version="1.2.0" />
-    <PackageReference Include="AngleSharp.Css" Version="1.0.0-beta.139" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
     <PackageReference Include="System.Collections.Immutable" Version="9.0.1" />
   </ItemGroup>
