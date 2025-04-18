@@ -874,7 +874,7 @@ public class HtmlSanitizer : IHtmlSanitizer
         if (iri != null && !iri.IsAbsolute && !string.IsNullOrEmpty(baseUrl))
         {
             // resolve relative URI
-            if (Uri.TryCreate(baseUrl, UriKind.Absolute, out Uri baseUri))
+            if (Uri.TryCreate(baseUrl, UriKind.Absolute, out Uri? baseUri))
             {
                 try
                 {
