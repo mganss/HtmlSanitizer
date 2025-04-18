@@ -10,7 +10,7 @@
     <FileVersion>$(AppVeyor_Build_Version).0</FileVersion>
     <PackageVersion>$(AppVeyor_Build_Version)</PackageVersion>
     <Authors>Michael Ganss</Authors>
-    <TargetFrameworks>net461;netstandard2.0</TargetFrameworks>
+    <TargetFrameworks>net461;netstandard2.0;net8.0</TargetFrameworks>
     <AssemblyName>HtmlSanitizer</AssemblyName>
     <AssemblyOriginatorKeyFile>HtmlSanitizer.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
