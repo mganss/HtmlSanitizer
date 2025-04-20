@@ -10,7 +10,7 @@
     <FileVersion>$(AppVeyor_Build_Version).0</FileVersion>
     <PackageVersion>$(AppVeyor_Build_Version)</PackageVersion>
     <Authors>Michael Ganss</Authors>
-    <TargetFrameworks>net461;netstandard2.0;net8.0</TargetFrameworks>
+    <TargetFrameworks>net462;netstandard2.0;net8.0</TargetFrameworks>
     <AssemblyName>HtmlSanitizer</AssemblyName>
     <AssemblyOriginatorKeyFile>HtmlSanitizer.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
@@ -19,8 +19,8 @@
     <PackageTags>xss;anti;antixss;html;security</PackageTags>
     <PackageProjectUrl>https://github.com/mganss/HtmlSanitizer</PackageProjectUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-	<PackageReadmeFile>README.md</PackageReadmeFile>
-	<RepositoryType>git</RepositoryType>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryType>git</RepositoryType>
     <RepositoryUrl>git://github.com/mganss/HtmlSanitizer</RepositoryUrl>
     <RootNamespace>Ganss.Xss</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
@@ -32,6 +32,7 @@
     <LangVersion>preview</LangVersion>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>nullable</WarningsAsErrors>
+    <NoWarn>$(NoWarn);IDE0130;SYSLIB1045</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(CI)' == 'True'">
@@ -42,9 +43,10 @@
     <PackageReference Include="AngleSharp" Version="1.2.0" />
     <PackageReference Include="AngleSharp.Css" Version="1.0.0-beta.151" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
+    <PackageReference Include="System.ValueTuple" Version="4.6.1" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net461'">
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net462'">
     <PackageReference Include="System.Collections.Immutable" Version="9.0.1" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0'">
