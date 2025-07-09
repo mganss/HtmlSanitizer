@@ -873,6 +873,22 @@ S
         Assert.Equal(expected, actual, ignoreCase: true);
     }
 
+    [Fact]
+    public void AnchorTagStyleExpressionXssWithReportTest()
+    {
+        // Arrange
+        var sanitizer = Sanitizer;
+
+        // Act
+        string htmlFragment = "exp/*<A STYLE='no\\xss:noxss(\"*//*\");xss:&#101;x&#x2F;*XSS*//*/*/pression(alert(\"XSS\"))'>";
+        string actual = sanitizer.Sanitize(htmlFragment, out var report);
+        //To generate structured log output
+        string logOutput = SanitizationReportLogger.GenerateLog(report);
+        // Assert
+        string expected = "exp/*<a></a>";
+        Assert.Equal(expected, actual, ignoreCase: true);
+    }
+
     /// <summary>
     /// A test for Base tag
     /// Example <!-- <BASE HREF="javascript:alert('XSS');//"> -->
@@ -980,6 +996,24 @@ S
         // Act
         string htmlFragment = "<XML ID=\"xss\"><I><B>&lt;IMG SRC=\"javas<!-- -->cript:alert('XSS')\"&gt;</B></I></XML><SPAN DATASRC=\"#xss\" DATAFLD=\"B\" DATAFORMATAS=\"HTML\"></SPAN>";
         string actual = sanitizer.Sanitize(htmlFragment);
+
+        // Assert
+        string expected = "<SPAN></SPAN>";
+        Assert.Equal(expected, actual, ignoreCase: true);
+    }
+
+    [Fact]
+    public void XmlWithCommentObfuscationXssWithReportTest()
+    {
+        // Arrange
+        var sanitizer = Sanitizer;
+
+        // Act
+        string htmlFragment = "<XML ID=\"xss\"><I><B>&lt;IMG SRC=\"javas<!-- -->cript:alert('XSS')\"&gt;</B></I></XML><SPAN DATASRC=\"#xss\" DATAFLD=\"B\" DATAFORMATAS=\"HTML\"></SPAN>";
+        string actual = sanitizer.Sanitize(htmlFragment, out var report);
+
+        //To generate structured log output
+        string logOutput = SanitizationReportLogger.GenerateLog(report);
 
         // Assert
         string expected = "<SPAN></SPAN>";
@@ -1656,6 +1690,24 @@ S
 
         Assert.Equal(expected, actual, ignoreCase: true);
     }
+
+
+    [Fact]
+    public void DisallowedAttributeWithReportTest()
+    {
+        var sanitizer = Sanitizer;
+
+        var html = @"<div bla=""test"">Test</div>";
+        var actual = sanitizer.Sanitize(html, out var report);
+
+        //To generate structured log output
+        string logOutput = SanitizationReportLogger.GenerateLog(report);
+
+        var expected = @"<div>Test</div>";
+
+        Assert.Equal(expected, actual, ignoreCase: true);
+    }
+
 
     /// <summary>
     /// Tests sanitization of attributes that contain a URL.
@@ -2998,6 +3050,28 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
         var html = @"<div class=""good bad"">Test</div>";
         var actual = sanitizer.Sanitize(html);
+
+        // Assert
+        Assert.Equal(@"<div>Test</div>", actual);
+    }
+
+
+    [Fact]
+    public void RemoveClassAttributeIfEmptyWithReportTest()
+    {
+        var options = new HtmlSanitizerOptions
+        {
+            AllowedTags = new HashSet<string> { "div" },
+            AllowedAttributes = new HashSet<string> { "class" },
+            AllowedCssClasses = new HashSet<string> { "other" },
+        };
+        var sanitizer = new HtmlSanitizer(options);
+
+        var html = @"<div class=""good bad"">Test</div>";
+        var actual = sanitizer.Sanitize(html, out var report);
+        //To generate structured log output
+        string logOutput = SanitizationReportLogger.GenerateLog(report);
+
 
         // Assert
         Assert.Equal(@"<div>Test</div>", actual);

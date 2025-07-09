@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -69,6 +70,7 @@ public class HtmlSanitizer : IHtmlSanitizer
     });
 
     private static readonly HtmlParser defaultHtmlParser = new(new HtmlParserOptions { IsScripting = true }, BrowsingContext.New(defaultConfiguration));
+    private SanitizationReport report = new SanitizationReport();
 
     /// <summary>
     /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class
@@ -397,6 +399,26 @@ public class HtmlSanitizer : IHtmlSanitizer
     /// Sanitizes the specified HTML body fragment. If a document is given, only the body part will be returned.
     /// </summary>
     /// <param name="html">The HTML body fragment to sanitize.</param>
+    /// <param name="report">The sanitation report containing details of removed or modified elements.</param>
+    /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
+    /// <param name="outputFormatter">The formatter used to render the DOM. Using the <see cref="OutputFormatter"/> if null.</param>
+    /// <returns>The sanitized HTML body fragment.</returns>
+    public string Sanitize(string html, out SanitizationReport report, string baseUrl = "", IMarkupFormatter? outputFormatter = null)
+    {
+        report = new SanitizationReport();
+
+        using var dom = SanitizeDom(html, baseUrl);
+        if (dom.Body == null) return string.Empty;
+        var output = dom.Body.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
+        report = this.report;
+        return output;
+    }
+
+
+    /// <summary>
+    /// Sanitizes the specified HTML body fragment. If a document is given, only the body part will be returned.
+    /// </summary>
+    /// <param name="html">The HTML body fragment to sanitize.</param>
     /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
     /// <returns>The sanitized HTML document.</returns>
     public IHtmlDocument SanitizeDom(string html, string baseUrl = "")
@@ -504,6 +526,7 @@ public class HtmlSanitizer : IHtmlSanitizer
         foreach (var tag in context.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList())
         {
             RemoveTag(tag, RemoveReason.NotAllowedTag);
+            report.LogRemovedTag(tag.TagName);
         }
 
         // always encode text in raw data content
@@ -534,7 +557,10 @@ public class HtmlSanitizer : IHtmlSanitizer
                 if (url == null)
                     RemoveAttribute(tag, attribute, RemoveReason.NotAllowedUrlValue);
                 else
+                {
                     tag.SetAttribute(attribute.Name, url);
+                    report.LogModifiedAttr(tag.TagName, attribute.Name);
+                }
             }
 
             // sanitize the style attribute
@@ -930,7 +956,10 @@ public class HtmlSanitizer : IHtmlSanitizer
         OnRemovingAttribute(e);
 
         if (!e.Cancel)
+        {
             tag.RemoveAttribute(attribute.Name);
+            report.LogRemovedAttr(tag.TagName, attribute.Name);
+        }
     }
 
     /// <summary>
@@ -975,6 +1004,9 @@ public class HtmlSanitizer : IHtmlSanitizer
         OnRemovingCssClass(e);
 
         if (!e.Cancel)
+        {
             tag.ClassList.Remove(cssClass);
+            report.LogRemovedCssClass(tag.TagName, cssClass);
+        }
     }
 }
