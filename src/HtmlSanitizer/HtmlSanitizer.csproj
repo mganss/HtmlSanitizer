@@ -39,14 +39,9 @@
 		<ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
 	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="AngleSharp" Version="1.3.0" />
-    <PackageReference Include="AngleSharp.Css" Version="1.0.0-beta.154" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
-  </ItemGroup>
 	<ItemGroup>
-		<PackageReference Include="AngleSharp" Version="[0.17.1]" />
-		<PackageReference Include="AngleSharp.Css" Version="[0.17.0]" />
+		<PackageReference Include="AngleSharp" Version="1.4.0" />
+		<PackageReference Include="AngleSharp.Css" Version="1.0.0-beta.154" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All" />
 	</ItemGroup>
 
