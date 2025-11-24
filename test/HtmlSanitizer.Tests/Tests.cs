@@ -2874,7 +2874,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
     public static IEnumerable<T> Shuffle<T>(IEnumerable<T> source, Random rng)
     {
-        T[] elements = source.ToArray();
+        T[] elements = [.. source];
         for (int i = elements.Length - 1; i >= 0; i--)
         {
             // Swap element "i" with a random earlier element it (or itself)
@@ -2973,7 +2973,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             if (e.Attribute.Name == "class")
             {
-                e.Tag.ClassList.Remove(e.Tag.ClassList.Except(["good", "oktoo"], StringComparer.OrdinalIgnoreCase).ToArray());
+                e.Tag.ClassList.Remove([.. e.Tag.ClassList.Except(["good", "oktoo"], StringComparer.OrdinalIgnoreCase)]);
                 e.Cancel = e.Tag.ClassList.Length != 0;
             }
         };
