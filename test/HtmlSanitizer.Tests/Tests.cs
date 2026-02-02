@@ -3629,4 +3629,17 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var sanitized = sanitizer.Sanitize(input);
         Assert.Equal("<style>:root { }</style>", sanitized);
     }
+
+    [Fact]
+    public void TemplateTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("template");
+        sanitizer.AllowedTags.Add("style");
+
+        var html = "<div><template><style>div { display: none }</style><script>alert('xss')</script></template></div>";
+        var sanitized = sanitizer.Sanitize(html);
+        var expected = "<div><template><style>div { display: none }</style></template></div>";
+        Assert.Equal(expected, sanitized);
+    }
 }
