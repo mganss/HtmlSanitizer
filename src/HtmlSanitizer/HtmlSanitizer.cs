@@ -498,7 +498,7 @@ public class HtmlSanitizer : IHtmlSanitizer
             tag.SetInnerText(escapedHtml);
     }
 
-    private void DoSanitize(IHtmlDocument dom, IParentNode context, string baseUrl = "")
+    private void DoSanitize(INode dom, IParentNode context, string baseUrl = "")
     {
         // remove disallowed tags
         foreach (var tag in context.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList())
@@ -520,6 +520,11 @@ public class HtmlSanitizer : IHtmlSanitizer
         // cleanup attributes
         foreach (var tag in context.QuerySelectorAll("*").ToList())
         {
+            if (tag is IHtmlTemplateElement templateElement && templateElement.Content is IDocumentFragment fragment)
+            {
+                DoSanitize(fragment, fragment, baseUrl);
+            }
+
             // remove disallowed attributes
             foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
             {
@@ -575,12 +580,17 @@ public class HtmlSanitizer : IHtmlSanitizer
             RemoveComments(node);
         }
 
-        DoPostProcess(dom, context as INode);
+        var doc = dom as IHtmlDocument ?? dom.Owner as IHtmlDocument;
+
+        if (doc != null)
+        {
+            DoPostProcess(doc, context as INode);
+        }
     }
 
-    private void SanitizeStyleSheets(IHtmlDocument dom, string baseUrl)
+    private void SanitizeStyleSheets(INode node, string baseUrl)
     {
-        foreach (var styleSheet in dom.StyleSheets.OfType<ICssStyleSheet>())
+        foreach (var styleSheet in node.GetStyleSheets().OfType<ICssStyleSheet>())
         {
             var styleTag = styleSheet.OwnerNode;
             var i = 0;
