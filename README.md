@@ -515,7 +515,7 @@ sanitizer.AllowedSchemes.Add("mailto");
 ```
 
 ### Default attributes that contain URIs
-`action`, `background`, `dynsrc`, `href`, `lowsrc`, `src`
+`action`, `formaction`, `background`, `dynsrc`, `href`, `lowsrc`, `src`
 
 ### Thread safety
 
