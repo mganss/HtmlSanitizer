@@ -10,7 +10,7 @@
 		<FileVersion>$(AppVeyor_Build_Version).0</FileVersion>
 		<PackageVersion>$(AppVeyor_Build_Version)</PackageVersion>
 		<Authors>Michael Ganss</Authors>
-		<TargetFrameworks>net462;net47;netstandard2.0;net8.0</TargetFrameworks>
+		<TargetFrameworks>netstandard2.0;net8.0</TargetFrameworks>
 		<AssemblyName>HtmlSanitizer</AssemblyName>
 		<AssemblyOriginatorKeyFile>HtmlSanitizer.snk</AssemblyOriginatorKeyFile>
 		<SignAssembly>true</SignAssembly>
@@ -40,17 +40,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="AngleSharp" Version="[0.17.1]" />
+		<PackageReference Include="AngleSharp" Version="[1.4.0]" />
 		<PackageReference Include="AngleSharp.Css" Version="[0.17.0]" />
 		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" PrivateAssets="All" />
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net462' Or '$(TargetFramework)' == 'net47' Or '$(TargetFramework)' == 'netstandard2.0'">
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
 		<PackageReference Include="System.Collections.Immutable" Version="10.0.8" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(TargetFramework)' == 'net462'">
-		<PackageReference Include="System.ValueTuple" Version="4.6.2" />
 	</ItemGroup>
 
 	<ItemGroup>
