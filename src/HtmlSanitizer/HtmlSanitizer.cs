@@ -817,15 +817,37 @@ public class HtmlSanitizer : IHtmlSanitizer
             }
         }
 
-        foreach (var style in setStyles)
-        {
-            styles.SetProperty(style.Key, style.Value);
-        }
+        if (removeStyles.Count == 0 && setStyles.Count == 0)
+            return;
+
+        var removedNames = new HashSet<string>();
 
         foreach (var style in removeStyles)
         {
-            RemoveStyle(element, styles, style.Item1, style.Item2);
+            var e = new RemovingStyleEventArgs(element, style.Item1, style.Item2);
+            OnRemovingStyle(e);
+
+            if (!e.Cancel)
+                removedNames.Add(style.Item1.Name);
         }
+
+        // Rebuild the declaration list once instead of mutating it property by property:
+        // AngleSharp.Css re-serializes the whole style attribute on every SetProperty/RemoveProperty call,
+        // which is quadratic in the number of declarations.
+        var cssText = new StringBuilder();
+
+        foreach (var style in styles)
+        {
+            if (removedNames.Contains(style.Name))
+                continue;
+
+            if (setStyles.TryGetValue(DecodeCss(style.Name), out var newValue))
+                cssText.Append(style.Name).Append(':').Append(newValue).Append(';');
+            else
+                cssText.Append(style.ToCss()).Append(';');
+        }
+
+        styles.CssText = cssText.ToString();
     }
 
     /// <summary>
@@ -941,22 +963,6 @@ public class HtmlSanitizer : IHtmlSanitizer
 
         if (!e.Cancel)
             tag.RemoveAttribute(attribute.Name);
-    }
-
-    /// <summary>
-    /// Removes a style from the document.
-    /// </summary>
-    /// <param name="tag">Tag the style belongs to.</param>
-    /// <param name="styles">Style rule that contains the style to be removed.</param>
-    /// <param name="style">Style to be removed.</param>
-    /// <param name="reason">Reason for removal.</param>
-    private void RemoveStyle(IElement tag, ICssStyleDeclaration styles, ICssProperty style, RemoveReason reason)
-    {
-        var e = new RemovingStyleEventArgs(tag, style, reason);
-        OnRemovingStyle(e);
-
-        if (!e.Cancel)
-            styles.RemoveProperty(style.Name);
     }
 
     /// <summary>
