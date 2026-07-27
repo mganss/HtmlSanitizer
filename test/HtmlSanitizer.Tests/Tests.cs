@@ -3395,13 +3395,13 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
         sanitizer.AllowedTags.Add("style");
 
-        AngleSharp.Css.Values.Color.UseHex = true;
+        AngleSharp.Css.Values.CssColorValue.UseHex = true;
 
         var sanitized = sanitizer.Sanitize(html);
 
         Assert.Equal(@"<p style=""color: #000000"">Text</p>", sanitized);
 
-        AngleSharp.Css.Values.Color.UseHex = false;
+        AngleSharp.Css.Values.CssColorValue.UseHex = false;
 
         sanitized = sanitizer.Sanitize(html);
 
@@ -3479,11 +3479,61 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
     }
 
     [Fact]
-    public void VarUrlTest()
+    public void PageRuleTest()
     {
-        var html = @"<span style=""background-image: var(--urlSpellingErrorV2,url(&quot;https://www.example.com/&quot;))"">Ipsum</span>";
+        // see https://github.com/mganss/HtmlSanitizer/issues/438
+
+        var input = "<style>@page { margin: 25mm }</style>";
+
+        var sanitizer = new HtmlSanitizer
+        {
+            AllowedTags = { "style" },
+            AllowedAtRules = { CssRuleType.Page },
+        };
+
+        var output = sanitizer.Sanitize(input);
+
+        Assert.Equal(input, output);
+    }
+
+    [Fact]
+    public void CssExceptionTest()
+    {
+        // see https://github.com/mganss/HtmlSanitizer/issues/426
+
+        var ex = Record.Exception(() => Sanitizer.Sanitize("<div style=\"border-width:1px;border-right-width:px;\"></div>"));
+        Assert.Null(ex);
+    }
+
+    [Fact]
+    public void RgbTest()
+    {
+        // see https://github.com/mganss/HtmlSanitizer/issues/340
+
         var sanitizer = new HtmlSanitizer();
-        sanitizer.AllowedAttributes.Add("style");
+        var html = @"<p style='color: RGB(0,0,0)'>Text</p>";
+        var sanitized = sanitizer.Sanitize(html, "http://www.example.com");
+        Assert.Equal("<p style=\"color: rgba(0, 0, 0, 1)\">Text</p>", sanitized);
+        html = @"<p style='color: rgb(0,0,0)'>Text</p>";
+        sanitized = sanitizer.Sanitize(html, "http://www.example.com");
+        Assert.Equal("<p style=\"color: rgba(0, 0, 0, 1)\">Text</p>", sanitized);
+    }
+
+    [Fact]
+    public void InheritTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("style");
+        var html = @"<style>div { margin: inherit }</style>";
+        var sanitized = sanitizer.Sanitize(html);
+        Assert.Equal(html, sanitized);
+    }
+
+    [Fact]
+    public void ReplacementCharacterTest()
+    {
+        var html = @"<span style=""background-image: var(--urlSpellingErrorV2,url(&quot;https://www.example.com/))"">Ipsum</span>";
+        var sanitizer = new HtmlSanitizer();
         var sanitized = sanitizer.Sanitize(html);
         Assert.Equal(html, sanitized);
     }
@@ -3507,7 +3557,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         sanitizer.AllowedTags.Add("xmp");
         var bypass = @"<svg></p><title><xmp></title><img src=x onerror=alert(1)></xmp></title>";
         var sanitized = sanitizer.Sanitize(bypass, "https://www.example.com");
-        var expected = @"<svg><p></p><title><xmp>&lt;/title&gt;&lt;img src=x onerror=alert(1)&gt;</xmp></title></svg>";
+        var expected = "<svg></svg><p></p><title>&lt;xmp&gt;</title><img src=\"https://www.example.com/x\">";
         Assert.Equal(expected, sanitized);
     }
 
@@ -3535,7 +3585,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         sanitizer.AllowedTags.Add("noscript");
         var bypass = @"<svg></p><title><noscript></title><img src=x onerror=alert(1)></noscript></title>";
         var sanitized = sanitizer.Sanitize(bypass, "https://www.example.com");
-        var expected = "<svg><p></p><title><noscript>&lt;/title&gt;&lt;img src=x onerror=alert(1)&gt;</noscript></title></svg>";
+        var expected = "<svg></svg><p></p><title>&lt;noscript&gt;</title><img src=\"https://www.example.com/x\">";
         Assert.Equal(expected, sanitized);
     }
 
@@ -3549,7 +3599,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         sanitizer.RemovingComment += (s, e) => e.Cancel = true;
         var bypass = @"<svg></p><style><!--</style><img src=x onerror=alert(1)>-->";
         var sanitized = sanitizer.Sanitize(bypass, "https://www.example.com");
-        var expected = "<svg><p></p><style><!--&lt;/style&gt;&lt;img src=x onerror=alert(1)&gt;--></style></svg>";
+        var expected = "<svg></svg><p></p><style></style><img src=\"https://www.example.com/x\">--&gt;";
         Assert.Equal(expected, sanitized);
     }
 
