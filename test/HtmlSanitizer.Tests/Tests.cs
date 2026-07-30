@@ -3692,4 +3692,21 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var expected = "<div><template><style>div { display: none }</style></template></div>";
         Assert.Equal(expected, sanitized);
     }
+
+    [Fact]
+    public void FilterCssRuleTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("style");
+        sanitizer.FilterCssRule += (s, e) =>
+        {
+            if (e.CssRule is ICssStyleRule styleRule && styleRule.SelectorText == "div")
+            {
+                e.Cancel = true;
+            }
+        };
+        var html = "<style>div { padding: 0 } p { padding-left: 10px }</style>";
+        var sanitized = sanitizer.Sanitize(html);
+        Assert.Equal("<style>p { padding-left: 10px }</style>", sanitized);
+    }
 }

@@ -272,3 +272,39 @@ public class FilterUrlEventArgs(IElement tag, string originalUrl, string? saniti
     /// </value>
     public IElement Tag { get; private set; } = tag;
 }
+
+/// <summary>
+/// Provides data for the <see cref="HtmlSanitizer.FilterCssRule"/> event.
+/// </summary>
+/// <remarks>
+/// Initializes a new instance of the <see cref="FilterCssRuleEventArgs"/> class.
+/// </remarks>
+/// <param name="styleTag">The element containing the CSS rule being sanitized.</param>
+/// <param name="cssRule">The CSS rule to be removed.</param>
+/// <param name="baseUrl">The base URL for resolving relative URLs.</param>
+public class FilterCssRuleEventArgs(IElement styleTag, ICssRule cssRule, string baseUrl) : CancelEventArgs
+{
+    /// <summary>
+    /// Gets the style tag containing the CSS rule being sanitized.
+    /// </summary>
+    /// <value>
+    /// The tag.
+    /// </value>
+    public IElement StyleTag { get; private set; } = styleTag;
+
+    /// <summary>
+    /// Gets the CSS rule being sanitized.
+    /// </summary>
+    /// <value>
+    /// The CSS rule.
+    /// </value>
+    public ICssRule CssRule { get; private set; } = cssRule;
+
+    /// <summary>
+    /// Gets the base URL for resolving relative URLs.
+    /// </summary>
+    /// <value>
+    /// The base URL for resolving relative URLs.
+    /// </value>
+    public string BaseUrl { get; private set; } = baseUrl;
+}

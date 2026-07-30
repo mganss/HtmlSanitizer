@@ -263,6 +263,10 @@ public class HtmlSanitizer : IHtmlSanitizer
     /// Occurs when a URL is being sanitized.
     /// </summary>
     public event EventHandler<FilterUrlEventArgs>? FilterUrl;
+    /// <summary>
+    /// Occurs when a CSS rule is being sanitized.
+    /// </summary>
+    public event EventHandler<FilterCssRuleEventArgs>? FilterCssRule;
 
     /// <summary>
     /// Raises the <see cref="E:PostProcessDom" /> event.
@@ -348,6 +352,17 @@ public class HtmlSanitizer : IHtmlSanitizer
     protected virtual void OnFilteringUrl(FilterUrlEventArgs e)
     {
         FilterUrl?.Invoke(this, e);
+    }
+
+    /// <summary>
+    /// Raises the <see cref="E:FilterCssRule" /> event.
+    /// </summary>
+    /// <param name="e">The <see cref="FilterCssRuleEventArgs"/> instance containing the event data.</param>
+    /// <returns>True if the CSS rule should be kept; otherwise, false.</returns>
+    protected virtual bool OnFilteringCssRule(FilterCssRuleEventArgs e)
+    {
+        FilterCssRule?.Invoke(this, e);
+        return !e.Cancel;
     }
 
     /// <summary>
@@ -610,6 +625,13 @@ public class HtmlSanitizer : IHtmlSanitizer
     private bool SanitizeStyleRule(ICssRule rule, IElement styleTag, string baseUrl)
     {
         if (!AllowedAtRules.Contains(rule.Type)) return false;
+
+        if (FilterCssRule != null)
+        {
+            var e = new FilterCssRuleEventArgs(styleTag, rule, baseUrl);
+            if (!OnFilteringCssRule(e))
+                return false;
+        }
 
         if (rule is ICssStyleRule styleRule)
         {
