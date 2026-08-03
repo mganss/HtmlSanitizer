@@ -800,9 +800,13 @@ public class HtmlSanitizer : IHtmlSanitizer
                 continue;
             }
 
-            val = WhitespaceRegex.Replace(val, string.Empty);
+            // The whitespace-stripped copy is used only to detect (possibly whitespace-obfuscated) url() constructs.
+            // The value written back is rebuilt from the original so that spacing between tokens is preserved.
+            var strippedVal = WhitespaceRegex.Replace(val, string.Empty);
 
-            var urls = CssUrl.Matches(val).Cast<Match>().Select(m => (Match: m, Url: SanitizeUrl(element, m.Groups[2].Value, baseUrl))).ToList();
+            var urls = CssUrl.Matches(strippedVal).Cast<Match>()
+                .Select(m => (Match: m, Url: SanitizeUrl(element, m.Groups[2].Value, baseUrl)))
+                .ToList();
 
             if (urls.Count > 0)
             {
@@ -810,24 +814,33 @@ public class HtmlSanitizer : IHtmlSanitizer
                     removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedUrlValue));
                 else
                 {
+                    // Prefer rebuilding against the original value so whitespace is preserved. Only fall
+                    // back to the stripped value if the url tokens don't line up (which can happen when
+                    // whitespace was obfuscating the url() construct).
+                    var originalMatches = CssUrl.Matches(val).Cast<Match>().ToList();
+                    var useOriginal = originalMatches.Count == urls.Count;
+                    var baseValue = useOriginal ? val : strippedVal;
+                    var matches = useOriginal ? originalMatches : urls.Select(u => u.Match).ToList();
+
                     var sb = new StringBuilder();
                     var ix = 0;
 
-                    foreach (var url in urls)
+                    for (var j = 0; j < matches.Count; j++)
                     {
-                        sb.Append(val, ix, url.Match.Index - ix);
+                        var match = matches[j];
+                        sb.Append(baseValue, ix, match.Index - ix);
                         sb.Append("url(");
-                        sb.Append(url.Match.Groups[1].Value);
-                        sb.Append(url.Url);
-                        sb.Append(url.Match.Groups[3].Value);
-                        ix = url.Match.Index + url.Match.Length;
+                        sb.Append(match.Groups[1].Value);
+                        sb.Append(urls[j].Url);
+                        sb.Append(match.Groups[3].Value);
+                        ix = match.Index + match.Length;
                     }
 
-                    sb.Append(val, ix, val.Length - ix);
+                    sb.Append(baseValue, ix, baseValue.Length - ix);
 
                     var s = sb.ToString();
 
-                    if (s != val)
+                    if (s != baseValue)
                     {
                         if (key != style.Name)
                         {

@@ -1848,6 +1848,42 @@ rl(javascript:alert(""foo""))'>";
         Assert.Equal(@"<div style=""margin: 10px 20px""></div>", sanitizer.Sanitize(html), ignoreCase: true);
     }
 
+    // Regression test for whitespace being stripped from CSS values that contain a rewritten url()
+    [Fact]
+    public void SanitizeStyleUrlPreservesWhitespaceTest()
+    {
+        const string baseUrl = "https://cdn.example.com/assets/";
+        var sanitizer = new HtmlSanitizer { AllowCssCustomProperties = true };
+
+        // A CSS variable holding a composite value.
+        var html = @"<div style=""--panel-bg: #fff url(texture.png) repeat"">x</div>";
+        var actual = sanitizer.Sanitize(html, baseUrl);
+        Assert.Equal(@"<div style=""--panel-bg: #fff url(https://cdn.example.com/assets/texture.png) repeat"">x</div>", actual);
+        Assert.DoesNotContain("#fffurl", actual);
+
+        // A variable holding a list of image URLs keeps its comma separator and resolves both.
+        html = @"<div style=""--carousel-arrows: url(prev.svg), url(next.svg)"">x</div>";
+        actual = sanitizer.Sanitize(html, baseUrl);
+        Assert.Equal(@"<div style=""--carousel-arrows: url(https://cdn.example.com/assets/prev.svg), url(https://cdn.example.com/assets/next.svg)"">x</div>", actual);
+
+        // A vendor property is kept verbatim.
+        sanitizer.AllowedCssProperties.Add("-webkit-box-reflect");
+        html = @"<div style=""-webkit-box-reflect: below 2px url(reflect.png)"">x</div>";
+        actual = sanitizer.Sanitize(html, baseUrl);
+        Assert.Equal(@"<div style=""-webkit-box-reflect: below 2px url(https://cdn.example.com/assets/reflect.png)"">x</div>", actual);
+        Assert.DoesNotContain("2pxurl", actual);
+
+        // Standard shorthands keep working.
+        html = @"<div style=""background: #fff url(texture.png) repeat"">x</div>";
+        actual = sanitizer.Sanitize(html, baseUrl);
+        Assert.Contains("https://cdn.example.com/assets/texture.png", actual);
+        Assert.Contains(" repeat", actual);
+
+        // Values without url() are unaffected.
+        html = @"<div style=""margin: 10px 20px"">x</div>";
+        Assert.Equal(@"<div style=""margin: 10px 20px"">x</div>", sanitizer.Sanitize(html, baseUrl));
+    }
+
     [Fact]
     public void SanitizeRemoveSrcJavascriptTest()
     {
@@ -2529,7 +2565,7 @@ rl(javascript:alert(""foo""))'>";
         {
             AllowedTags = new HashSet<string> { "div" },
             AllowedAttributes = new HashSet<string> { "class" },
-            AllowedCssClasses  = new HashSet<string> { "good" },
+            AllowedCssClasses = new HashSet<string> { "good" },
         };
         RemoveReason? reason = null;
         string removedClass = null;
@@ -2555,7 +2591,7 @@ rl(javascript:alert(""foo""))'>";
         {
             AllowedTags = new HashSet<string> { "div" },
             AllowedAttributes = new HashSet<string> { "class" },
-            AllowedCssClasses  = new HashSet<string> { "other" },
+            AllowedCssClasses = new HashSet<string> { "other" },
         };
         RemoveReason? reason = null;
         string attributeName = null;
@@ -2992,7 +3028,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             AllowedTags = new HashSet<string> { "div" },
             AllowedAttributes = new HashSet<string> { "class" },
-            AllowedCssClasses  = new HashSet<string> { "other" },
+            AllowedCssClasses = new HashSet<string> { "other" },
         };
         var sanitizer = new HtmlSanitizer(options);
 
@@ -3713,16 +3749,20 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
     [Fact]
     public void FilterUrlDuplicateTest()
     {
+        const string baseUrl = "https://cdn.example.com/assets/";
+
         var sanitizer = new HtmlSanitizer();
 
         var count = 0;
         sanitizer.FilterUrl += (_, _) => count++;
 
         // A single background image with one url().
-        sanitizer.Sanitize(
-            @"<div style=""background-image: url(logo.png)"">Hello</div>",
-            "https://cdn.example.com/assets/");
-
+        sanitizer.Sanitize(@"<div style=""background-image: url(logo.png)"">x</div>", baseUrl);
         Assert.Equal(1, count);
+
+        // Two url()s in one value (multiple background images) fire once each - twice in total.
+        count = 0;
+        sanitizer.Sanitize(@"<div style=""background-image: url(a.png), url(b.png)"">x</div>", baseUrl);
+        Assert.Equal(2, count);
     }
 }
