@@ -1884,6 +1884,26 @@ rl(javascript:alert(""foo""))'>";
         Assert.Equal(@"<div style=""margin: 10px 20px"">x</div>", sanitizer.Sanitize(html, baseUrl));
     }
 
+    // Covers the fallback branch in SanitizeStyleDeclaration where the whitespace-stripped value and the
+    // original value yield a different number of url() matches.
+    [Fact]
+    public void SanitizeStyleUrlWhitespaceBeforeParenFallbackTest()
+    {
+        const string baseUrl = "https://cdn.example.com/assets/";
+        var sanitizer = new HtmlSanitizer
+        {
+            AllowCssCustomProperties = true
+        };
+
+        var html = @"<div style=""--logo: url (pic.png)"">x</div>";
+        var actual = sanitizer.Sanitize(html, baseUrl);
+        Assert.Equal(@"<div style=""--logo: url(https://cdn.example.com/assets/pic.png)"">x</div>", actual);
+
+        html = @"<div style=""--logo: url (javascript:alert(1))"">x</div>";
+        actual = sanitizer.Sanitize(html, baseUrl);
+        Assert.Equal(@"<div>x</div>", actual);
+    }
+
     [Fact]
     public void SanitizeRemoveSrcJavascriptTest()
     {
