@@ -802,9 +802,9 @@ public class HtmlSanitizer : IHtmlSanitizer
 
             val = WhitespaceRegex.Replace(val, string.Empty);
 
-            var urls = CssUrl.Matches(val).Cast<Match>().Select(m => (Match: m, Url: SanitizeUrl(element, m.Groups[2].Value, baseUrl)));
+            var urls = CssUrl.Matches(val).Cast<Match>().Select(m => (Match: m, Url: SanitizeUrl(element, m.Groups[2].Value, baseUrl))).ToList();
 
-            if (urls.Any())
+            if (urls.Count > 0)
             {
                 if (urls.Any(u => u.Url == null))
                     removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedUrlValue));

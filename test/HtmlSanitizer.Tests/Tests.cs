@@ -3709,4 +3709,20 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var sanitized = sanitizer.Sanitize(html);
         Assert.Equal("<style>p { padding-left: 10px }</style>", sanitized);
     }
+
+    [Fact]
+    public void FilterUrlDuplicateTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+
+        var count = 0;
+        sanitizer.FilterUrl += (_, _) => count++;
+
+        // A single background image with one url().
+        sanitizer.Sanitize(
+            @"<div style=""background-image: url(logo.png)"">Hello</div>",
+            "https://cdn.example.com/assets/");
+
+        Assert.Equal(1, count);
+    }
 }
