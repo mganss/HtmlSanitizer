@@ -164,3 +164,4 @@ coverity.zip
 *.nuget.targets
 
 /.idea
+/.claude
