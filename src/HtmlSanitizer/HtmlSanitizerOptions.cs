@@ -47,10 +47,20 @@ public class HtmlSanitizerOptions
     /// <summary>
     /// Allow all custom CSS properties (variables) prefixed with <c>--</c>.
     /// </summary>
+    /// <example>
+    /// <code>
+    /// var options = new HtmlSanitizerOptions { AllowCssCustomProperties = true };
+    /// </code>
+    /// </example>
     public bool AllowCssCustomProperties { get; set; }
 
     /// <summary>
     /// Allow all HTML5 data attributes; the attributes prefixed with <c>data-</c>.
     /// </summary>
+    /// <example>
+    /// <code>
+    /// var options = new HtmlSanitizerOptions { AllowDataAttributes = true };
+    /// </code>
+    /// </example>
     public bool AllowDataAttributes { get; set; }
 }
