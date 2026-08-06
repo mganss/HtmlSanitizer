@@ -59,8 +59,11 @@ public class HtmlSanitizer : IHtmlSanitizer
     private static readonly Regex CssComments = new(@"/\*.*?\*/", RegexOptions.Compiled);
     // IE6 <http://heideri.ch/jso/#80>
     private static readonly Regex CssExpression = new(@"[eE\uFF25\uFF45][xX\uFF38\uFF58][pP\uFF30\uFF50][rR\u0280\uFF32\uFF52][eE\uFF25\uFF45][sS\uFF33\uFF53]{2}[iI\u026A\uFF29\uFF49][oO\uFF2F\uFF4F][nN\u0274\uFF2E\uFF4E]", RegexOptions.Compiled);
-    private static readonly Regex CssUrl = new(@"[Uu][Rr\u0280][Ll\u029F]\((['""]?)([^'"")]+)(['""]?)", RegexOptions.Compiled);
-    private static readonly Regex WhitespaceRegex = new(@"\s*", RegexOptions.Compiled);
+    // Whitespace is allowed around the parenthesis and around the quotes, as a browser tokenizing
+    // url() would. The whitespace runs are atomic so the pattern can't backtrack into them, which
+    // is what made the earlier permissive version vulnerable to ReDoS (see 7fb4f86).
+    private static readonly Regex CssUrl = new(@"[Uu][Rr\u0280][Ll\u029F](?>\s*)\((?>\s*)(['""]?)([^'"")]*)(['""]?)(?>\s*)\)?", RegexOptions.Compiled);
+    private static readonly Regex WhitespaceRegex = new(@"\s+", RegexOptions.Compiled);
     private static readonly IConfiguration defaultConfiguration = Configuration.Default.WithCss(new CssParserOptions
     {
         IsIncludingUnknownDeclarations = true,
@@ -800,9 +803,17 @@ public class HtmlSanitizer : IHtmlSanitizer
                 continue;
             }
 
-            val = WhitespaceRegex.Replace(val, string.Empty);
-
-            var urls = CssUrl.Matches(val).Cast<Match>().Select(m => (Match: m, Url: SanitizeUrl(element, m.Groups[2].Value, baseUrl))).ToList();
+            // Matching runs against the original value so that the spacing between tokens is preserved
+            // when the value is rebuilt below. Whitespace inside the URL itself is removed before
+            // validation so constructs like url(java script:alert(1)) can't smuggle a disallowed scheme
+            // past the check; the value written back is what SanitizeUrl returned, so what is validated
+            // is what is emitted.
+            var urls = CssUrl.Matches(val).Cast<Match>()
+                .Select(m => (Match: m, Url: WhitespaceRegex.Replace(m.Groups[2].Value, string.Empty)))
+                // An empty url() has nothing to resolve or to validate, leave it alone.
+                .Where(u => u.Url.Length > 0)
+                .Select(u => (u.Match, Url: SanitizeUrl(element, u.Url, baseUrl)))
+                .ToList();
 
             if (urls.Count > 0)
             {
@@ -820,6 +831,7 @@ public class HtmlSanitizer : IHtmlSanitizer
                         sb.Append(url.Match.Groups[1].Value);
                         sb.Append(url.Url);
                         sb.Append(url.Match.Groups[3].Value);
+                        sb.Append(')');
                         ix = url.Match.Index + url.Match.Length;
                     }
 

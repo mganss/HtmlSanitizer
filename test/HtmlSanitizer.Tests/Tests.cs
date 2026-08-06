@@ -3660,6 +3660,161 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         Assert.Equal("<style>:root { --my-var: 1px }</style>", sanitized);
     }
 
+    // Regression test for whitespace being stripped from CSS values that contain a rewritten url()
+    [Fact]
+    public void SanitizeStyleUrlPreservesWhitespaceTest()
+    {
+        const string baseUrl = "https://cdn.example.com/assets/";
+        var sanitizer = new HtmlSanitizer { AllowCssCustomProperties = true };
+
+        // A CSS variable holding a composite value.
+        var html = @"<div style=""--panel-bg: #fff url(texture.png) repeat"">x</div>";
+        var actual = sanitizer.Sanitize(html, baseUrl);
+        Assert.Equal(@"<div style=""--panel-bg: #fff url(https://cdn.example.com/assets/texture.png) repeat"">x</div>", actual);
+        Assert.DoesNotContain("#fffurl", actual);
+
+        // A variable holding a list of image URLs keeps its comma separator and resolves both.
+        html = @"<div style=""--carousel-arrows: url(prev.svg), url(next.svg)"">x</div>";
+        actual = sanitizer.Sanitize(html, baseUrl);
+        Assert.Equal(@"<div style=""--carousel-arrows: url(https://cdn.example.com/assets/prev.svg), url(https://cdn.example.com/assets/next.svg)"">x</div>", actual);
+
+        // A vendor property is kept verbatim.
+        sanitizer.AllowedCssProperties.Add("-webkit-box-reflect");
+        html = @"<div style=""-webkit-box-reflect: below 2px url(reflect.png)"">x</div>";
+        actual = sanitizer.Sanitize(html, baseUrl);
+        Assert.Equal(@"<div style=""-webkit-box-reflect: below 2px url(https://cdn.example.com/assets/reflect.png)"">x</div>", actual);
+        Assert.DoesNotContain("2pxurl", actual);
+
+        // Padding inside url() is normalized away, the URL itself is resolved and the quote kept.
+        html = @"<div style=""--panel-bg: #fff url( 'texture.png' ) repeat"">x</div>";
+        actual = sanitizer.Sanitize(html, baseUrl);
+        Assert.Equal(@"<div style=""--panel-bg: #fff url('https://cdn.example.com/assets/texture.png') repeat"">x</div>", actual);
+
+        // Standard shorthands keep working.
+        html = @"<div style=""background: #fff url(texture.png) repeat"">x</div>";
+        actual = sanitizer.Sanitize(html, baseUrl);
+        Assert.Contains("https://cdn.example.com/assets/texture.png", actual);
+        Assert.Contains(" repeat", actual);
+
+        // Values without url() are unaffected.
+        html = @"<div style=""margin: 10px 20px"">x</div>";
+        Assert.Equal(@"<div style=""margin: 10px 20px"">x</div>", sanitizer.Sanitize(html, baseUrl));
+    }
+
+    // Covers url() detection when whitespace separates "url" from the opening paren
+    [Fact]
+    public void SanitizeStyleUrlWhitespaceBeforeParenTest()
+    {
+        const string baseUrl = "https://cdn.example.com/assets/";
+        var sanitizer = new HtmlSanitizer
+        {
+            AllowCssCustomProperties = true
+        };
+
+        var html = @"<div style=""--logo: url (pic.png)"">x</div>";
+        var actual = sanitizer.Sanitize(html, baseUrl);
+        Assert.Equal(@"<div style=""--logo: url(https://cdn.example.com/assets/pic.png)"">x</div>", actual);
+
+        html = @"<div style=""--logo: url (javascript:alert(1))"">x</div>";
+        actual = sanitizer.Sanitize(html, baseUrl);
+        Assert.Equal(@"<div>x</div>", actual);
+    }
+
+    // Whitespace padding inside url() must not stop the URL from being validated and resolved.
+    // Padding between the paren and the quote used to leave the quoted URL outside the match,
+    // so it was copied through unchecked.
+    [Fact]
+    public void SanitizeStyleUrlPaddedQuotesAreResolvedTest()
+    {
+        var urls = new[]
+        {
+            @"url( 'pic.png' )",
+            @"url('pic.png' )",
+            @"url( 'pic.png')",
+            @"url (  'pic.png'  )",
+            "url(\t'pic.png'\t)",
+            "url(\n'pic.png'\n)",
+        };
+
+        foreach (var url in urls)
+        {
+            var sanitizer = new HtmlSanitizer { AllowCssCustomProperties = true };
+
+            var actual = sanitizer.Sanitize($@"<div style=""--logo: {url}"">x</div>", "https://cdn.example.com/assets/");
+
+            Assert.Equal(@"<div style=""--logo: url('https://cdn.example.com/assets/pic.png')"">x</div>", actual);
+        }
+    }
+
+    // Bypass regression: a disallowed scheme must be removed no matter how the url() token is
+    // padded with whitespace or how the quotes are (mis)matched. These are checked against a
+    // vendor property and a custom property because AngleSharp normalizes known properties
+    // before the sanitizer sees them, which would mask the hole.
+    [Fact]
+    public void SanitizeStyleUrlWhitespaceObfuscationTest()
+    {
+        var values = new[]
+        {
+            @"url( 'javascript:alert(1)' )",
+            @"url('javascript:alert(1)' )",
+            @"url ( 'javascript:alert(1)')",
+            "url(\t'javascript:alert(1)')",
+            "url(\n\t 'javascript:alert(1)' \n)",
+            @"url( &quot;javascript:alert(1)&quot; )",
+            @"url( &quot;vbscript:msgbox(1)&quot; )",
+            @"url('javascript:alert(1)'",
+            @"url(java script:alert(1))",
+            @"url(javascript :alert(1))",
+            @"url(&#1;javascript:alert(1))",
+            @"#fff url('a.png') , url( 'javascript:alert(1)' )",
+            // No closing parenthesis anywhere, so the url() token is never terminated.
+            @"url('javascript:alert 1",
+            @"url( 'javascript:alert 1",
+            @"url(javascript:alert 1",
+            @"url(&quot;javascript:alert 1",
+            @"url ( &quot;vbscript:msgbox 1",
+        };
+
+        foreach (var value in values)
+        {
+            foreach (var property in new[] { "-ms-behavior", "--logo" })
+            {
+                var sanitizer = new HtmlSanitizer { AllowCssCustomProperties = true };
+                sanitizer.AllowedCssProperties.Add("-ms-behavior");
+
+                var html = $@"<div style=""{property}: {value}"">x</div>";
+
+                Assert.Equal(@"<div>x</div>", sanitizer.Sanitize(html));
+                Assert.Equal(@"<div>x</div>", sanitizer.Sanitize(html, "https://cdn.example.com/assets/"));
+            }
+        }
+    }
+
+    // A parenthesis inside a quoted URL must survive the round trip.
+    [Fact]
+    public void SanitizeStyleUrlQuotedParenthesisTest()
+    {
+        var sanitizer = new HtmlSanitizer { AllowCssCustomProperties = true };
+
+        var actual = sanitizer.Sanitize(@"<div style=""--logo: url('a(1).png')"">x</div>", "https://cdn.example.com/assets/");
+
+        Assert.Equal(@"<div style=""--logo: url('https://cdn.example.com/assets/a(1).png')"">x</div>", actual);
+    }
+
+    // An empty url() has nothing to resolve, so it is left alone rather than rewritten to the base URL.
+    [Fact]
+    public void SanitizeStyleEmptyUrlTest()
+    {
+        foreach (var url in new[] { "url()", "url(  )" })
+        {
+            var sanitizer = new HtmlSanitizer { AllowCssCustomProperties = true };
+
+            var html = $@"<div style=""--logo: {url}"">x</div>";
+
+            Assert.Equal(html, sanitizer.Sanitize(html, "https://cdn.example.com/assets/"));
+        }
+    }
+
     [Fact]
     public void DisallowStyleAttributeCssCustomPropertiesTest()
     {
@@ -3713,16 +3868,20 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
     [Fact]
     public void FilterUrlDuplicateTest()
     {
+        const string baseUrl = "https://cdn.example.com/assets/";
+
         var sanitizer = new HtmlSanitizer();
 
         var count = 0;
         sanitizer.FilterUrl += (_, _) => count++;
 
         // A single background image with one url().
-        sanitizer.Sanitize(
-            @"<div style=""background-image: url(logo.png)"">Hello</div>",
-            "https://cdn.example.com/assets/");
-
+        sanitizer.Sanitize(@"<div style=""background-image: url(logo.png)"">x</div>", baseUrl);
         Assert.Equal(1, count);
+
+        // Two url()s in one value (multiple background images) fire once each - twice in total.
+        count = 0;
+        sanitizer.Sanitize(@"<div style=""background-image: url(a.png), url(b.png)"">x</div>", baseUrl);
+        Assert.Equal(2, count);
     }
 }
