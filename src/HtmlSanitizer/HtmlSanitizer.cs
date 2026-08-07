@@ -660,10 +660,11 @@ public class HtmlSanitizer : IHtmlSanitizer
             }
             else if (rule is ICssKeyframesRule keyFramesRule)
             {
-                foreach (var childRule in keyFramesRule.Rules.OfType<ICssKeyframeRule>().ToList())
+                foreach (var childRule in keyFramesRule.Rules.OfType<ICssKeyframeRule>()
+                    .Where(r => !SanitizeStyleRule(r, styleTag, baseUrl) && RemoveAtRule(styleTag, r))
+                    .ToList())
                 {
-                    if (!SanitizeStyleRule(childRule, styleTag, baseUrl) && RemoveAtRule(styleTag, childRule))
-                        keyFramesRule.Remove(childRule.KeyText);
+                    keyFramesRule.Remove(childRule.KeyText);
                 }
             }
             else if (rule is ICssKeyframeRule keyFrameRule)
