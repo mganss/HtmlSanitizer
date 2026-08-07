@@ -2043,6 +2043,24 @@ rl(javascript:alert(""foo""))'>";
     }
 
     [Fact]
+    public void UncPathResolvedToFileSchemeIsRejectedTest()
+    {
+        var sanitizer = Sanitizer;
+        var html = @"<a href=""\\evil.com\share\x"">Test</a>";
+        var actual = sanitizer.Sanitize(html, baseUrl: "https://example.com/a/");
+        Assert.Equal("<a>Test</a>", actual, ignoreCase: true);
+    }
+
+    [Fact]
+    public void BaseUrlWithDisallowedSchemeIsRejectedTest()
+    {
+        var sanitizer = Sanitizer;
+        var html = @"<a href=""x"">Test</a>";
+        var actual = sanitizer.Sanitize(html, baseUrl: "ftp://host/dir/");
+        Assert.Equal("<a>Test</a>", actual, ignoreCase: true);
+    }
+
+    [Fact]
     public void JavaScriptIncludeAndAngleBracketsTest()
     {
         // Arrange

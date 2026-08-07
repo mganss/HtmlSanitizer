@@ -1129,12 +1129,21 @@ public class HtmlSanitizer : IHtmlSanitizer
             {
                 try
                 {
-                    var sanitizedUrl = new Uri(baseUri, iri.Value).AbsoluteUri;
-                    var ev = new FilterUrlEventArgs(element, url, sanitizedUrl);
+                    var resolvedUri = new Uri(baseUri, iri.Value);
 
-                    OnFilteringUrl(ev);
+                    if (!AllowedSchemes.Contains(resolvedUri.Scheme, StringComparer.OrdinalIgnoreCase))
+                    {
+                        iri = null;
+                    }
+                    else
+                    {
+                        var sanitizedUrl = resolvedUri.AbsoluteUri;
+                        var ev = new FilterUrlEventArgs(element, url, sanitizedUrl);
 
-                    return ev.SanitizedUrl;
+                        OnFilteringUrl(ev);
+
+                        return ev.SanitizedUrl;
+                    }
                 }
                 catch (UriFormatException)
                 {
