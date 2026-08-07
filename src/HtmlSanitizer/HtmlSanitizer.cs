@@ -802,47 +802,57 @@ public class HtmlSanitizer : IHtmlSanitizer
         // Checks one declaration's value - whether it belongs to an ordinary property or is a
         // shorthand recovered from a pending-substitution value below - against the same rules:
         // is the property allowed, is the value free of disallowed constructs, and is every URL
-        // in it acceptable. Queues the property for removal, or for a rewritten value, accordingly.
-        void Evaluate(ICssProperty property, string rawName, string rawValue)
+        // in it acceptable. Reports what the caller should do, rather than mutating the removal/
+        // set collections itself: keeping the mutation visible at the call site (instead of hidden
+        // behind a closure) is also what it takes for static analysis to see that those collections
+        // can end up non-empty below.
+        (ICssProperty? RemoveProperty, RemoveReason RemoveReason, string? SetKey, string? SetValue) Evaluate(ICssProperty property, string rawName, string rawValue)
         {
             var key = DecodeCss(rawName);
             var val = DecodeCss(rawValue);
 
             if (!IsAllowedCssProperty(key))
-            {
-                removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(property, RemoveReason.NotAllowedStyle));
-                return;
-            }
+                return (property, RemoveReason.NotAllowedStyle, null, null);
 
             var sanitized = SanitizeCssValue(element, val, baseUrl, out var reason);
 
             if (sanitized == null)
-            {
-                removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(property, reason));
-                return;
-            }
+                return (property, reason, null, null);
 
             if (sanitized != val)
             {
-                if (key != rawName)
-                {
-                    removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(property, RemoveReason.NotAllowedUrlValue));
-                }
-                setStyles[key] = sanitized;
+                return key != rawName
+                    ? (property, RemoveReason.NotAllowedUrlValue, key, sanitized)
+                    : (null, default, key, sanitized);
             }
+
+            return (null, default, null, null);
         }
 
-        foreach (var style in styles)
+        foreach (var style in styles.Where(style => covered == null || !covered.Contains(style.Name)))
         {
             // The longhands of a pending-substitution shorthand carry no value of their own.
             // The shorthand that produced them is evaluated below instead.
-            if (covered == null || !covered.Contains(style.Name))
-                Evaluate(style, style.Name, style.Value);
+            var (removeProperty, removeReason, setKey, setValue) = Evaluate(style, style.Name, style.Value);
+
+            if (removeProperty != null)
+                removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(removeProperty, removeReason));
+
+            if (setKey != null)
+                setStyles[setKey] = setValue!;
         }
 
         // Values recovered from pending-substitution shorthands go through exactly the same checks.
         foreach (var (name, value, _) in pending)
-            Evaluate(new ShorthandProperty(name, value), name, value);
+        {
+            var (removeProperty, removeReason, setKey, setValue) = Evaluate(new ShorthandProperty(name, value), name, value);
+
+            if (removeProperty != null)
+                removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(removeProperty, removeReason));
+
+            if (setKey != null)
+                setStyles[setKey] = setValue!;
+        }
 
         if (removeStyles.Count == 0 && setStyles.Count == 0)
             return;
@@ -871,7 +881,7 @@ public class HtmlSanitizer : IHtmlSanitizer
                 // Write the shorthand once, where its first longhand sits, so declaration order is
                 // preserved. The longhands must not be written themselves: they serialize as
                 // "background-image: " and the whole declaration would be lost on reparse.
-                var (Name, Value, Longhands) = pending.First(p => p.Longhands.Contains(style.Name));
+                var (Name, Value, _) = pending.First(p => p.Longhands.Contains(style.Name));
 
                 if (!written!.Add(Name))
                     continue;
@@ -972,10 +982,9 @@ public class HtmlSanitizer : IHtmlSanitizer
         var pending = new List<(string, string, HashSet<string>)>();
         HashSet<string>? opaque = null;
 
-        foreach (var style in styles)
+        foreach (var style in styles.Where(s => string.IsNullOrEmpty(s.Value)))
         {
-            if (string.IsNullOrEmpty(style.Value))
-                (opaque ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Add(style.Name);
+            (opaque ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Add(style.Name);
         }
 
         // An empty longhand is not proof of a pending value on its own: "font: 12px/1.5 Arial"
