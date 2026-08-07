@@ -2,10 +2,12 @@ using AngleSharp;
 using AngleSharp.Css;
 using AngleSharp.Css.Dom;
 using AngleSharp.Css.Parser;
+using AngleSharp.Css.Values;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -72,6 +74,12 @@ public class HtmlSanitizer : IHtmlSanitizer
     });
 
     private static readonly HtmlParser defaultHtmlParser = new(new HtmlParserOptions { IsScripting = true }, BrowsingContext.New(defaultConfiguration));
+
+    // Used to relate longhand properties back to the shorthands they belong to. Only the property
+    // metadata is needed, so the default factory is enough regardless of the browsing context.
+    private static readonly DefaultDeclarationFactory declarationFactory = new();
+    private static readonly ConcurrentDictionary<string, string[]> shorthandsOf = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly ConcurrentDictionary<string, HashSet<string>> longhandsOf = new(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
     /// Initializes a new instance of the <see cref="HtmlSanitizer"/> class
@@ -784,73 +792,57 @@ public class HtmlSanitizer : IHtmlSanitizer
 
     private void SanitizeStyleDeclaration(IElement element, ICssStyleDeclaration styles, string baseUrl)
     {
+        var pending = GetPendingShorthands(styles);
+        var covered = pending.Count == 0 ? null
+            : new HashSet<string>(pending.SelectMany(p => p.Longhands), StringComparer.OrdinalIgnoreCase);
+
         var removeStyles = new List<Tuple<ICssProperty, RemoveReason>>();
         var setStyles = new Dictionary<string, string>();
 
-        foreach (var style in styles)
+        // Checks one declaration's value - whether it belongs to an ordinary property or is a
+        // shorthand recovered from a pending-substitution value below - against the same rules:
+        // is the property allowed, is the value free of disallowed constructs, and is every URL
+        // in it acceptable. Queues the property for removal, or for a rewritten value, accordingly.
+        void Evaluate(ICssProperty property, string rawName, string rawValue)
         {
-            var key = DecodeCss(style.Name);
-            var val = DecodeCss(style.Value);
+            var key = DecodeCss(rawName);
+            var val = DecodeCss(rawValue);
 
             if (!IsAllowedCssProperty(key))
             {
-                removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedStyle));
-                continue;
+                removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(property, RemoveReason.NotAllowedStyle));
+                return;
             }
 
-            if (CssExpression.IsMatch(val) || DisallowCssPropertyValue.IsMatch(val))
+            var sanitized = SanitizeCssValue(element, val, baseUrl, out var reason);
+
+            if (sanitized == null)
             {
-                removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedValue));
-                continue;
+                removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(property, reason));
+                return;
             }
 
-            // Matching runs against the original value so that the spacing between tokens is preserved
-            // when the value is rebuilt below. Whitespace inside the URL itself is removed before
-            // validation so constructs like url(java script:alert(1)) can't smuggle a disallowed scheme
-            // past the check; the value written back is what SanitizeUrl returned, so what is validated
-            // is what is emitted.
-            var urls = CssUrl.Matches(val).Cast<Match>()
-                .Select(m => (Match: m, Url: WhitespaceRegex.Replace(m.Groups[2].Value, string.Empty)))
-                // An empty url() has nothing to resolve or to validate, leave it alone.
-                .Where(u => u.Url.Length > 0)
-                .Select(u => (u.Match, Url: SanitizeUrl(element, u.Url, baseUrl)))
-                .ToList();
-
-            if (urls.Count > 0)
+            if (sanitized != val)
             {
-                if (urls.Any(u => u.Url == null))
-                    removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedUrlValue));
-                else
+                if (key != rawName)
                 {
-                    var sb = new StringBuilder();
-                    var ix = 0;
-
-                    foreach (var url in urls)
-                    {
-                        sb.Append(val, ix, url.Match.Index - ix);
-                        sb.Append("url(");
-                        sb.Append(url.Match.Groups[1].Value);
-                        sb.Append(url.Url);
-                        sb.Append(url.Match.Groups[3].Value);
-                        sb.Append(')');
-                        ix = url.Match.Index + url.Match.Length;
-                    }
-
-                    sb.Append(val, ix, val.Length - ix);
-
-                    var s = sb.ToString();
-
-                    if (s != val)
-                    {
-                        if (key != style.Name)
-                        {
-                            removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(style, RemoveReason.NotAllowedUrlValue));
-                        }
-                        setStyles[key] = s;
-                    }
+                    removeStyles.Add(new Tuple<ICssProperty, RemoveReason>(property, RemoveReason.NotAllowedUrlValue));
                 }
+                setStyles[key] = sanitized;
             }
         }
+
+        foreach (var style in styles)
+        {
+            // The longhands of a pending-substitution shorthand carry no value of their own.
+            // The shorthand that produced them is evaluated below instead.
+            if (covered == null || !covered.Contains(style.Name))
+                Evaluate(style, style.Name, style.Value);
+        }
+
+        // Values recovered from pending-substitution shorthands go through exactly the same checks.
+        foreach (var (name, value, _) in pending)
+            Evaluate(new ShorthandProperty(name, value), name, value);
 
         if (removeStyles.Count == 0 && setStyles.Count == 0)
             return;
@@ -870,19 +862,211 @@ public class HtmlSanitizer : IHtmlSanitizer
         // AngleSharp.Css re-serializes the whole style attribute on every SetProperty/RemoveProperty call,
         // which is quadratic in the number of declarations.
         var cssText = new StringBuilder();
+        var written = pending.Count == 0 ? null : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var style in styles)
         {
+            if (covered != null && covered.Contains(style.Name))
+            {
+                // Write the shorthand once, where its first longhand sits, so declaration order is
+                // preserved. The longhands must not be written themselves: they serialize as
+                // "background-image: " and the whole declaration would be lost on reparse.
+                var (Name, Value, Longhands) = pending.First(p => p.Longhands.Contains(style.Name));
+
+                if (!written!.Add(Name))
+                    continue;
+
+                if (removedNames.Contains(Name))
+                    continue;
+
+                var value = setStyles.TryGetValue(DecodeCss(Name), out var newValue)
+                    ? newValue
+                    : Value;
+
+                cssText.Append(Name).Append(':').Append(value).Append(';');
+
+                continue;
+            }
+
             if (removedNames.Contains(style.Name))
                 continue;
 
-            if (setStyles.TryGetValue(DecodeCss(style.Name), out var newValue))
-                cssText.Append(style.Name).Append(':').Append(newValue).Append(';');
+            if (setStyles.TryGetValue(DecodeCss(style.Name), out var updatedValue))
+                cssText.Append(style.Name).Append(':').Append(updatedValue).Append(';');
             else
                 cssText.Append(style.ToCss()).Append(';');
         }
 
         styles.CssText = cssText.ToString();
+    }
+
+    /// <summary>
+    /// Applies the value level checks to a single declaration value.
+    /// </summary>
+    /// <param name="element">The element the declaration belongs to.</param>
+    /// <param name="value">The decoded declaration value.</param>
+    /// <param name="baseUrl">The base URL relative URLs are resolved against.</param>
+    /// <param name="reason">The reason the declaration has to be removed, if it has to be.</param>
+    /// <returns>The value to keep, with any URLs rewritten, or <c>null</c> if the declaration must be removed.</returns>
+    private string? SanitizeCssValue(IElement element, string value, string baseUrl, out RemoveReason reason)
+    {
+        if (CssExpression.IsMatch(value) || DisallowCssPropertyValue.IsMatch(value))
+        {
+            reason = RemoveReason.NotAllowedValue;
+            return null;
+        }
+
+        reason = RemoveReason.NotAllowedUrlValue;
+
+        // Matching runs against the original value so that the spacing between tokens is preserved
+        // when the value is rebuilt below. Whitespace inside the URL itself is removed before
+        // validation so constructs like url(java script:alert(1)) can't smuggle a disallowed scheme
+        // past the check; the value written back is what SanitizeUrl returned, so what is validated
+        // is what is emitted.
+        var urls = CssUrl.Matches(value).Cast<Match>()
+            .Select(m => (Match: m, Url: WhitespaceRegex.Replace(m.Groups[2].Value, string.Empty)))
+            // An empty url() has nothing to resolve or to validate, leave it alone.
+            .Where(u => u.Url.Length > 0)
+            .Select(u => (u.Match, Url: SanitizeUrl(element, u.Url, baseUrl)))
+            .ToList();
+
+        if (urls.Count == 0)
+            return value;
+
+        if (urls.Any(u => u.Url == null))
+            return null;
+
+        var sb = new StringBuilder();
+        var ix = 0;
+
+        foreach (var url in urls)
+        {
+            sb.Append(value, ix, url.Match.Index - ix);
+            sb.Append("url(");
+            sb.Append(url.Match.Groups[1].Value);
+            sb.Append(url.Url);
+            sb.Append(url.Match.Groups[3].Value);
+            sb.Append(')');
+            ix = url.Match.Index + url.Match.Length;
+        }
+
+        sb.Append(value, ix, value.Length - ix);
+
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Finds the declarations that the CSS object model refuses to expose through its longhands.
+    /// </summary>
+    /// <remarks>
+    /// A shorthand whose value contains <c>var()</c> becomes a pending-substitution value: per the
+    /// CSS custom properties spec its longhands serialize as the empty string, so the per-property
+    /// checks would see nothing at all and the declaration would pass through unexamined. Recover
+    /// the shorthand that produced those longhands, together with the text the author actually
+    /// wrote, so it can be checked like any other value.
+    /// </remarks>
+    /// <param name="styles">The declaration block.</param>
+    /// <returns>The recovered shorthands, empty if the block has none.</returns>
+    private static List<(string Name, string Value, HashSet<string> Longhands)> GetPendingShorthands(ICssStyleDeclaration styles)
+    {
+        var pending = new List<(string, string, HashSet<string>)>();
+        HashSet<string>? opaque = null;
+
+        foreach (var style in styles)
+        {
+            if (string.IsNullOrEmpty(style.Value))
+                (opaque ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Add(style.Name);
+        }
+
+        // An empty longhand is not proof of a pending value on its own: "font: 12px/1.5 Arial"
+        // leaves the sub-properties it omits empty as well. Those are weeded out below by the
+        // requirement that a shorthand account for all of its longhands.
+        if (opaque == null)
+            return pending;
+
+        // A longhand can belong to more than one shorthand (border-top-color is reachable from
+        // border, border-top and border-color). Take the widest shorthand the opaque longhands
+        // fully cover first, then drop what it accounts for, so a narrower overlapping shorthand
+        // cannot claim them as well and widen the declaration on the way out.
+        var candidates = opaque
+            .SelectMany(GetShorthands)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(name => (Name: name, Longhands: GetLonghands(name)))
+            .OrderByDescending(c => c.Longhands.Count)
+            .ToList();
+
+        foreach (var (name, longhands) in candidates)
+        {
+            if (longhands.Count == 0 || !longhands.All(opaque.Contains))
+                continue;
+
+            var value = styles.GetPropertyValue(name);
+
+            // Only one of the candidates is the shorthand that was actually declared; the others
+            // answer with the empty string.
+            if (string.IsNullOrEmpty(value))
+                continue;
+
+            pending.Add((name, value, longhands));
+            opaque.ExceptWith(longhands);
+        }
+
+        return pending;
+    }
+
+    /// <summary>
+    /// Gets the shorthand properties a property is part of.
+    /// </summary>
+    private static string[] GetShorthands(string property) =>
+        shorthandsOf.GetOrAdd(property, static p => declarationFactory.Create(p)?.Shorthands ?? []);
+
+    /// <summary>
+    /// Expands a property into the set of longhand properties it ultimately controls.
+    /// </summary>
+    private static HashSet<string> GetLonghands(string property) =>
+        longhandsOf.GetOrAdd(property, static p =>
+        {
+            var longhands = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            Expand(p, longhands, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+            return longhands;
+        });
+
+    private static void Expand(string property, HashSet<string> longhands, HashSet<string> visited)
+    {
+        if (!visited.Add(property))
+            return;
+
+        var children = declarationFactory.Create(property)?.Longhands;
+
+        if (children == null || children.Length == 0)
+        {
+            longhands.Add(property);
+            return;
+        }
+
+        foreach (var child in children)
+            Expand(child, longhands, visited);
+    }
+
+    /// <summary>
+    /// Stands in for a shorthand declaration that the CSS object model only exposes as a
+    /// pending-substitution value, so that <see cref="RemovingStyle"/> reports the property the
+    /// author wrote rather than one of the empty longhands it expands to.
+    /// </summary>
+    private sealed class ShorthandProperty(string name, string value) : ICssProperty
+    {
+        public string Name { get; } = name;
+        public string Value { get; set; } = value;
+        public bool IsImportant { get; set; }
+        public ICssValue RawValue => null!;
+        public bool IsInherited => false;
+        public bool IsInitial => false;
+        public bool IsAnimatable => false;
+        public bool CanBeInherited => false;
+        public bool IsShorthand => true;
+        public ICssProperty Compute(ICssComputeContext context) => this;
+        public void ToCss(TextWriter writer, IStyleFormatter formatter) =>
+            writer.Write(formatter.Declaration(Name, Value, IsImportant));
     }
 
     /// <summary>

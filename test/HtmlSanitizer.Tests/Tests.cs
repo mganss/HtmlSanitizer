@@ -3884,4 +3884,208 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         sanitizer.Sanitize(@"<div style=""background-image: url(a.png), url(b.png)"">x</div>", baseUrl);
         Assert.Equal(2, count);
     }
+
+    // A shorthand whose value contains var() is a pending-substitution value: per the CSS custom
+    // properties spec its longhands serialize as the empty string, so the value used to slip past
+    // every check - scheme filtering, base URL resolution, the FilterUrl event and
+    // DisallowCssPropertyValue - and was written out verbatim.
+    [Fact]
+    public void SanitizeStyleVarShorthandDisallowedUrlTest()
+    {
+        var properties = new[]
+        {
+            "background", "border", "border-image", "border-color", "font", "list-style",
+            "margin", "padding", "outline", "columns", "text-decoration", "border-radius",
+            "flex", "grid", "transition", "animation", "gap",
+        };
+
+        foreach (var property in properties)
+        {
+            var sanitizer = new HtmlSanitizer();
+
+            var html = $@"<div style=""{property}: var(--a, url(javascript:alert(1)))"">x</div>";
+
+            Assert.Equal("<div>x</div>", sanitizer.Sanitize(html));
+            Assert.Equal("<div>x</div>", sanitizer.Sanitize(html, "https://cdn.example.com/assets/"));
+        }
+    }
+
+    // The scheme allow list applies inside a var() fallback just as it does anywhere else.
+    [Fact]
+    public void SanitizeStyleVarShorthandSchemeTest()
+    {
+        var urls = new[]
+        {
+            "javascript:alert(1)",
+            "vbscript:msgbox(1)",
+            "ftp://evil.example.com/a.png",
+            "data:text/html,x",
+        };
+
+        foreach (var url in urls)
+        {
+            var sanitizer = new HtmlSanitizer();
+
+            var html = $@"<div style=""background: var(--a, url({url}))"">x</div>";
+
+            Assert.Equal("<div>x</div>", sanitizer.Sanitize(html));
+        }
+    }
+
+    // expression() is caught inside a var() fallback too.
+    [Fact]
+    public void SanitizeStyleVarShorthandExpressionTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+
+        Assert.Equal("<div>x</div>",
+            sanitizer.Sanitize(@"<div style=""font: var(--a, expression(alert(1)))"">x</div>"));
+    }
+
+    // A shorthand with an allowed URL in the var() fallback keeps working, and a relative one is
+    // still resolved against the base URL.
+    [Fact]
+    public void SanitizeStyleVarShorthandAllowedUrlTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+
+        var html = @"<div style=""background: var(--a, url(http://www.example.com/a.png))"">x</div>";
+        Assert.Equal(html, sanitizer.Sanitize(html));
+
+        Assert.Equal(@"<div style=""background: var(--a, url(https://cdn.example.com/assets/pic.png))"">x</div>",
+            sanitizer.Sanitize(@"<div style=""background: var(--a, url(pic.png))"">x</div>", "https://cdn.example.com/assets/"));
+
+        Assert.Equal(@"<div style=""border-image: var(--a, url(https://cdn.example.com/assets/pic.png))"">x</div>",
+            sanitizer.Sanitize(@"<div style=""border-image: var(--a, url(pic.png))"">x</div>", "https://cdn.example.com/assets/"));
+    }
+
+    // One bad URL condemns the whole declaration, matching how ordinary values are treated.
+    [Fact]
+    public void SanitizeStyleVarShorthandMixedUrlsTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+
+        Assert.Equal("<div>x</div>", sanitizer.Sanitize(
+            @"<div style=""background: var(--a, url(http://www.example.com/a.png)), var(--b, url(javascript:alert(1)))"">x</div>"));
+    }
+
+    // The FilterUrl event has to see URLs that only appear inside a var() fallback.
+    [Fact]
+    public void SanitizeStyleVarShorthandFilterUrlTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        var seen = new List<string>();
+        sanitizer.FilterUrl += (_, e) => seen.Add(e.OriginalUrl);
+
+        sanitizer.Sanitize(@"<div style=""background: var(--a, url(http://www.example.com/a.png))"">x</div>");
+
+        Assert.Equal(["http://www.example.com/a.png"], seen);
+    }
+
+    // RemovingStyle reports the shorthand the author wrote, not one of the empty longhands, and
+    // cancelling it keeps the declaration.
+    [Fact]
+    public void SanitizeStyleVarShorthandRemovingStyleEventTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        var removed = new List<string>();
+        sanitizer.RemovingStyle += (_, e) => removed.Add($"{e.Style.Name}:{e.Reason}");
+
+        sanitizer.Sanitize(@"<div style=""background: var(--a, url(javascript:alert(1)))"">x</div>");
+        Assert.Equal(["background:NotAllowedUrlValue"], removed);
+
+        var cancelling = new HtmlSanitizer();
+        cancelling.RemovingStyle += (_, e) => e.Cancel = true;
+
+        var html = @"<div style=""background: var(--a, url(javascript:alert(1)))"">x</div>";
+        Assert.Equal(html, cancelling.Sanitize(html));
+    }
+
+    // A property that is not on the allow list is dropped even when var() hides its value.
+    [Fact]
+    public void SanitizeStyleVarShorthandNotAllowedPropertyTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedCssProperties.Remove("background");
+
+        Assert.Equal("<div>x</div>",
+            sanitizer.Sanitize(@"<div style=""background: var(--a, url(http://www.example.com/a.png))"">x</div>"));
+    }
+
+    // A longhand can belong to several shorthands - border-top-color is reachable from border,
+    // border-top and border-color. The one that exactly accounts for the empty longhands has to
+    // win, otherwise a border-color declaration would be widened into a full border on the way out.
+    [Fact]
+    public void SanitizeStyleVarShorthandAmbiguousLonghandTest()
+    {
+        var properties = new[] { "border-color", "border-top", "border", "border-width" };
+
+        foreach (var property in properties)
+        {
+            var sanitizer = new HtmlSanitizer();
+
+            // Nothing dangerous in the value, so the declaration survives under its own name.
+            var html = $@"<div style=""{property}: var(--a)"">x</div>";
+            Assert.Equal(html, sanitizer.Sanitize(html));
+
+            // A bad URL under the same property is still removed.
+            Assert.Equal("<div>x</div>",
+                sanitizer.Sanitize($@"<div style=""{property}: var(--a, url(javascript:alert(1)))"">x</div>"));
+        }
+    }
+
+    // A shorthand that omits sub-properties leaves those empty as well ("font: 12px/1.5 Arial" has
+    // no font-weight), which must not be mistaken for a pending-substitution value.
+    [Fact]
+    public void SanitizeStylePartialShorthandUnaffectedTest()
+    {
+        var styles = new[]
+        {
+            ("font: 12px/1.5 Arial", "font: 12px / 1.5 Arial"),
+            ("border: 1px solid red", "border: 1px solid rgba(255, 0, 0, 1)"),
+            ("background: transparent", "background: rgba(0, 0, 0, 0)"),
+            ("list-style: disc inside", "list-style: disc inside"),
+            ("margin: 10px 20px", "margin: 10px 20px"),
+            ("border-radius: 50%", "border-radius: 50%"),
+        };
+
+        foreach (var (style, expected) in styles)
+        {
+            var sanitizer = new HtmlSanitizer();
+
+            Assert.Equal($@"<div style=""{expected}"">x</div>",
+                sanitizer.Sanitize($@"<div style=""{style}"">x</div>"));
+        }
+    }
+
+    // Removing another declaration forces the block to be rebuilt. A pending-substitution shorthand
+    // has to survive that rebuild: its longhands serialize as "background-image: " and writing those
+    // out would silently drop the declaration.
+    [Fact]
+    public void SanitizeStyleVarShorthandSurvivesRebuildTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+
+        // color is kept, the disallowed property is dropped, and background keeps its var() value.
+        Assert.Equal(@"<div style=""background: var(--a, url(http://www.example.com/a.png)); color: rgba(255, 0, 0, 1)"">x</div>",
+            sanitizer.Sanitize(@"<div style=""background: var(--a, url(http://www.example.com/a.png)); color: red; behavior: url(x.htc)"">x</div>"));
+
+        // Declaration order is preserved when the shorthand is not the first declaration.
+        Assert.Equal(@"<div style=""color: rgba(255, 0, 0, 1); background: var(--a, url(http://www.example.com/a.png))"">x</div>",
+            sanitizer.Sanitize(@"<div style=""color: red; background: var(--a, url(http://www.example.com/a.png)); behavior: url(x.htc)"">x</div>"));
+    }
+
+    // The same hole existed in style elements, which share the declaration sanitizing code.
+    [Fact]
+    public void SanitizeStyleTagVarShorthandTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("style");
+
+        Assert.Equal("<style>div { }</style>",
+            sanitizer.Sanitize(@"<style>div { background: var(--a, url(javascript:alert(1))) }</style>"));
+
+        Assert.Equal("<style>div { background: var(--a, url(http://www.example.com/a.png)) }</style>",
+            sanitizer.Sanitize(@"<style>div { background: var(--a, url(http://www.example.com/a.png)) }</style>"));
+    }
 }
