@@ -342,6 +342,7 @@ public static class HtmlSanitizerDefaults
         "transition-property",
         "transition-timing-function",
         "unicode-bidi",
+        "unicode-range",
         "user-select",
         "vertical-align",
         "visibility",

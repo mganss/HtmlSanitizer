@@ -718,6 +718,58 @@ public class HtmlSanitizer : IHtmlSanitizer
             {
                 SanitizeStyleDeclaration(styleTag, keyFrameRule.Style, baseUrl);
             }
+            else if (rule is ICssFontFaceRule fontFaceRule)
+            {
+                return SanitizeFontFaceRule(styleTag, fontFaceRule, baseUrl);
+            }
+            else if (rule is ICssImportRule importRule)
+            {
+                // The browser fetches the imported style sheet, so its URL has to clear the same
+                // scheme check as any other. The rule is not rewritten - that would mean rebuilding
+                // its text and re-escaping the URL - so one that does not pass is dropped instead.
+                return SanitizeUrl(styleTag, importRule.Href, baseUrl) != null;
+            }
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// Sanitizes the declarations of an <c>@font-face</c> rule.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// An <c>@font-face</c> rule carries declarations like a style rule does, but the CSS object
+    /// model exposes them as <see cref="ICssProperties"/> rather than an
+    /// <see cref="ICssStyleDeclaration"/>, so <see cref="SanitizeStyleDeclaration"/> cannot be
+    /// reused. Checking them here is what keeps the <c>src</c> descriptor - a URL the browser
+    /// really does request - subject to <see cref="AllowedSchemes"/> and to base URL resolution.
+    /// </para>
+    /// <para>
+    /// The object model offers no way to drop a single declaration from the rule, and a font whose
+    /// source has been taken away is of no use, so anything unacceptable removes the whole rule.
+    /// </para>
+    /// </remarks>
+    /// <param name="styleTag">The style element the rule belongs to.</param>
+    /// <param name="fontFaceRule">The rule to sanitize.</param>
+    /// <param name="baseUrl">The base URL relative URLs are resolved against.</param>
+    /// <returns><c>true</c> if the rule can be kept; otherwise, <c>false</c>.</returns>
+    private bool SanitizeFontFaceRule(IElement styleTag, ICssFontFaceRule fontFaceRule, string baseUrl)
+    {
+        // Materialized because the declarations are updated while going through them.
+        foreach (var property in ((IEnumerable<ICssProperty>)fontFaceRule).ToList())
+        {
+            if (!IsAllowedCssProperty(DecodeCss(property.Name)))
+                return false;
+
+            var value = DecodeCss(property.Value);
+            var sanitized = SanitizeCssValue(styleTag, value, baseUrl, out _);
+
+            if (sanitized == null)
+                return false;
+
+            if (sanitized != value)
+                property.Value = sanitized;
         }
 
         return true;

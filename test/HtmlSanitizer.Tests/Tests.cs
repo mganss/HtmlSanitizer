@@ -4280,6 +4280,78 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             sanitizer.Sanitize(@"<style>div { background: var(--a, url(http://www.example.com/a.png)) }</style>"));
     }
 
+    private static HtmlSanitizer FontFaceSanitizer()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("style");
+        sanitizer.AllowedAtRules.Add(CssRuleType.FontFace);
+        sanitizer.AllowedAtRules.Add(CssRuleType.Import);
+        sanitizer.AllowedCssProperties.Add("src");
+        return sanitizer;
+    }
+
+    // SanitizeStyleRule only recognized style, grouping, page and keyframe rules, so every other
+    // at-rule reached the output with its declarations untouched. The src descriptor of an
+    // @font-face rule is a URL the browser really requests, so it has to pass the scheme check.
+    [InlineData(@"@font-face { font-family: x; src: url(javascript:alert(1)) }")]
+    [InlineData(@"@font-face { font-family: x; src: url(data:font/woff;base64,AA) }")]
+    [InlineData(@"@font-face { font-family: x; src: local(""y""), url(javascript:alert(1)) }")]
+    [InlineData(@"@import url(javascript:alert(1));")]
+    [Theory]
+    public void SanitizeAtRuleWithDisallowedUrlTest(string css)
+    {
+        Assert.Equal("<style></style>", FontFaceSanitizer().Sanitize($"<style>{css}</style>"));
+    }
+
+    [Fact]
+    public void SanitizeFontFaceRuleTest()
+    {
+        var sanitizer = FontFaceSanitizer();
+
+        // An acceptable source is kept, and format() alongside it survives the rewrite.
+        Assert.Equal(@"<style>@font-face { font-family: x; src: url(""https://cdn.example.com/a.woff"") format(""woff"") }</style>",
+            sanitizer.Sanitize(@"<style>@font-face { font-family: x; src: url(https://cdn.example.com/a.woff) format(""woff"") }</style>"));
+
+        // ... and a relative one resolves against the base URL, as it does in a style rule.
+        Assert.Equal(@"<style>@font-face { font-family: x; src: url(""https://www.example.com/d/a.woff"") }</style>",
+            sanitizer.Sanitize(@"<style>@font-face { font-family: x; src: url(a.woff) }</style>", "https://www.example.com/d/"));
+
+        // unicode-range is allowed by default, so the shape every font service emits survives.
+        Assert.Equal(@"<style>@font-face { font-family: x; src: url(""a.woff""); unicode-range: U+0-7F }</style>",
+            sanitizer.Sanitize(@"<style>@font-face { font-family: x; src: url(a.woff); unicode-range: U+0-7F }</style>"));
+
+        // A descriptor that is not in AllowedCssProperties takes the rule with it: there is no way
+        // to drop one declaration from a font face rule, and a font without its source is useless.
+        // Demonstrated by disallowing one rather than by naming an exotic descriptor - the CSS
+        // object model only ever surfaces font-family, src, unicode-range and the font-* properties
+        // here, and drops the rest (size-adjust, font-display, ...) before the allowlist sees them.
+        sanitizer.AllowedCssProperties.Remove("font-family");
+
+        Assert.Equal("<style></style>",
+            sanitizer.Sanitize(@"<style>@font-face { font-family: x; src: url(a.woff) }</style>"));
+    }
+
+    [Fact]
+    public void SanitizeImportRuleTest()
+    {
+        var sanitizer = FontFaceSanitizer();
+
+        Assert.Equal(@"<style>@import url(""https://cdn.example.com/x.css"");</style>",
+            sanitizer.Sanitize(@"<style>@import url(https://cdn.example.com/x.css);</style>"));
+    }
+
+    // A namespace URI is an identifier that is compared, never fetched, so it is deliberately left
+    // alone: resolving it against the base URL would change it and stop selectors matching.
+    [Fact]
+    public void NamespaceRuleUrlIsNotResolvedTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("style");
+
+        Assert.Equal(@"<style>@namespace svg url(""http://www.w3.org/2000/svg"");</style>",
+            sanitizer.Sanitize(@"<style>@namespace svg url(http://www.w3.org/2000/svg);</style>", "https://www.example.com/d/"));
+    }
+
     // The CSS object model only exposes a stylesheet for a style element whose type attribute it
     // recognizes as CSS, so a <style type=""> used to pass its content straight through: not
     // sanitized as CSS, and not encoded as literal text either. Browsers apply it as CSS, since
