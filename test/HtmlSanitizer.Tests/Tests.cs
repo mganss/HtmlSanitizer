@@ -1,14 +1,16 @@
-using AngleSharp;
+﻿using AngleSharp;
 using AngleSharp.Css;
 using AngleSharp.Css.Dom;
 using AngleSharp.Css.Parser;
 using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
+using System.Collections.Concurrent;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using Xunit;
+using Xunit.Sdk;
 
 // Tests based on tests from http://roadkill.codeplex.com/
 
@@ -21,6 +23,16 @@ namespace Ganss.Xss.Tests;
 public class HtmlSanitizerFixture
 {
     public HtmlSanitizer Sanitizer { get; set; } = new HtmlSanitizer();
+}
+
+/// <summary>
+/// Excludes a test from <see cref="HtmlSanitizerTests.ThreadTest"/>, which runs tests next to each
+/// other on separate threads. Apply it to tests that mutate process-wide state: those cannot be run
+/// concurrently with anything else, and would make the tests they run alongside fail at random.
+/// </summary>
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class NotThreadSafeAttribute : Attribute
+{
 }
 
 /// <summary>
@@ -1799,46 +1811,44 @@ S
         Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
     }
 
-    [Fact]
-    public void SanitizeRemoveStyleScriptsTest()
+    // Inline style with url() using javascript: scheme
+    [InlineData(@"<DIV STYLE='background-image: url(javascript:alert(""foo""))'>")]
+    // ... using a control char
+    [InlineData(@"<DIV STYLE='background-image: url(&#1;javascript:alert(""foo""))'>")]
+    // ... in quotes
+    [InlineData(@"<DIV STYLE='background-image: url(""javascript:alert(foo)"")'>")]
+    // IE expressions in CSS not allowed
+    [InlineData(@"<DIV STYLE='width: expression(alert(""foo""));'>")]
+    [InlineData(@"<DIV STYLE='width: e/**/xpression(alert(""foo""));'>")]
+    // ... using Unicode escapes
+    [InlineData(@"<DIV STYLE='background-image: \75rl(javascript:alert(""foo""))'>")]
+    [InlineData(@"<DIV STYLE='background-image: \000075rl(javascript:alert(""foo""))'>")]
+    [InlineData(@"<DIV STYLE='background-image: \75 rl(javascript:alert(""foo""))'>")]
+    [InlineData(@"<DIV STYLE='background-image: \000075 rl(javascript:alert(""foo""))'>")]
+    // ... where the escape is terminated by a newline rather than a space
+    [InlineData("<DIV STYLE='background-image: \\000075\nrl(javascript:alert(\"foo\"))'>")]
+    [Theory]
+    public void SanitizeRemoveStyleScriptsTest(string html)
     {
         var sanitizer = Sanitizer;
-        // Inline style with url() using javascript: scheme
-        var html = @"<DIV STYLE='background-image: url(javascript:alert(""foo""))'>";
         Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
-        // Inline style with url() using javascript: scheme, using control char
-        html = @"<DIV STYLE='background-image: url(&#1;javascript:alert(""foo""))'>";
-        Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
-        // Inline style with url() using javascript: scheme, in quotes
-        html = @"<DIV STYLE='background-image: url(""javascript:alert(foo)"")'>";
-        Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
-        // IE expressions in CSS not allowed
-        html = @"<DIV STYLE='width: expression(alert(""foo""));'>";
-        Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
-        html = @"<DIV STYLE='width: e/**/xpression(alert(""foo""));'>";
-        Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
-        html = @"<DIV STYLE='background-image: url(javascript:alert(""foo""));color: #fff'>";
-        Assert.Equal(@"<div style=""color: rgba(255, 255, 255, 1)""></div>", sanitizer.Sanitize(html), ignoreCase: true);
+    }
 
-        // Inline style with url() using javascript: scheme, using Unicode
-        // escapes
-        html = @"<DIV STYLE='background-image: \75rl(javascript:alert(""foo""))'>";
-        Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
-        html = @"<DIV STYLE='background-image: \000075rl(javascript:alert(""foo""))'>";
-        Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
-        html = @"<DIV STYLE='background-image: \75 rl(javascript:alert(""foo""))'>";
-        Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
-        html = @"<DIV STYLE='background-image: \000075 rl(javascript:alert(""foo""))'>";
-        Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
-        html = @"<DIV STYLE='background-image: \000075
-rl(javascript:alert(""foo""))'>";
-        Assert.Equal(@"<div></div>", sanitizer.Sanitize(html), ignoreCase: true);
+    // The declaration carrying the bad url() is dropped on its own, the rest of the style stays.
+    [Fact]
+    public void SanitizeRemoveStyleScriptsKeepsOtherDeclarationsTest()
+    {
+        var sanitizer = Sanitizer;
+        var html = @"<DIV STYLE='background-image: url(javascript:alert(""foo""));color: #fff'>";
+        Assert.Equal(@"<div style=""color: rgba(255, 255, 255, 1)""></div>", sanitizer.Sanitize(html), ignoreCase: true);
     }
 
     [Fact]
     public void SanitizeRemoveStylePhishingTest()
     {
-        var sanitizer = Sanitizer;
+        // Its own sanitizer, not the shared fixture one: removing a property from that would
+        // outlive this test, and ThreadTest reads the same set from other threads meanwhile.
+        var sanitizer = new HtmlSanitizer();
         sanitizer.AllowedCssProperties.Remove("position");
         // The position property is not allowed
         var html = @"<div style=""position:absolute;top:0""></div>";
@@ -1848,32 +1858,25 @@ rl(javascript:alert(""foo""))'>";
         Assert.Equal(@"<div style=""margin: 10px 20px""></div>", sanitizer.Sanitize(html), ignoreCase: true);
     }
 
-    [Fact]
-    public void SanitizeRemoveSrcJavascriptTest()
+    [InlineData(@"<img src=\'javascript:alert(""foo"")\'>")]
+    // Case-insensitive protocol matching
+    [InlineData(@"<IMG SRC=\'JaVaScRiPt:alert(""foo"")\'>")]
+    // Protocol encoded using UTF-8 numeric entities
+    [InlineData(@"<IMG SRC=\'&#106;&#97;&#118;&#97;&#115;&#99;&#114;&#105;&#112;&#116;&#58;alert(""foo"")\'>")]
+    // Protocol encoded using UTF-8 numeric entities without a semicolon
+    // (which is allowed because the max number of digits is used)
+    [InlineData(@"<IMG SRC=\'&#0000106&#0000097&#0000118&#0000097&#0000115&#0000099&#0000114&#0000105&#0000112&#0000116&#0000058alert(""foo"")\'>")]
+    // Protocol encoded using UTF-8 numeric hex entities without a semicolon
+    // (which is allowed because the max number of digits is used)
+    [InlineData(@"<IMG SRC=\'&#x6A&#x61&#x76&#x61&#x73&#x63&#x72&#x69&#x70&#x74&#x3A;alert(""foo"")\'>")]
+    // Embedded tab character in protocol
+    [InlineData(@"<IMG SRC=\'jav\tascript:alert(""foo"");\'>")]
+    // Embedded tab character in protocol, but encoded this time
+    [InlineData(@"<IMG SRC=\'jav&#x09;ascript:alert(""foo"");\'>")]
+    [Theory]
+    public void SanitizeRemoveSrcJavascriptTest(string html)
     {
         var sanitizer = Sanitizer;
-        var html = @"<img src=\'javascript:alert(""foo"")\'>";
-        Assert.Equal(@"<img>", sanitizer.Sanitize(html), ignoreCase: true);
-        // Case-insensitive protocol matching
-        html = @"<IMG SRC=\'JaVaScRiPt:alert(""foo"")\'>";
-        Assert.Equal(@"<img>", sanitizer.Sanitize(html), ignoreCase: true);
-        // Grave accents (not parsed)
-        // Protocol encoded using UTF-8 numeric entities
-        html = @"<IMG SRC=\'&#106;&#97;&#118;&#97;&#115;&#99;&#114;&#105;&#112;&#116;&#58;alert(""foo"")\'>";
-        Assert.Equal(@"<img>", sanitizer.Sanitize(html), ignoreCase: true);
-        // Protocol encoded using UTF-8 numeric entities without a semicolon
-        // (which is allowed because the max number of digits is used)
-        html = @"<IMG SRC=\'&#0000106&#0000097&#0000118&#0000097&#0000115&#0000099&#0000114&#0000105&#0000112&#0000116&#0000058alert(""foo"")\'>";
-        Assert.Equal(@"<img>", sanitizer.Sanitize(html), ignoreCase: true);
-        // Protocol encoded using UTF-8 numeric hex entities without a semicolon
-        // (which is allowed because the max number of digits is used)
-        html = @"<IMG SRC=\'&#x6A&#x61&#x76&#x61&#x73&#x63&#x72&#x69&#x70&#x74&#x3A;alert(""foo"")\'>";
-        Assert.Equal(@"<img>", sanitizer.Sanitize(html), ignoreCase: true);
-        // Embedded tab character in protocol
-        html = @"<IMG SRC=\'jav\tascript:alert(""foo"");\'>";
-        Assert.Equal(@"<img>", sanitizer.Sanitize(html), ignoreCase: true);
-        // Embedded tab character in protocol, but encoded this time
-        html = @"<IMG SRC=\'jav&#x09;ascript:alert(""foo"");\'>";
         Assert.Equal(@"<img>", sanitizer.Sanitize(html), ignoreCase: true);
     }
 
@@ -1927,24 +1930,19 @@ rl(javascript:alert(""foo""))'>";
         Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
     }
 
-    [Fact]
-    public void SanitizeUnsafePropsTest()
+    [InlineData(@"<div style=""POSITION:RELATIVE"">XSS</div>")]
+    [InlineData(@"<div style=""behavior:url(test.htc)"">XSS</div>")]
+    [InlineData(@"<div style=""-ms-behavior:url(test.htc) url(#obj)"">XSS</div>")]
+    [InlineData(@"<div style=""-o-link:'javascript:alert(1)';-o-link-source:current"">XSS</div>")]
+    [InlineData(@"<div style=""-moz-binding:url(xss.xbl)"">XSS</div>")]
+    [Theory]
+    public void SanitizeUnsafePropsTest(string html)
     {
-        var sanitizer = Sanitizer;
+        // Its own sanitizer, not the shared fixture one: removing a property from that would
+        // outlive this test, and ThreadTest reads the same set from other threads meanwhile.
+        var sanitizer = new HtmlSanitizer();
         sanitizer.AllowedCssProperties.Remove("position");
-        var html = @"<div style=""POSITION:RELATIVE"">XSS</div>";
-        Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
 
-        html = @"<div style=""behavior:url(test.htc)"">XSS</div>";
-        Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
-
-        html = @"<div style=""-ms-behavior:url(test.htc) url(#obj)"">XSS</div>";
-        Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
-
-        html = @"<div style=""-o-link:'javascript:alert(1)';-o-link-source:current"">XSS</div>";
-        Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
-
-        html = @"<div style=""-moz-binding:url(xss.xbl)"">XSS</div>";
         Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
     }
 
@@ -1964,18 +1962,16 @@ rl(javascript:alert(""foo""))'>";
         Assert.Equal(@"<div style=""display: none; border-left-color: rgba(255, 0, 0, 1)"">prop</div>", sanitizer.Sanitize(html), ignoreCase: true);
     }
 
-    [Fact]
-    public void SanitizeUnicodeExpressionTest()
+    // Fullwidth small letters
+    [InlineData(@"<div style=""top:ｅｘｐｒｅｓｓｉｏｎ(alert())"">XSS</div>")]
+    // Fullwidth capital letters
+    [InlineData(@"<div style=""top:ＥＸＰＲＥＳＳＩＯＮ(alert())"">XSS</div>")]
+    // IPA extensions
+    [InlineData(@"<div style=""top:expʀessɪoɴ(alert())"">XSS</div>")]
+    [Theory]
+    public void SanitizeUnicodeExpressionTest(string html)
     {
         var sanitizer = Sanitizer;
-        // Fullwidth small letters
-        var html = @"<div style=""top:ｅｘｐｒｅｓｓｉｏｎ(alert())"">XSS</div>";
-        Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
-        // Fullwidth capital letters
-        html = @"<div style=""top:ＥＸＰＲＥＳＳＩＯＮ(alert())"">XSS</div>";
-        Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
-        // IPA extensions
-        html = @"<div style=""top:expʀessɪoɴ(alert())"">XSS</div>";
         Assert.Equal(@"<div>XSS</div>", sanitizer.Sanitize(html), ignoreCase: true);
     }
 
@@ -2904,12 +2900,53 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         }
     }
 
+    /// <summary>
+    /// Every test that <see cref="ThreadTest"/> can run, as one entry per *invocation* rather than
+    /// per method: a parameterless test contributes a single entry, a [Theory] one entry per data
+    /// row. Invoking a theory without its arguments only raises a parameter count mismatch, so
+    /// expanding the rows here is what lets theories take part at all.
+    /// </summary>
+    public static IEnumerable<(MethodInfo Method, object[] Args)> GetThreadTestInvocations()
+    {
+        var methods = typeof(HtmlSanitizerTests).GetTypeInfo().GetMethods()
+            .Where(m => m.GetCustomAttributes(typeof(FactAttribute), false).Cast<FactAttribute>().Any(f => f.Skip == null))
+            .Where(m => m.Name != nameof(ThreadTest)
+                && !m.GetCustomAttributes(typeof(NotThreadSafeAttribute), false).Any());
+
+        foreach (var method in methods)
+        {
+            if (method.GetParameters().Length == 0)
+            {
+                yield return (method, null);
+                continue;
+            }
+
+            // [Theory]: InlineData, MemberData and ClassData all derive from DataAttribute.
+            foreach (var data in method.GetCustomAttributes(typeof(DataAttribute), false).Cast<DataAttribute>())
+            {
+                foreach (var args in data.GetData(method))
+                {
+                    yield return (method, args);
+                }
+            }
+        }
+    }
+
     [Fact]
     public void ThreadTest()
     {
         const int numThreads = 16;
-        const int numRuns = 1000;
-        var random = new Random(615322944);
+        const int numRuns = 100;
+
+        // Seeded at random rather than fixed. A race needs two particular tests to overlap, and
+        // this many runs pairs up roughly a third of the suite - so a fixed seed would examine the
+        // same third on every build and never look at the rest, while varying it lets successive
+        // builds work through the remainder. The seed is reported on failure to reproduce a hit.
+        var seed = Random.Shared.Next();
+        var random = new Random(seed);
+
+        // Resolved once: enumerating the theory data on every run would repeat that work 100 times.
+        var invocations = GetThreadTestInvocations().ToList();
 
         for (int i = 0; i < numRuns; i++)
         {
@@ -2919,17 +2956,17 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             var fixture = new HtmlSanitizerFixture();
             var tests = new HtmlSanitizerTests(fixture);
             var waiting = numThreads;
-            var methods = typeof(HtmlSanitizerTests).GetTypeInfo().GetMethods()
-                .Where(m => m.GetCustomAttributes(typeof(Xunit.FactAttribute), false).Cast<Xunit.FactAttribute>().Any(f => f.Skip == null))
-                .Where(m => m.Name != nameof(ThreadTest) && m.Name != nameof(HexColorTest));
-            var threads = Shuffle(methods, random)
+            var threads = Shuffle(invocations, random)
                 .Take(numThreads)
-                .Select(m => new Thread(() =>
+                .Select(invocation => new Thread(() =>
                 {
                     try
                     {
                         if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
-                        m.Invoke(tests, null);
+                        // Wait for the whole batch to be ready, so the tests actually overlap
+                        // instead of trickling through as the threads are started one by one.
+                        allGo.WaitOne();
+                        invocation.Method.Invoke(tests, invocation.Args);
                     }
                     catch (Exception ex)
                     {
@@ -2943,9 +2980,113 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             foreach (var thread in threads)
                 thread.Join();
 
-            Assert.Null(firstException);
+            if (firstException != null)
+            {
+                Assert.Fail($"{failures} of {numThreads} tests failed when run concurrently. "
+                    + $"Pass {seed} to the Random above to replay this exact combination.{Environment.NewLine}{firstException}");
+            }
+
             Assert.Equal(0, failures);
         }
+    }
+
+    /// <summary>
+    /// Hammers the state a sanitizer shares with every other one - the static longhand/shorthand
+    /// caches, the default parser and the browsing context behind it - from many threads at once,
+    /// and requires every result to equal what the same input produces on its own.
+    /// </summary>
+    /// <remarks>
+    /// Where <see cref="ThreadTest"/> samples the suite at random and can only catch a race that
+    /// happens to trip an assertion, this pins down the specific shared state and reports a
+    /// mismatch as a wrong *value*, so a torn read shows up as a diff rather than an exception.
+    /// </remarks>
+    [Fact]
+    public void ConcurrentSanitizeProducesSameResultTest()
+    {
+        const int numThreads = 16;
+        const int numIterations = 250;
+        const string baseUrl = "https://www.example.com";
+
+        // Picked for the shared state each one touches: var() inside a shorthand is what populates
+        // the static longhand/shorthand caches, the style elements go through the CSS object model
+        // and the type="" recovery path, and all of them share the one default HTML parser.
+        string[] inputs =
+        [
+            @"<div style=""background: var(--a, url(http://www.example.com/a.png))"">x</div>",
+            @"<div style=""border: var(--b); color: red"">x</div>",
+            @"<div style=""font: var(--c); margin: 1px 2px"">x</div>",
+            @"<style>div { background: var(--a, url(javascript:alert(1))) }</style>",
+            @"<style type="""">@import url(//evil.example/x.css);div { color: red }</style>",
+            @"<a href=""javascript:alert(1)"">x</a><img src=""test.gif"">",
+            @"<table><textarea><td></textarea><img src=x onerror=alert(1)>",
+            @"<div style=""width: expression(alert(1)); color: blue"">x</div>",
+        ];
+
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("style");
+
+        var results = new ConcurrentBag<(int Index, string Output)>();
+        Exception firstException = null;
+        var allGo = new ManualResetEvent(false);
+        var waiting = numThreads;
+
+        // Run concurrently *before* computing the expected values, so the threads race to populate
+        // the static caches instead of finding them already warm.
+        var threads = Enumerable.Range(0, numThreads).Select(_ => new Thread(() =>
+        {
+            try
+            {
+                if (Interlocked.Decrement(ref waiting) == 0) allGo.Set();
+                allGo.WaitOne();
+
+                for (var i = 0; i < numIterations; i++)
+                {
+                    var index = i % inputs.Length;
+                    results.Add((index, sanitizer.Sanitize(inputs[index], baseUrl)));
+                }
+            }
+            catch (Exception ex)
+            {
+                Interlocked.CompareExchange(ref firstException, ex, null);
+            }
+        })).ToList();
+
+        foreach (var thread in threads)
+            thread.Start();
+        foreach (var thread in threads)
+            thread.Join();
+
+        Assert.Null(firstException);
+
+        var expected = inputs.Select(i => sanitizer.Sanitize(i, baseUrl)).ToList();
+
+        Assert.Equal(numThreads * numIterations, results.Count);
+        Assert.All(results, r => Assert.Equal(expected[r.Index], r.Output));
+    }
+
+    // Guards the reflection above: if the discovery ever silently stops finding tests, or a theory's
+    // rows stop being expanded, ThreadTest would keep passing while testing next to nothing.
+    [Fact]
+    public void ThreadTestDiscoversTestsAndTheoryRowsTest()
+    {
+        var invocations = GetThreadTestInvocations().ToList();
+
+        Assert.True(invocations.Count > 100, $"expected the bulk of the suite, got {invocations.Count}");
+        Assert.DoesNotContain(invocations, i => i.Method.Name == nameof(ThreadTest));
+        Assert.DoesNotContain(invocations, i => i.Method.Name == nameof(HexColorTest));
+
+        // Every entry must be invocable: argument count has to match the signature.
+        Assert.All(invocations, i =>
+            Assert.Equal(i.Method.GetParameters().Length, i.Args?.Length ?? 0));
+
+        // A [Theory] contributes one entry per data row, not a single argument-less one.
+        var theory = typeof(HtmlSanitizerTests).GetMethod(nameof(SanitizeStyleTagWithTypeAttributeTest));
+        var expectedRows = theory.GetCustomAttributes(typeof(InlineDataAttribute), false).Length;
+        var rows = invocations.Where(i => i.Method == theory).ToList();
+
+        Assert.True(expectedRows > 1);
+        Assert.Equal(expectedRows, rows.Count);
+        Assert.All(rows, r => Assert.Single(r.Args));
     }
 
     [Fact]
@@ -3404,6 +3545,8 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         Assert.Equal(html, sanitized);
     }
 
+    // Toggles a global AngleSharp switch, so it cannot run alongside other tests.
+    [NotThreadSafe]
     [Fact]
     public void HexColorTest()
     {
@@ -4105,5 +4248,108 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
         Assert.Equal("<style>div { background: var(--a, url(http://www.example.com/a.png)) }</style>",
             sanitizer.Sanitize(@"<style>div { background: var(--a, url(http://www.example.com/a.png)) }</style>"));
+    }
+
+    // The CSS object model only exposes a stylesheet for a style element whose type attribute it
+    // recognizes as CSS, so a <style type=""> used to pass its content straight through: not
+    // sanitized as CSS, and not encoded as literal text either. Browsers apply it as CSS, since
+    // the HTML standard defaults an absent *or empty* type to text/css.
+    [Theory]
+    [InlineData("")]
+    [InlineData(" text/css")]
+    [InlineData("text/css ")]
+    [InlineData("text/css;charset=utf-8")]
+    [InlineData("TEXT/CSS")]
+    [InlineData("text/plain")]
+    [InlineData("foo")]
+    public void SanitizeStyleTagWithTypeAttributeTest(string type)
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("style");
+
+        var css = "@import url(//evil.example/x.css);div { background-image: url(javascript:alert(1)); color: red }";
+
+        // The type attribute must not change what happens to the content: the disallowed @import
+        // is dropped and the javascript: URL does not survive, exactly as without a type.
+        Assert.Equal($@"<style type=""{type}"">div {{ color: rgba(255, 0, 0, 1) }}</style>",
+            sanitizer.Sanitize($@"<style type=""{type}"">{css}</style>"));
+
+        Assert.Equal("<style>div { color: rgba(255, 0, 0, 1) }</style>",
+            sanitizer.Sanitize($"<style>{css}</style>"));
+    }
+
+    [Fact]
+    public void SanitizeStyleTagWithTypeAttributeMarkupTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("style");
+
+        // No raw markup may survive inside the style element.
+        var sanitized = sanitizer.Sanitize(@"<style type=""""><script>alert(1)</script></style>");
+
+        Assert.Equal(@"<style type=""""></style>", sanitized);
+        Assert.DoesNotContain("<script", sanitized, StringComparison.OrdinalIgnoreCase);
+
+        // ... and sanitizing is idempotent, so the output cannot re-parse into something worse.
+        Assert.Equal(sanitized, sanitizer.Sanitize(sanitized));
+    }
+
+    // The SVG style element is not an IHtmlStyleElement, so it took the same path.
+    [Fact]
+    public void SanitizeSvgStyleTagWithTypeAttributeTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("style");
+        sanitizer.AllowedTags.Add("svg");
+
+        Assert.Equal(@"<svg><style type="""">a { color: rgba(255, 0, 0, 1) }</style></svg>",
+            sanitizer.Sanitize(@"<svg><style type="""">a { background-image: url(javascript:alert(1)); color: red }</style></svg>"));
+    }
+
+    // The recovery path re-parses the element's content inside a fresh <style> tag. An HTML style
+    // element is RAWTEXT, so its text can never hold "</style>", but an SVG one is parsed as markup
+    // where an entity produces exactly that. It has to truncate rather than let anything escape.
+    [Fact]
+    public void SanitizeStyleTagWithTypeAttributeEndTagInContentTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("style");
+        sanitizer.AllowedTags.Add("svg");
+
+        var sanitized = sanitizer.Sanitize(@"<svg><style type="""">a{color:red}&lt;/style&gt;b{color:lime}</style></svg>");
+
+        // Everything from the embedded end tag on is dropped, and no markup is injected.
+        Assert.Equal(@"<svg><style type="""">a { color: rgba(255, 0, 0, 1) }</style></svg>", sanitized);
+        Assert.Equal(sanitized, sanitizer.Sanitize(sanitized));
+    }
+
+    [Fact]
+    public void SanitizeStyleTagWithTypeAttributeUsesHtmlParserFactoryTest()
+    {
+        // The <style type=""> path (see SanitizeStyleTagWithTypeAttributeTest) recovers a
+        // stylesheet by re-parsing the element's content through HtmlParserFactory - the same
+        // factory used for the rest of the document - rather than a separately configured parser,
+        // so a custom HtmlParserFactory must be honored here too.
+        var called = false;
+        var sanitizer = new HtmlSanitizer
+        {
+            HtmlParserFactory = () =>
+            {
+                called = true;
+                return new HtmlParser(new HtmlParserOptions { IsScripting = true },
+                    BrowsingContext.New(Configuration.Default.WithCss(new CssParserOptions
+                    {
+                        IsIncludingUnknownDeclarations = true,
+                        IsIncludingUnknownRules = true,
+                        IsToleratingInvalidSelectors = true,
+                    })));
+            }
+        };
+        sanitizer.AllowedTags.Add("style");
+
+        var actual = sanitizer.Sanitize(@"<style type="""">div { color: red }</style>");
+
+        Assert.True(called);
+        Assert.Equal(@"<style type="""">div { color: rgba(255, 0, 0, 1) }</style>", actual);
     }
 }

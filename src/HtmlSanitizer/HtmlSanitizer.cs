@@ -55,6 +55,7 @@ namespace Ganss.Xss;
 public class HtmlSanitizer : IHtmlSanitizer
 {
     private const string StyleAttributeName = "style";
+    private const string StyleTagName = "style";
 
     // from http://genshi.edgewall.org/
     private static readonly Regex CssUnicodeEscapes = new(@"\\([0-9a-fA-F]{1,6})\s?|\\([^\r\n\f0-9a-fA-F'""{};:()#*])", RegexOptions.Compiled);
@@ -66,12 +67,14 @@ public class HtmlSanitizer : IHtmlSanitizer
     // is what made the earlier permissive version vulnerable to ReDoS (see 7fb4f86).
     private static readonly Regex CssUrl = new(@"[Uu][Rr\u0280][Ll\u029F](?>\s*)\((?>\s*)(['""]?)([^'"")]*)(['""]?)(?>\s*)\)?", RegexOptions.Compiled);
     private static readonly Regex WhitespaceRegex = new(@"\s+", RegexOptions.Compiled);
-    private static readonly IConfiguration defaultConfiguration = Configuration.Default.WithCss(new CssParserOptions
+    private static readonly CssParserOptions cssParserOptions = new()
     {
         IsIncludingUnknownDeclarations = true,
         IsIncludingUnknownRules = true,
         IsToleratingInvalidSelectors = true,
-    });
+    };
+
+    private static readonly IConfiguration defaultConfiguration = Configuration.Default.WithCss(cssParserOptions);
 
     private static readonly HtmlParser defaultHtmlParser = new(new HtmlParserOptions { IsScripting = true }, BrowsingContext.New(defaultConfiguration));
 
@@ -532,9 +535,11 @@ public class HtmlSanitizer : IHtmlSanitizer
             RemoveTag(tag, RemoveReason.NotAllowedTag);
         }
 
-        // always encode text in raw data content
+        // always encode text in raw data content, except in style elements: their content is
+        // sanitized as CSS by SanitizeStyleSheets below, which owns every style element - the
+        // SVG one included, which is not an IHtmlStyleElement.
         foreach (var tag in context.QuerySelectorAll("*")
-            .Where(t => t is not IHtmlStyleElement
+            .Where(t => t.LocalName != StyleTagName
                 && t.Flags.HasFlag(NodeFlags.LiteralText)
                 && !string.IsNullOrWhiteSpace(t.InnerHtml)))
         {
@@ -616,21 +621,55 @@ public class HtmlSanitizer : IHtmlSanitizer
 
     private void SanitizeStyleSheets(INode node, string baseUrl)
     {
+        var handled = new HashSet<IElement>();
+
         foreach (var styleSheet in node.GetStyleSheets().OfType<ICssStyleSheet>())
         {
-            var styleTag = styleSheet.OwnerNode;
-            var i = 0;
-
-            while (i < styleSheet.Rules.Length)
-            {
-                var rule = styleSheet.Rules[i];
-                if (!SanitizeStyleRule(rule, styleTag, baseUrl) && RemoveAtRule(styleTag, rule))
-                    styleSheet.RemoveAt(i);
-                else i++;
-            }
-
-            styleTag.InnerHtml = styleSheet.ToCss(StyleFormatter).Replace("<", "\\3c ");
+            SanitizeStyleSheet(styleSheet, styleSheet.OwnerNode, baseUrl);
+            handled.Add(styleSheet.OwnerNode);
         }
+
+        // The CSS object model only exposes a stylesheet for a style element whose type attribute
+        // it recognizes as CSS. A <style type=""> is applied as CSS by browsers - the HTML standard
+        // defaults an absent *or empty* type to text/css - but yields no stylesheet here, so its
+        // content would reach the output untouched: it is neither sanitized above nor encoded as
+        // literal text in DoSanitize. Recover a stylesheet for whatever the loop above did not
+        // cover by re-parsing the element's content as a fresh, type-less <style> tag through the
+        // configured HtmlParserFactory - the CSS object model always recognizes that - rather than
+        // reproducing the MIME matching of each browser, which is what left the gap. Using
+        // HtmlParserFactory here, the same factory the rest of the document was parsed with, keeps
+        // this path's CSS parsing options in sync with the primary one instead of needing a second,
+        // independently configured parser that could drift out of step with it.
+        if (node is not IParentNode parent)
+            return;
+
+        foreach (var styleTag in parent.QuerySelectorAll(StyleTagName).Where(t => !handled.Contains(t)).ToList())
+        {
+            var reparsed = HtmlParserFactory().ParseDocument($"<style>{styleTag.TextContent}</style>");
+            var styleSheet = reparsed.GetStyleSheets().OfType<ICssStyleSheet>().FirstOrDefault();
+
+            if (styleSheet != null)
+                SanitizeStyleSheet(styleSheet, styleTag, baseUrl);
+            else
+                // A type-less <style> tag should always yield a stylesheet; if it somehow doesn't,
+                // fail closed rather than leaving the original, unsanitized content in place.
+                styleTag.InnerHtml = string.Empty;
+        }
+    }
+
+    private void SanitizeStyleSheet(ICssStyleSheet styleSheet, IElement styleTag, string baseUrl)
+    {
+        var i = 0;
+
+        while (i < styleSheet.Rules.Length)
+        {
+            var rule = styleSheet.Rules[i];
+            if (!SanitizeStyleRule(rule, styleTag, baseUrl) && RemoveAtRule(styleTag, rule))
+                styleSheet.RemoveAt(i);
+            else i++;
+        }
+
+        styleTag.InnerHtml = styleSheet.ToCss(StyleFormatter).Replace("<", "\\3c ");
     }
 
     private bool SanitizeStyleRule(ICssRule rule, IElement styleTag, string baseUrl)
