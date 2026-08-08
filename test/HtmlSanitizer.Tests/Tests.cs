@@ -1693,6 +1693,36 @@ S
         Assert.Equal(expected, actual, ignoreCase: true);
     }
 
+    // cite and longdesc hold URLs but were not in UriAttributes, so their values reached the
+    // output unchecked. No current browser dereferences either one, but longdesc historically
+    // was an XSS vector, and there is no reason for a URL attribute to skip the scheme check.
+    [InlineData(@"<blockquote cite=""javascript:alert(1)"">x</blockquote>", @"<blockquote>x</blockquote>")]
+    [InlineData(@"<q cite=""javascript:alert(1)"">x</q>", @"<q>x</q>")]
+    [InlineData(@"<del cite=""javascript:alert(1)"">x</del>", @"<del>x</del>")]
+    [InlineData(@"<ins cite=""javascript:alert(1)"">x</ins>", @"<ins>x</ins>")]
+    [InlineData(@"<img longdesc=""javascript:alert(1)"" src=""y"">", @"<img src=""y"">")]
+    // legitimate values still pass through
+    [InlineData(@"<blockquote cite=""http://www.example.com/a"">x</blockquote>", @"<blockquote cite=""http://www.example.com/a"">x</blockquote>")]
+    [InlineData(@"<img longdesc=""http://www.example.com/a"" src=""y"">", @"<img longdesc=""http://www.example.com/a"" src=""y"">")]
+    [Theory]
+    public void CiteAndLongdescAreUrlAttributesTest(string html, string expected)
+    {
+        Assert.Equal(expected, new HtmlSanitizer().Sanitize(html), ignoreCase: true);
+    }
+
+    // ... and they resolve against the base URL like any other URL attribute.
+    [Fact]
+    public void CiteAndLongdescResolveAgainstBaseUrlTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+
+        Assert.Equal(@"<blockquote cite=""http://www.example.com/a"">x</blockquote>",
+            sanitizer.Sanitize(@"<blockquote cite=""a"">x</blockquote>", "http://www.example.com"), ignoreCase: true);
+
+        Assert.Equal(@"<img longdesc=""http://www.example.com/a"" src=""http://www.example.com/y"">",
+            sanitizer.Sanitize(@"<img longdesc=""a"" src=""y"">", "http://www.example.com"), ignoreCase: true);
+    }
+
     /// <summary>
     /// Tests disallowed css properties.
     /// </summary>

@@ -105,7 +105,7 @@ public static class HtmlSanitizerDefaults
     /// </summary>
     public static ISet<string> UriAttributes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "action", "formaction", "background", "dynsrc", "href", "lowsrc", "src"
+        "action", "cite", "formaction", "background", "dynsrc", "href", "longdesc", "lowsrc", "src"
     }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
