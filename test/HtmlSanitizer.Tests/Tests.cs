@@ -36,6 +36,17 @@ public sealed class NotThreadSafeAttribute : Attribute
 }
 
 /// <summary>
+/// Excludes a test from <see cref="HtmlSanitizerTests.ThreadTest"/> because of what it costs, not
+/// because it races. A round there ends when its slowest test does, so one test an order of
+/// magnitude above the rest sets the price of every round it lands in. Apply it to those, and only
+/// where the test is a poor race probe anyway.
+/// </summary>
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class TooSlowForThreadTestAttribute : Attribute
+{
+}
+
+/// <summary>
 /// Tests for <see cref="HtmlSanitizer"/>.
 /// </summary>
 public class HtmlSanitizerTests : IClassFixture<HtmlSanitizerFixture>
@@ -2941,7 +2952,8 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var methods = typeof(HtmlSanitizerTests).GetTypeInfo().GetMethods()
             .Where(m => m.GetCustomAttributes(typeof(FactAttribute), false).Cast<FactAttribute>().Any(f => f.Skip == null))
             .Where(m => m.Name != nameof(ThreadTest)
-                && m.GetCustomAttributes(typeof(NotThreadSafeAttribute), false).Length == 0);
+                && m.GetCustomAttributes(typeof(NotThreadSafeAttribute), false).Length == 0
+                && m.GetCustomAttributes(typeof(TooSlowForThreadTestAttribute), false).Length == 0);
 
         foreach (var method in methods)
         {
@@ -2965,29 +2977,39 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
     [Fact]
     public void ThreadTest()
     {
-        const int numThreads = 16;
-        const int numRuns = 100;
+        // What catches a race is two particular tests overlapping, so the thing to maximise is
+        // pairs examined per test invocation run. A round of n contributes n(n-1)/2 pairs but costs
+        // only n invocations, so pairs grow quadratically in the width of a round and only linearly
+        // in the number of rounds: widening rounds buys far more coverage per second than adding
+        // them. 64 well exceeds the core count, which is fine and arguably helps - the resulting
+        // oversubscription forces preemption points the tests would not otherwise see.
+        const int numThreads = 64;
+        const int numPasses = 3;
 
-        // Seeded at random rather than fixed. A race needs two particular tests to overlap, and
-        // this many runs pairs up roughly a third of the suite - so a fixed seed would examine the
-        // same third on every build and never look at the rest, while varying it lets successive
-        // builds work through the remainder. The seed is reported on failure to reproduce a hit.
+        // Seeded at random rather than fixed, so successive builds work through different pairings
+        // instead of re-examining the same ones. Reported on failure to reproduce a hit.
         var seed = Random.Shared.Next();
         var random = new Random(seed);
 
-        // Resolved once: enumerating the theory data on every run would repeat that work 100 times.
+        // Resolved once: enumerating the theory data per round would repeat that work every time.
         var invocations = GetThreadTestInvocations().ToList();
 
-        for (int i = 0; i < numRuns; i++)
+        // Deal rather than draw. Sampling with replacement both repeats invocations within a round,
+        // where they pair a test with itself and buy nothing, and leaves others untouched. Dealing
+        // a fresh shuffle into consecutive rounds runs every test exactly once per pass, against a
+        // different cohort each pass.
+        var rounds = Enumerable.Range(0, numPasses)
+            .SelectMany(_ => Shuffle(invocations, random).Chunk(numThreads));
+
+        foreach (var round in rounds)
         {
             var allGo = new ManualResetEvent(false);
             Exception firstException = null;
             var failures = 0;
             var fixture = new HtmlSanitizerFixture();
             var tests = new HtmlSanitizerTests(fixture);
-            var waiting = numThreads;
-            var threads = Shuffle(invocations, random)
-                .Take(numThreads)
+            var waiting = round.Length;
+            var threads = round
                 .Select(invocation => new Thread(() =>
                 {
                     try
@@ -3012,7 +3034,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
             if (firstException != null)
             {
-                Assert.Fail($"{failures} of {numThreads} tests failed when run concurrently. "
+                Assert.Fail($"{failures} of {round.Length} tests failed when run concurrently. "
                     + $"Pass {seed} to the Random above to replay this exact combination.{Environment.NewLine}{firstException}");
             }
 
@@ -3030,7 +3052,9 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
     /// happens to trip an assertion, this pins down the specific shared state and reports a
     /// mismatch as a wrong *value*, so a torn read shows up as a diff rather than an exception.
     /// </remarks>
-    [Fact]
+    // ~320 ms, and it spawns 16 threads of its own on top of the round that would be running it.
+    // Nothing is gained by having ThreadTest sample a test that already hammers the shared state.
+    [Fact, TooSlowForThreadTest]
     public void ConcurrentSanitizeProducesSameResultTest()
     {
         const int numThreads = 16;
@@ -3104,6 +3128,8 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         Assert.True(invocations.Count > 100, $"expected the bulk of the suite, got {invocations.Count}");
         Assert.DoesNotContain(invocations, i => i.Method.Name == nameof(ThreadTest));
         Assert.DoesNotContain(invocations, i => i.Method.Name == nameof(HexColorTest));
+        Assert.DoesNotContain(invocations, i => i.Method.Name == nameof(SanitizeSrcdocDeeplyNestedIsBoundedTest));
+        Assert.DoesNotContain(invocations, i => i.Method.Name == nameof(ConcurrentSanitizeProducesSameResultTest));
 
         // Every entry must be invocable: argument count has to match the signature.
         Assert.All(invocations, i =>
@@ -4564,7 +4590,8 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         Assert.Equal(actual, sanitizer.Sanitize(actual));
     }
 
-    [Fact]
+    // ~700 ms, an order of magnitude above the next slowest: the nesting it builds is the point.
+    [Fact, TooSlowForThreadTest]
     public void SanitizeSrcdocDeeplyNestedIsBoundedTest()
     {
         var sanitizer = CreateSrcdocSanitizer();
