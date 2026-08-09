@@ -24,6 +24,7 @@ In order to facilitate different use cases, HtmlSanitizer can be customized at s
 - Configure allowed CSS [at-rules](https://developer.mozilla.org/en-US/docs/Web/CSS/At-rule) through the property `AllowedAtRules`. All other at-rules will be stripped.
 - Configure allowed URI schemes through the property `AllowedSchemes`. All other URIs will be stripped.
 - Configure HTML attributes that contain URIs (such as "src", "href" etc.) through the property `UriAttributes`.
+- Configure HTML attributes that contain a *list* of URIs (such as "srcset", "ping") through the property `UriListAttributes`. Every entry is checked separately.
 - Provide a base URI that will be used to resolve relative URIs against.
 - Cancelable events are raised before a tag, attribute, or style is removed.
 
@@ -516,7 +517,41 @@ sanitizer.AllowedSchemes.Add("mailto");
 ```
 
 ### Default attributes that contain URIs
-`action`, `cite`, `formaction`, `background`, `dynsrc`, `href`, `longdesc`, `lowsrc`, `src`
+`action`, `background`, `cite`, `codebase`, `data`, `dynsrc`, `formaction`, `href`, `icon`, `longdesc`, `lowsrc`, `manifest`, `poster`, `src`, `xlink:href`
+
+The value of an attribute listed in `UriAttributes` is checked against `AllowedSchemes`. An attribute that carries a URI but is *not* listed keeps its value as-is, so if you add such an attribute to `AllowedAttributes` you should add it to `UriAttributes` as well:
+
+```C#
+sanitizer.AllowedAttributes.Add("data-thumbnail");
+sanitizer.UriAttributes.Add("data-thumbnail");
+```
+
+_Note:_ attributes that merely name something in the same document rather than locating a resource - `usemap`, `classid`, `profile` - are deliberately not treated as URI attributes. Nothing fetches them, and resolving them against a base URI would break them: `usemap="#map"` has to stay a hash-name reference to match its `<map>`.
+
+### Default attributes that contain lists of URIs
+`archive`, `ping`, `srcset`
+
+These hold several URIs in one value, so each entry is checked on its own and the failing ones are dropped; the attribute itself is removed only if nothing survives. `srcset` is parsed as a candidate list so that descriptors are kept with the URI they belong to, and commas inside a URI do not split it.
+
+```C#
+// srcset="https://example.com/a.jpg 1x, javascript:alert(1) 2x"
+// becomes srcset="https://example.com/a.jpg 1x"
+```
+
+Checking such an attribute through `UriAttributes` instead would inspect the whole value as a single URI, which only ever looks at the first entry - so use `UriListAttributes` for these.
+
+### The `srcdoc` attribute
+
+`srcdoc` holds a complete HTML document rather than a URI, and a browser parses and runs it in its own browsing context. It is therefore not a URI attribute: if you allow it, its content is sanitized as HTML with the same settings as the surrounding document.
+
+```C#
+sanitizer.AllowedTags.Add("iframe");
+sanitizer.AllowedAttributes.Add("srcdoc");
+// <iframe srcdoc="&lt;img src=x onerror=alert(1)&gt;"></iframe>
+// becomes <iframe srcdoc="&lt;img src=&quot;x&quot;&gt;"></iframe>
+```
+
+Nested `srcdoc` documents are sanitized as well, up to a fixed depth, beyond which the attribute is removed.
 
 ### Thread safety
 

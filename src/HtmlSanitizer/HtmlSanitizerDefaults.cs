@@ -101,11 +101,52 @@ public static class HtmlSanitizerDefaults
     }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
-    /// The default URI attributes.
+    /// The default URI attributes. Values of attributes named here are screened against
+    /// <see cref="AllowedSchemes"/>; an attribute carrying a URL that is not listed keeps its
+    /// value verbatim, so adding one to <see cref="AllowedAttributes"/> without also adding it
+    /// here leaves it unfiltered.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Membership is decided by whether a browser resolves the value as a URL and may fetch or
+    /// navigate to it. Attributes that merely name something in the current document do not
+    /// qualify, and listing one is actively harmful: <c>usemap</c> takes a hash-name reference
+    /// (<c>#map</c>), which resolution against a base URL rewrites into an absolute URL that no
+    /// longer matches any map, breaking the image map while preventing nothing - a
+    /// <c>javascript:</c> value there is inert because nothing ever fetches it. <c>classid</c>
+    /// and <c>profile</c> are identifiers in the same way.
+    /// </para>
+    /// <para>
+    /// <c>archive</c>, <c>ping</c> and <c>srcset</c> are absent for a different reason: each
+    /// holds a <em>list</em> of URLs, and screening inspects the value as a single URL. Only the
+    /// first entry would be examined, so a hostile one in any later position would pass through
+    /// untouched - as in <c>srcset="ok.jpg 1x, javascript:alert(1) 2x"</c>. They are screened
+    /// entry by entry instead; see <see cref="UriListAttributes"/>.
+    /// </para>
+    /// <para>
+    /// <c>srcdoc</c> is absent for a third reason: it carries a nested HTML document rather than
+    /// a URL, so URL screening is the wrong check. Its content is sanitized as HTML instead.
+    /// </para>
+    /// </remarks>
     public static ISet<string> UriAttributes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
     {
-        "action", "cite", "formaction", "background", "dynsrc", "href", "longdesc", "lowsrc", "src"
+        "action", "background", "cite", "codebase", "data", "dynsrc", "formaction", "href",
+        "icon", "longdesc", "lowsrc", "manifest", "poster", "src", "xlink:href"
+    }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The default URI list attributes: attributes whose value is a list of URLs rather than a
+    /// single one. Every entry is screened against <see cref="AllowedSchemes"/> individually and
+    /// entries that fail are dropped, so a hostile URL cannot hide behind a benign first entry.
+    /// </summary>
+    /// <remarks>
+    /// <c>srcset</c> is a comma-separated list of candidates, each a URL followed by an optional
+    /// width or density descriptor. <c>ping</c> and <c>archive</c> are whitespace-separated plain
+    /// URL lists.
+    /// </remarks>
+    public static ISet<string> UriListAttributes { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "archive", "ping", "srcset"
     }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>

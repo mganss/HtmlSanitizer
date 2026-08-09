@@ -2941,7 +2941,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         var methods = typeof(HtmlSanitizerTests).GetTypeInfo().GetMethods()
             .Where(m => m.GetCustomAttributes(typeof(FactAttribute), false).Cast<FactAttribute>().Any(f => f.Skip == null))
             .Where(m => m.Name != nameof(ThreadTest)
-                && !m.GetCustomAttributes(typeof(NotThreadSafeAttribute), false).Any());
+                && m.GetCustomAttributes(typeof(NotThreadSafeAttribute), false).Length == 0);
 
         foreach (var method in methods)
         {
@@ -4453,5 +4453,348 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
         Assert.True(called);
         Assert.Equal(@"<style type="""">div { color: rgba(255, 0, 0, 1) }</style>", actual);
+    }
+
+    // A srcdoc attribute holds a nested HTML document that the browser parses and runs in its own
+    // browsing context, so its content has to be sanitized as HTML. URL screening is the wrong
+    // check here, which is why adding srcdoc to UriAttributes cannot secure it.
+    private static HtmlSanitizer CreateSrcdocSanitizer()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("iframe");
+        sanitizer.AllowedAttributes.Add("srcdoc");
+        return sanitizer;
+    }
+
+    [Fact]
+    public void SanitizeSrcdocScriptTest()
+    {
+        var sanitizer = CreateSrcdocSanitizer();
+
+        Assert.Equal(@"<iframe srcdoc="""">test</iframe>",
+            sanitizer.Sanitize(@"<iframe srcdoc=""&lt;script&gt;alert(1)&lt;/script&gt;"">test</iframe>"));
+    }
+
+    [Fact]
+    public void SanitizeSrcdocEventHandlerTest()
+    {
+        var sanitizer = CreateSrcdocSanitizer();
+
+        Assert.Equal(@"<iframe srcdoc=""&lt;img src=&quot;x&quot;&gt;""></iframe>",
+            sanitizer.Sanitize(@"<iframe srcdoc=""&lt;img src=x onerror=alert(1)&gt;""></iframe>"));
+    }
+
+    [Fact]
+    public void SanitizeSrcdocUrlTest()
+    {
+        var sanitizer = CreateSrcdocSanitizer();
+
+        Assert.Equal(@"<iframe srcdoc=""&lt;a&gt;click&lt;/a&gt;""></iframe>",
+            sanitizer.Sanitize(@"<iframe srcdoc=""&lt;a href=javascript:alert(1)&gt;click&lt;/a&gt;""></iframe>"));
+    }
+
+    [Fact]
+    public void SanitizeSrcdocKeepsAllowedContentTest()
+    {
+        var sanitizer = CreateSrcdocSanitizer();
+
+        Assert.Equal(@"<iframe srcdoc=""&lt;b&gt;hi&lt;/b&gt;""></iframe>",
+            sanitizer.Sanitize(@"<iframe srcdoc=""&lt;b&gt;hi&lt;/b&gt;""></iframe>"));
+    }
+
+    // The nested document is held to the same policy as the outer one, not a fixed default:
+    // a tag the caller allows survives inside srcdoc, and one they don't does not.
+    [Fact]
+    public void SanitizeSrcdocAppliesSamePolicyTest()
+    {
+        var html = @"<iframe srcdoc=""&lt;marquee&gt;hi&lt;/marquee&gt;""></iframe>";
+
+        var withoutMarquee = CreateSrcdocSanitizer();
+        Assert.Equal(@"<iframe srcdoc=""""></iframe>", withoutMarquee.Sanitize(html));
+
+        var withMarquee = CreateSrcdocSanitizer();
+        withMarquee.AllowedTags.Add("marquee");
+        Assert.Equal(html, withMarquee.Sanitize(html));
+    }
+
+    // srcdoc on any element is sanitized, not just on the iframe it is defined for: an attacker
+    // picks the carrier, and a stray srcdoc could be moved onto an iframe by later processing.
+    [Fact]
+    public void SanitizeSrcdocOnOtherElementTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedAttributes.Add("srcdoc");
+
+        Assert.Equal(@"<div srcdoc=""""></div>",
+            sanitizer.Sanitize(@"<div srcdoc=""&lt;script&gt;alert(1)&lt;/script&gt;""></div>"));
+    }
+
+    [Fact]
+    public void SanitizeSrcdocNotAllowedIsRemovedTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("iframe");
+
+        Assert.Equal(@"<iframe></iframe>",
+            sanitizer.Sanitize(@"<iframe srcdoc=""&lt;script&gt;alert(1)&lt;/script&gt;""></iframe>"));
+    }
+
+    [Fact]
+    public void SanitizeSrcdocIsIdempotentTest()
+    {
+        var sanitizer = CreateSrcdocSanitizer();
+
+        var once = sanitizer.Sanitize(@"<iframe srcdoc=""&lt;img src=x onerror=alert(1)&gt;&lt;b&gt;hi&lt;/b&gt;""></iframe>");
+
+        Assert.Equal(once, sanitizer.Sanitize(once));
+    }
+
+    // Nested srcdoc documents are sanitized at every level, and the nesting is bounded so a
+    // hostile input cannot force unbounded recursion.
+    [Fact]
+    public void SanitizeSrcdocNestedTest()
+    {
+        var sanitizer = CreateSrcdocSanitizer();
+        var inner = @"<iframe srcdoc=""&lt;script&gt;alert(1)&lt;/script&gt;""></iframe>";
+        var html = $@"<iframe srcdoc=""{inner.Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;").Replace("\"", "&quot;")}""></iframe>";
+
+        var actual = sanitizer.Sanitize(html);
+
+        Assert.DoesNotContain("alert", actual, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(actual, sanitizer.Sanitize(actual));
+    }
+
+    [Fact]
+    public void SanitizeSrcdocDeeplyNestedIsBoundedTest()
+    {
+        var sanitizer = CreateSrcdocSanitizer();
+
+        static string Encode(string s) => s.Replace("&", "&amp;").Replace("<", "&lt;")
+            .Replace(">", "&gt;").Replace("\"", "&quot;");
+
+        var html = @"<script>alert(1)</script>";
+        for (var i = 0; i < 12; i++)
+            html = $@"<iframe srcdoc=""{Encode(html)}""></iframe>";
+
+        var actual = sanitizer.Sanitize(html);
+
+        Assert.DoesNotContain("alert", actual, StringComparison.OrdinalIgnoreCase);
+    }
+
+    // Attributes that carry a URL must be screened against AllowedSchemes. An attribute that is
+    // allowed but not treated as a URI attribute keeps its value verbatim, so each of these
+    // would otherwise pass javascript: straight through once a caller allowed the attribute.
+    [Theory]
+    [InlineData("object", "data")]
+    [InlineData("object", "codebase")]
+    [InlineData("video", "poster")]
+    [InlineData("menuitem", "icon")]
+    [InlineData("html", "manifest")]
+    [InlineData("use", "xlink:href")]
+    public void SanitizeUriAttributeRejectsJavascriptUrlTest(string tag, string attribute)
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add(tag);
+        sanitizer.AllowedAttributes.Add(attribute);
+
+        var actual = sanitizer.Sanitize($@"<{tag} {attribute}=""javascript:alert(1)""></{tag}>");
+
+        Assert.DoesNotContain("javascript:", actual, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Theory]
+    [InlineData("object", "data", "https://www.example.com/a.swf")]
+    [InlineData("object", "codebase", "https://www.example.com/")]
+    [InlineData("video", "poster", "https://www.example.com/p.png")]
+    [InlineData("menuitem", "icon", "https://www.example.com/i.png")]
+    [InlineData("use", "xlink:href", "#shape")]
+    public void SanitizeUriAttributeKeepsAllowedUrlTest(string tag, string attribute, string url)
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add(tag);
+        sanitizer.AllowedAttributes.Add(attribute);
+
+        var actual = sanitizer.Sanitize($@"<{tag} {attribute}=""{url}""></{tag}>");
+
+        Assert.Contains(url, actual, StringComparison.Ordinal);
+    }
+
+    // usemap, classid and profile name something rather than locating it: no browser fetches or
+    // navigates to their values, so screening them prevents nothing. For usemap it also does
+    // damage - the value must stay a hash-name reference, and resolving it against a base URL
+    // turns "#map1" into an absolute URL that matches no map, silently breaking the image map.
+    // usemap is allowed by default, so that breakage would reach callers who configured nothing.
+    [Theory]
+    [InlineData("usemap")]
+    [InlineData("classid")]
+    [InlineData("profile")]
+    public void UriAttributesExcludesIdentifierAttributesTest(string attribute)
+    {
+        Assert.DoesNotContain(attribute, new HtmlSanitizer().UriAttributes);
+    }
+
+    [Fact]
+    public void SanitizeUsemapKeepsHashNameReferenceUnderBaseUrlTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+
+        Assert.Equal(@"<img usemap=""#map1"">",
+            sanitizer.Sanitize(@"<img usemap=""#map1"">", "https://www.example.com/page"));
+    }
+
+    // archive, ping and srcset hold a LIST of URLs, so they belong in UriListAttributes, where
+    // every entry is screened, rather than UriAttributes, where only the first would be.
+    [Theory]
+    [InlineData("srcset")]
+    [InlineData("ping")]
+    [InlineData("archive")]
+    public void UriListAttributesContainsListValuedUrlAttributesTest(string attribute)
+    {
+        var sanitizer = new HtmlSanitizer();
+
+        Assert.Contains(attribute, sanitizer.UriListAttributes);
+        Assert.DoesNotContain(attribute, sanitizer.UriAttributes);
+    }
+
+    private static HtmlSanitizer CreateUriListSanitizer(string attribute)
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedAttributes.Add(attribute);
+        return sanitizer;
+    }
+
+    // The case that motivated all of this: a hostile URL hiding behind a benign first entry.
+    [Theory]
+    [InlineData("ping")]
+    [InlineData("archive")]
+    public void SanitizeUriListDropsHostileEntryInAnyPositionTest(string attribute)
+    {
+        var sanitizer = CreateUriListSanitizer(attribute);
+
+        var actual = sanitizer.Sanitize(
+            $@"<img {attribute}=""https://www.example.com/a https://www.example.com/b"">");
+        Assert.Equal($@"<img {attribute}=""https://www.example.com/a https://www.example.com/b"">", actual);
+
+        var hostile = sanitizer.Sanitize(
+            $@"<img {attribute}=""https://www.example.com/a javascript:alert(1) https://www.example.com/b"">");
+        Assert.DoesNotContain("javascript:", hostile, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("https://www.example.com/a", hostile, StringComparison.Ordinal);
+        Assert.Contains("https://www.example.com/b", hostile, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void SanitizeSrcsetDropsHostileCandidateInAnyPositionTest()
+    {
+        var sanitizer = CreateUriListSanitizer("srcset");
+
+        var actual = sanitizer.Sanitize(
+            @"<img srcset=""https://www.example.com/a.jpg 1x, javascript:alert(1) 2x, https://www.example.com/b.jpg 3x"">");
+
+        Assert.DoesNotContain("javascript:", actual, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("https://www.example.com/a.jpg 1x", actual, StringComparison.Ordinal);
+        Assert.Contains("https://www.example.com/b.jpg 3x", actual, StringComparison.Ordinal);
+    }
+
+    // The width/density descriptor has to survive with the URL it belongs to.
+    [Fact]
+    public void SanitizeSrcsetKeepsDescriptorsTest()
+    {
+        var sanitizer = CreateUriListSanitizer("srcset");
+
+        Assert.Equal(@"<img srcset=""https://www.example.com/a.jpg 1x, https://www.example.com/b.jpg 2x"">",
+            sanitizer.Sanitize(@"<img srcset=""https://www.example.com/a.jpg 1x, https://www.example.com/b.jpg 2x"">"));
+
+        Assert.Equal(@"<img srcset=""https://www.example.com/a.jpg 400w, https://www.example.com/b.jpg 800w"">",
+            sanitizer.Sanitize(@"<img srcset=""https://www.example.com/a.jpg 400w, https://www.example.com/b.jpg 800w"">"));
+    }
+
+    [Fact]
+    public void SanitizeSrcsetWithoutDescriptorTest()
+    {
+        var sanitizer = CreateUriListSanitizer("srcset");
+
+        Assert.Equal(@"<img srcset=""https://www.example.com/a.jpg"">",
+            sanitizer.Sanitize(@"<img srcset=""https://www.example.com/a.jpg"">"));
+    }
+
+    // A comma can appear inside a candidate URL, so srcset cannot be split on commas naively.
+    // AngleSharp's SourceSet parser implements the real candidate grammar.
+    [Fact]
+    public void SanitizeSrcsetWithCommaInUrlTest()
+    {
+        var sanitizer = CreateUriListSanitizer("srcset");
+
+        var actual = sanitizer.Sanitize(@"<img srcset=""https://www.example.com/a.jpg?x=1,2 1x"">");
+
+        Assert.Contains("x=1,2", actual, StringComparison.Ordinal);
+        Assert.Contains("1x", actual, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("srcset")]
+    [InlineData("ping")]
+    [InlineData("archive")]
+    public void SanitizeUriListRemovesAttributeWhenNothingSurvivesTest(string attribute)
+    {
+        var sanitizer = CreateUriListSanitizer(attribute);
+
+        var actual = sanitizer.Sanitize($@"<img {attribute}=""javascript:alert(1) vbscript:alert(2)"">");
+
+        Assert.Equal(@"<img>", actual);
+    }
+
+    [Theory]
+    [InlineData("srcset")]
+    [InlineData("ping")]
+    [InlineData("archive")]
+    public void SanitizeUriListRemovesEmptyAttributeTest(string attribute)
+    {
+        var sanitizer = CreateUriListSanitizer(attribute);
+
+        Assert.Equal(@"<img>", sanitizer.Sanitize($@"<img {attribute}="" "">"));
+    }
+
+    // A caller can register their own list-valued attribute, the same way UriAttributes works.
+    [Fact]
+    public void SanitizeUriListIsConfigurableTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedAttributes.Add("data-urls");
+        sanitizer.UriListAttributes.Add("data-urls");
+
+        var actual = sanitizer.Sanitize(
+            @"<img data-urls=""https://www.example.com/a javascript:alert(1)"">");
+
+        Assert.Equal(@"<img data-urls=""https://www.example.com/a"">", actual);
+    }
+
+    [Fact]
+    public void SanitizeUriListResolvesRelativeUrlsAgainstBaseUrlTest()
+    {
+        var sanitizer = CreateUriListSanitizer("srcset");
+
+        Assert.Equal(@"<img srcset=""https://www.example.com/a.jpg 1x, https://www.example.com/b.jpg 2x"">",
+            sanitizer.Sanitize(@"<img srcset=""a.jpg 1x, b.jpg 2x"">", "https://www.example.com/"));
+    }
+
+    [Theory]
+    [InlineData("srcset")]
+    [InlineData("ping")]
+    [InlineData("archive")]
+    public void SanitizeUriListIsIdempotentTest(string attribute)
+    {
+        var sanitizer = CreateUriListSanitizer(attribute);
+
+        var once = sanitizer.Sanitize(
+            $@"<img {attribute}=""https://www.example.com/a javascript:alert(1) https://www.example.com/b"">");
+
+        Assert.Equal(once, sanitizer.Sanitize(once));
+    }
+
+    // srcdoc carries HTML, not a URL, so it is sanitized as markup rather than screened as a URL.
+    [Fact]
+    public void UriAttributesExcludesSrcdocTest()
+    {
+        Assert.DoesNotContain("srcdoc", new HtmlSanitizer().UriAttributes);
     }
 }

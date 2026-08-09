@@ -45,6 +45,12 @@ public class HtmlSanitizerOptions
     public ISet<string> UriAttributes { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
+    /// Gets or sets the allowed URI list attributes, whose value is a list of URLs rather than a
+    /// single one. See <see cref="HtmlSanitizerDefaults.UriListAttributes"/>.
+    /// </summary>
+    public ISet<string> UriListAttributes { get; set; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
     /// Allow all custom CSS properties (variables) prefixed with <c>--</c>.
     /// </summary>
     public bool AllowCssCustomProperties { get; set; }

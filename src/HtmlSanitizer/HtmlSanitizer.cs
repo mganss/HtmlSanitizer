@@ -1,9 +1,10 @@
-using AngleSharp;
+﻿using AngleSharp;
 using AngleSharp.Css;
 using AngleSharp.Css.Dom;
 using AngleSharp.Css.Parser;
 using AngleSharp.Css.Values;
 using AngleSharp.Dom;
+using AngleSharp.Html;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using System;
@@ -56,6 +57,15 @@ public class HtmlSanitizer : IHtmlSanitizer
 {
     private const string StyleAttributeName = "style";
     private const string StyleTagName = "style";
+    private const string SrcdocAttributeName = "srcdoc";
+    private const string SrcsetAttributeName = "srcset";
+
+    /// <summary>
+    /// How many levels of nested srcdoc documents are sanitized before the attribute is dropped.
+    /// Each level costs a full parse, and legitimate markup does not nest browsing contexts this
+    /// deeply, so the limit only bounds the work a hostile input can force.
+    /// </summary>
+    private const int MaxSrcdocDepth = 5;
 
     // from http://genshi.edgewall.org/
     private static readonly Regex CssUnicodeEscapes = new(@"\\([0-9a-fA-F]{1,6})\s?|\\([^\r\n\f0-9a-fA-F'""{};:()#*])", RegexOptions.Compiled);
@@ -94,6 +104,7 @@ public class HtmlSanitizer : IHtmlSanitizer
         AllowedSchemes = new HashSet<string>(HtmlSanitizerDefaults.AllowedSchemes, StringComparer.OrdinalIgnoreCase);
         AllowedAttributes = new HashSet<string>(HtmlSanitizerDefaults.AllowedAttributes, StringComparer.OrdinalIgnoreCase);
         UriAttributes = new HashSet<string>(HtmlSanitizerDefaults.UriAttributes, StringComparer.OrdinalIgnoreCase);
+        UriListAttributes = new HashSet<string>(HtmlSanitizerDefaults.UriListAttributes, StringComparer.OrdinalIgnoreCase);
         AllowedCssProperties = new HashSet<string>(HtmlSanitizerDefaults.AllowedCssProperties, StringComparer.OrdinalIgnoreCase);
         AllowedAtRules = new HashSet<CssRuleType>(HtmlSanitizerDefaults.AllowedAtRules);
         AllowedClasses = new HashSet<string>(HtmlSanitizerDefaults.AllowedClasses);
@@ -110,6 +121,7 @@ public class HtmlSanitizer : IHtmlSanitizer
         AllowedSchemes = new HashSet<string>(options.AllowedSchemes, StringComparer.OrdinalIgnoreCase);
         AllowedAttributes = new HashSet<string>(options.AllowedAttributes, StringComparer.OrdinalIgnoreCase);
         UriAttributes = new HashSet<string>(options.UriAttributes, StringComparer.OrdinalIgnoreCase);
+        UriListAttributes = new HashSet<string>(options.UriListAttributes, StringComparer.OrdinalIgnoreCase);
         AllowedClasses = new HashSet<string>(options.AllowedCssClasses, StringComparer.OrdinalIgnoreCase);
         AllowedCssProperties = new HashSet<string>(options.AllowedCssProperties, StringComparer.OrdinalIgnoreCase);
         AllowedAtRules = new HashSet<CssRuleType>(options.AllowedAtRules);
@@ -211,6 +223,19 @@ public class HtmlSanitizer : IHtmlSanitizer
     /// The URI attributes.
     /// </value>
     public ISet<string> UriAttributes { get; private set; }
+
+    /// <summary>
+    /// Gets or sets the attributes whose value is a <em>list</em> of URLs rather than a single
+    /// one, such as <c>srcset</c> and <c>ping</c>. Each entry is screened against
+    /// <see cref="AllowedSchemes"/> on its own and failing entries are dropped; the attribute
+    /// itself is removed only when nothing survives.
+    /// </summary>
+    /// <remarks>
+    /// Listing such an attribute in <see cref="UriAttributes"/> instead would screen the whole
+    /// value as one URL, which examines only the first entry and lets a hostile one in any later
+    /// position through. This set is deliberately separate for that reason.
+    /// </remarks>
+    public ISet<string> UriListAttributes { get; private set; }
 
     /// <summary>
     /// Gets or sets the allowed CSS properties such as "font" and "margin".
@@ -527,7 +552,7 @@ public class HtmlSanitizer : IHtmlSanitizer
             tag.SetInnerText(escapedHtml);
     }
 
-    private void DoSanitize(INode dom, IParentNode context, string baseUrl = "")
+    private void DoSanitize(INode dom, IParentNode context, string baseUrl = "", int srcdocDepth = 0)
     {
         // remove disallowed tags
         foreach (var tag in context.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList())
@@ -536,8 +561,14 @@ public class HtmlSanitizer : IHtmlSanitizer
         }
 
         // always encode text in raw data content, except in style elements: their content is
-        // sanitized as CSS by SanitizeStyleSheets below, which owns every style element - the
-        // SVG one included, which is not an IHtmlStyleElement.
+        // sanitized as CSS by SanitizeStyleSheets below, which owns every style element.
+        //
+        // Matched by local name rather than by type on purpose. A <style> keeps the namespace it
+        // was parsed in, and AngleSharp gives each namespace a different class: HtmlStyleElement
+        // in HTML, SvgStyleElement in SVG, and in MathML a plain MathElement with no style
+        // interface at all. So "is IHtmlStyleElement" would let the SVG and MathML ones fall
+        // through to the encoder and out of the CSS sanitizer, and even ILinkStyle - shared by
+        // the HTML and SVG classes - would still miss MathML. The local name catches all three.
         foreach (var tag in context.QuerySelectorAll("*")
             .Where(t => t.LocalName != StyleTagName
                 && t.Flags.HasFlag(NodeFlags.LiteralText)
@@ -553,7 +584,7 @@ public class HtmlSanitizer : IHtmlSanitizer
         {
             if (tag is IHtmlTemplateElement templateElement && templateElement.Content is IDocumentFragment fragment)
             {
-                DoSanitize(fragment, fragment, baseUrl);
+                DoSanitize(fragment, fragment, baseUrl, srcdocDepth);
             }
 
             // remove disallowed attributes
@@ -562,8 +593,11 @@ public class HtmlSanitizer : IHtmlSanitizer
                 RemoveAttribute(tag, attribute, RemoveReason.NotAllowedAttribute);
             }
 
+            // sanitize the content of a surviving srcdoc attribute
+            SanitizeSrcdoc(tag, baseUrl, srcdocDepth);
+
             // sanitize URLs in URL-marked attributes
-            foreach (var attribute in tag.Attributes.Where(IsUriAttribute).ToList())
+            foreach (var attribute in tag.Attributes.Where(a => IsUriAttribute(a) && !IsUriListAttribute(a)).ToList())
             {
                 var url = SanitizeUrl(tag, attribute.Value, baseUrl);
 
@@ -571,6 +605,12 @@ public class HtmlSanitizer : IHtmlSanitizer
                     RemoveAttribute(tag, attribute, RemoveReason.NotAllowedUrlValue);
                 else
                     tag.SetAttribute(attribute.Name, url);
+            }
+
+            // sanitize every entry of attributes holding a list of URLs
+            foreach (var attribute in tag.Attributes.Where(IsUriListAttribute).ToList())
+            {
+                SanitizeUriList(tag, attribute, baseUrl);
             }
 
             // sanitize the style attribute
@@ -617,6 +657,129 @@ public class HtmlSanitizer : IHtmlSanitizer
         {
             DoPostProcess(doc, context as INode);
         }
+    }
+
+    /// <summary>
+    /// Sanitizes an attribute whose value is a list of URLs, screening each entry on its own.
+    /// </summary>
+    /// <remarks>
+    /// Screening the raw value as a single URL would only ever examine the first entry, letting
+    /// <c>srcset="ok.jpg 1x, javascript:alert(1) 2x"</c> through intact. Entries that fail are
+    /// dropped individually and the surviving ones are kept, so hostile candidates are removed
+    /// without discarding the usable ones; the attribute goes only when nothing is left.
+    /// <para>
+    /// <c>srcset</c> is parsed with AngleSharp's <see cref="SourceSet"/>, which implements the
+    /// HTML candidate-string grammar - a comma separates candidates, but a comma may also sit
+    /// inside a URL, so splitting the text naively would corrupt valid values. The other list
+    /// attributes are whitespace-separated and need no such grammar.
+    /// </para>
+    /// </remarks>
+    private void SanitizeUriList(IElement tag, IAttr attribute, string baseUrl)
+    {
+        var value = attribute.Value;
+
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            RemoveAttribute(tag, attribute, RemoveReason.NotAllowedUrlValue);
+            return;
+        }
+
+        var sanitized = attribute.Name.Equals(SrcsetAttributeName, StringComparison.OrdinalIgnoreCase)
+            ? SanitizeSrcset(tag, value, baseUrl)
+            : SanitizeUrlList(tag, value, baseUrl);
+
+        if (sanitized == null)
+            RemoveAttribute(tag, attribute, RemoveReason.NotAllowedUrlValue);
+        else
+            tag.SetAttribute(attribute.Name, sanitized);
+    }
+
+    /// <summary>
+    /// Screens each candidate of a <c>srcset</c> value, preserving the descriptor that belongs to
+    /// each surviving URL. Returns null when no candidate survives.
+    /// </summary>
+    private string? SanitizeSrcset(IElement tag, string value, string baseUrl)
+    {
+        var kept = new List<string>();
+
+        foreach (var candidate in SourceSet.Parse(value))
+        {
+            var candidateUrl = candidate.Url;
+
+            if (candidateUrl == null || candidateUrl.Length == 0) continue;
+
+            var url = SanitizeUrl(tag, candidateUrl, baseUrl);
+
+            if (url == null) continue;
+
+            kept.Add(string.IsNullOrEmpty(candidate.Descriptor)
+                ? url
+                : $"{url} {candidate.Descriptor}");
+        }
+
+        return kept.Count > 0 ? string.Join(", ", kept) : null;
+    }
+
+    /// <summary>
+    /// Screens each entry of a whitespace-separated URL list such as <c>ping</c> or
+    /// <c>archive</c>. Returns null when no entry survives.
+    /// </summary>
+    private string? SanitizeUrlList(IElement tag, string value, string baseUrl)
+    {
+        var kept = new List<string>();
+
+        foreach (var entry in value.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var url = SanitizeUrl(tag, entry, baseUrl);
+
+            if (url != null) kept.Add(url);
+        }
+
+        return kept.Count > 0 ? string.Join(" ", kept) : null;
+    }
+
+    /// <summary>
+    /// Sanitizes the content of a <c>srcdoc</c> attribute, which holds a nested HTML document
+    /// rather than a URL or plain text.
+    /// </summary>
+    /// <remarks>
+    /// A browser parses <c>srcdoc</c> into its own browsing context and runs whatever it finds,
+    /// so an unsanitized value is an unfiltered script channel. It cannot be secured the way
+    /// other attributes are: marking it as a URI attribute applies URL screening, which is the
+    /// wrong check for markup, and leaving it to <see cref="AllowedAttributes"/> alone gives
+    /// callers no safe way to permit the attribute at all. Instead the value is sanitized as
+    /// HTML with this same sanitizer, so the nested document is held to exactly the policy the
+    /// outer one is.
+    /// </remarks>
+    private void SanitizeSrcdoc(IElement tag, string baseUrl, int srcdocDepth)
+    {
+        var attribute = tag.Attributes.FirstOrDefault(a =>
+            a.Name.Equals(SrcdocAttributeName, StringComparison.OrdinalIgnoreCase));
+
+        if (attribute == null || string.IsNullOrEmpty(attribute.Value))
+            return;
+
+        // Nested srcdoc documents each cost a full parse. Rather than recurse without bound,
+        // drop the attribute once the limit is reached: the nested content is unexamined at that
+        // point, so keeping it would be keeping something unsanitized.
+        if (srcdocDepth >= MaxSrcdocDepth)
+        {
+            RemoveAttribute(tag, attribute, RemoveReason.NotAllowedValue);
+            return;
+        }
+
+        var parser = HtmlParserFactory();
+        using var nested = parser.ParseDocument("<!doctype html><html><body>" + attribute.Value);
+
+        if (nested.Body == null)
+        {
+            RemoveAttribute(tag, attribute, RemoveReason.NotAllowedValue);
+            return;
+        }
+
+        DoSanitize(nested, nested.Body, baseUrl, srcdocDepth + 1);
+
+        tag.SetAttribute(attribute.Name, nested.Body.ChildNodes.ToHtml(OutputFormatter));
     }
 
     private void SanitizeStyleSheets(INode node, string baseUrl)
@@ -816,6 +979,11 @@ public class HtmlSanitizer : IHtmlSanitizer
     private bool IsUriAttribute(IAttr attribute)
     {
         return UriAttributes.Contains(attribute.Name);
+    }
+
+    private bool IsUriListAttribute(IAttr attribute)
+    {
+        return UriListAttributes.Contains(attribute.Name);
     }
 
     /// <summary>
@@ -1075,7 +1243,7 @@ public class HtmlSanitizer : IHtmlSanitizer
 
         foreach (var style in styles.Where(s => string.IsNullOrEmpty(s.Value)))
         {
-            (opaque ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Add(style.Name);
+            (opaque ??= [with(StringComparer.OrdinalIgnoreCase)]).Add(style.Name);
         }
 
         // An empty longhand is not proof of a pending value on its own: "font: 12px/1.5 Arial"
@@ -1127,7 +1295,7 @@ public class HtmlSanitizer : IHtmlSanitizer
         longhandsOf.GetOrAdd(property, static p =>
         {
             var longhands = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            Expand(p, longhands, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+            Expand(p, longhands, [with(StringComparer.OrdinalIgnoreCase)]);
             return longhands;
         });
 
