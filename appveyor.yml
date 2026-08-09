@@ -1,6 +1,6 @@
-version: 9.1.{build}
+version: 9.2.{build}
 skip_tags: true
-image: Visual Studio 2022
+image: Visual Studio 2026
 environment:
   access_token:
     secure: Eq6BjtZ80BXKLwFMg76IjuQAvbLjbojIF/X/ARouGVhxPneJtgDfCXMPNgJ7KBKq
