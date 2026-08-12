@@ -3765,6 +3765,44 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         Assert.Equal(@"<div style=""height: 0; background-image: url(&quot;https://example.com/1.jpg&quot;), url(&quot;https://example.com/2.jpg&quot;), url(&quot;https://example.com/3.jpg&quot;); display: none""></div>", sanitized);
     }
 
+    // A duplicate declaration must not override an earlier !important one, in a style element
+    // or in a style attribute. Fixed upstream in AngleSharp.Css 1.0.1,
+    // see https://github.com/AngleSharp/AngleSharp.Css/issues/193
+    [Fact]
+    public void Number587StyleElementTest()
+    {
+        // see https://github.com/mganss/HtmlSanitizer/issues/587
+        var sanitizer = new HtmlSanitizer(new HtmlSanitizerOptions
+        {
+            AllowedTags = new HashSet<string> { "style" },
+            AllowedAtRules = new HashSet<CssRuleType> { CssRuleType.Style },
+            AllowedCssProperties = new HashSet<string> { "font-size", "padding", "padding-bottom", "padding-left", "padding-right", "padding-top" }
+        });
+
+        var html = "<style>.someClass { padding: 20px !important; font-size: 20px; padding: 0 }</style>";
+        var sanitized = sanitizer.Sanitize(html);
+
+        Assert.Equal("<style>.someClass { padding: 20px !important; font-size: 20px }</style>", sanitized);
+    }
+
+    [Fact]
+    public void Number587StyleAttributeTest()
+    {
+        // see https://github.com/mganss/HtmlSanitizer/issues/587
+        var sanitizer = new HtmlSanitizer(new HtmlSanitizerOptions
+        {
+            AllowedTags = new HashSet<string> { "p" },
+            AllowedAttributes = new HashSet<string> { "style" },
+            AllowedAtRules = new HashSet<CssRuleType> { CssRuleType.Style },
+            AllowedCssProperties = new HashSet<string> { "font-size", "padding", "padding-bottom", "padding-left", "padding-right", "padding-top" }
+        });
+
+        var html = @"<p style=""padding: 20px !important; font-size: 20px; padding: 0"">Test</p>";
+        var sanitized = sanitizer.Sanitize(html);
+
+        Assert.Equal(@"<p style=""padding: 20px !important; font-size: 20px"">Test</p>", sanitized);
+    }
+
     [Fact]
     public void BypassTest()
     {
