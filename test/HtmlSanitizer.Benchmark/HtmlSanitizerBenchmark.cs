@@ -6,15 +6,24 @@ namespace Ganss.Xss.Benchmark;
 public class HtmlSanitizerBenchmark
 {
     private HtmlSanitizer _sanitizer = null!;
+    private HtmlSanitizer _styleSheetSanitizer = null!;
     private string _googleFileContent = null!;
     private string _largeFileContent = null!;
+    private string _emailFileContent = null!;
 
     [GlobalSetup]
     public void GlobalSetup()
     {
         _googleFileContent = File.ReadAllText("google.html");
         _largeFileContent = File.ReadAllText("ecmascript.html");
+        _emailFileContent = File.ReadAllText("email.html");
         _sanitizer = new HtmlSanitizer();
+
+        // <style> is not an allowed tag by default, so the tag is dropped before its content is
+        // ever looked at. Allowing it is what puts SanitizeStyleSheets - and the CSS parsing and
+        // regex work behind it - on the measured path.
+        _styleSheetSanitizer = new HtmlSanitizer();
+        _styleSheetSanitizer.AllowedTags.Add("style");
     }
 
     /// <summary>
@@ -42,5 +51,40 @@ public class HtmlSanitizerBenchmark
     public void SanitizeLarge()
     {
         _sanitizer.Sanitize(_largeFileContent);
+    }
+
+    /// <summary>
+    /// A newsletter is style-heavy: the work is CSS rather than DOM.
+    /// </summary>
+    /// <remarks>
+    /// The other documents leave the CSS path almost unmeasured - ECMAScript has no styled element
+    /// at all and Google has eight of 309 - even though sanitizing a style attribute costs far more
+    /// per byte than sanitizing ordinary markup. HTML email is where that case really arises, since
+    /// mail clients strip stylesheets and templates inline everything instead.
+    /// <para>
+    /// email.html is generated rather than taken from a real campaign, so that nothing
+    /// third-party is vendored in, but its shape is calibrated against a real responsive template
+    /// (Cerberus): about 45% of elements carry a style attribute, averaging 3.3 declarations each,
+    /// drawn from the property mix that template actually uses - margin, font-size, line-height,
+    /// color, padding, font-family. Values differ per element on purpose; repeating one string
+    /// would let the CSS parser cache its way to a number no real document would produce. A
+    /// minority carry background-image: url(...), which is kept a minority because the reference
+    /// template has none inline, and over-representing it would flatter any change aimed at URL
+    /// handling.
+    /// </para>
+    /// </remarks>
+    [Benchmark]
+    public void SanitizeEmail()
+    {
+        _sanitizer.Sanitize(_emailFileContent);
+    }
+
+    /// <summary>
+    /// The same newsletter with stylesheets kept, which is what exercises SanitizeStyleSheets.
+    /// </summary>
+    [Benchmark]
+    public void SanitizeEmailWithStyleSheets()
+    {
+        _styleSheetSanitizer.Sanitize(_emailFileContent);
     }
 }
