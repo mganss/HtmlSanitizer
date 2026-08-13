@@ -115,6 +115,11 @@ public class HtmlSanitizer : IHtmlSanitizer
     /// with the given options.
     /// </summary>
     /// <param name="options">Options to control the sanitizing.</param>
+    /// <remarks>
+    /// Unlike the parameterless constructor, this replaces every collection with the one from
+    /// <paramref name="options"/> rather than merging with <see cref="HtmlSanitizerDefaults"/>. See
+    /// the remarks on <see cref="HtmlSanitizerOptions"/> and <see cref="HtmlSanitizerOptions.CreateDefault"/>.
+    /// </remarks>
     public HtmlSanitizer(HtmlSanitizerOptions options)
     {
         AllowedTags = new HashSet<string>(options.AllowedTags, StringComparer.OrdinalIgnoreCase);

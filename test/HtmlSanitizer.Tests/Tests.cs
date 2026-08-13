@@ -3804,6 +3804,44 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
     }
 
     [Fact]
+    public void HtmlSanitizerOptionsCreateDefaultMatchesParameterlessConstructorTest()
+    {
+        // see https://github.com/mganss/HtmlSanitizer/issues/570
+        var options = HtmlSanitizerOptions.CreateDefault();
+        var fromOptions = new HtmlSanitizer(options);
+        var fromDefaultCtor = new HtmlSanitizer();
+
+        Assert.Equal(fromDefaultCtor.AllowedTags, fromOptions.AllowedTags);
+        Assert.Equal(fromDefaultCtor.AllowedAttributes, fromOptions.AllowedAttributes);
+        Assert.Equal(fromDefaultCtor.AllowedClasses, fromOptions.AllowedClasses);
+        Assert.Equal(fromDefaultCtor.AllowedCssProperties, fromOptions.AllowedCssProperties);
+        Assert.Equal(fromDefaultCtor.AllowedAtRules, fromOptions.AllowedAtRules);
+        Assert.Equal(fromDefaultCtor.AllowedSchemes, fromOptions.AllowedSchemes);
+        Assert.Equal(fromDefaultCtor.UriAttributes, fromOptions.UriAttributes);
+        Assert.Equal(fromDefaultCtor.UriListAttributes, fromOptions.UriListAttributes);
+
+        var html = @"<a href=""javascript:alert(1)"">click</a><a href=""https://example.com"">ok</a>";
+        Assert.Equal(fromDefaultCtor.Sanitize(html), fromOptions.Sanitize(html));
+    }
+
+    [Fact]
+    public void HtmlSanitizerOptionsCreateDefaultAllowsOverridingOneSettingTest()
+    {
+        // see https://github.com/mganss/HtmlSanitizer/issues/570
+        var options = HtmlSanitizerOptions.CreateDefault();
+        options.AllowedTags.Clear();
+        options.AllowedTags.Add("a");
+
+        var sanitizer = new HtmlSanitizer(options);
+
+        // href is still screened against the (default) AllowedSchemes, unlike an
+        // HtmlSanitizerOptions built from scratch with UriAttributes left unset - the malicious
+        // href is stripped even though the (still default) AllowedAttributes allows "href".
+        var sanitized = sanitizer.Sanitize(@"<a href=""javascript:alert(1)"">click</a><div>dropped</div>");
+        Assert.Equal("<a>click</a>", sanitized);
+    }
+
+    [Fact]
     public void BypassTest()
     {
         var sanitizer = new HtmlSanitizer();

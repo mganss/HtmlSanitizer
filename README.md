@@ -27,7 +27,7 @@ In order to facilitate different use cases, HtmlSanitizer can be customized at s
 - Configure HTML attributes that contain a *list* of URIs (such as "srcset", "ping") through the property `UriListAttributes`. Every entry is checked separately.
 - Provide a base URI that will be used to resolve relative URIs against.
 - Cancelable events are raised before a tag, attribute, or style is removed.
-- All of the above can be set in one go by passing an `HtmlSanitizerOptions` object to the constructor. Note that its collections start out *empty* rather than at their defaults, see [Configuring with `HtmlSanitizerOptions`](#configuring-with-htmlsanitizeroptions).
+- All of the above can be set in one go by passing an `HtmlSanitizerOptions` object to the constructor. Note that `new HtmlSanitizerOptions()` starts with *empty* collections rather than the defaults - use `HtmlSanitizerOptions.CreateDefault()` if you only want to override a few settings, see [Configuring with `HtmlSanitizerOptions`](#configuring-with-htmlsanitizeroptions).
 
 Usage
 -----
@@ -64,7 +64,7 @@ var sanitizer = new HtmlSanitizer(new HtmlSanitizerOptions
 });
 ```
 
-**Every collection on `HtmlSanitizerOptions` starts out empty, so this constructor replaces the defaults instead of adding to them.** Whatever you leave unset is empty on the resulting sanitizer - unlike the parameterless `new HtmlSanitizer()`, which seeds all of these from `HtmlSanitizerDefaults`. Set each collection you care about explicitly, using the corresponding `HtmlSanitizerDefaults` member where you want the default value.
+**Every collection on `HtmlSanitizerOptions` starts out empty, so this constructor replaces the defaults instead of adding to them.** Whatever you leave unset is empty on the resulting sanitizer - unlike the parameterless `new HtmlSanitizer()`, which seeds all of these from `HtmlSanitizerDefaults`. Set each collection you care about explicitly, using the corresponding `HtmlSanitizerDefaults` member where you want the default value, or start from `HtmlSanitizerOptions.CreateDefault()` as shown below.
 
 This matters most for `UriAttributes`, which is a *screening* list rather than an allow list: leaving it empty does not deny URI attributes, it means no attribute is treated as carrying a URI at all. Its value is then never checked against `AllowedSchemes`, so
 
@@ -91,7 +91,7 @@ var sanitizer = new HtmlSanitizer(new HtmlSanitizerOptions
 // <a href="https://example.com">ok</a> becomes <a>ok</a>
 ```
 
-If you only want to adjust a handful of settings, it is safer to start from the defaults and modify the properties, because everything you do not touch keeps its default value:
+If you only want to adjust a handful of settings, it is safer to start from the defaults and modify the properties, because everything you do not touch keeps its default value. You can do this either on the sanitizer itself:
 
 ```C#
 var sanitizer = new HtmlSanitizer();
@@ -99,6 +99,17 @@ sanitizer.AllowedTags.Clear();
 sanitizer.AllowedTags.Add("a");
 sanitizer.AllowedTags.Add("img");
 // UriAttributes, AllowedSchemes, etc. remain at their defaults
+```
+
+or, if you want an `HtmlSanitizerOptions` instance (e.g. to build it up before constructing the sanitizer), by starting from `HtmlSanitizerOptions.CreateDefault()` instead of `new HtmlSanitizerOptions()`:
+
+```C#
+var options = HtmlSanitizerOptions.CreateDefault();
+options.AllowedTags.Clear();
+options.AllowedTags.Add("a");
+options.AllowedTags.Add("img");
+// UriAttributes, AllowedSchemes, etc. remain at their defaults
+var sanitizer = new HtmlSanitizer(options);
 ```
 
 ### Tags allowed by default

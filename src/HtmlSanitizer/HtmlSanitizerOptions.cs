@@ -7,6 +7,16 @@ namespace Ganss.Xss;
 /// <summary>
 /// Provides options to be used with <see cref="HtmlSanitizer"/>.
 /// </summary>
+/// <remarks>
+/// Every collection here starts out <em>empty</em>, unlike the sanitizer produced by the
+/// parameterless <see cref="HtmlSanitizer()"/> constructor, which seeds them from
+/// <see cref="HtmlSanitizerDefaults"/>. Passing a partially-filled instance to
+/// <see cref="HtmlSanitizer(HtmlSanitizerOptions)"/> replaces the defaults instead of adding to
+/// them, so anything you leave unset is empty on the resulting sanitizer - most notably
+/// <see cref="UriAttributes"/>, whose emptiness means URI attributes such as <c>href</c> are not
+/// screened against <see cref="AllowedSchemes"/> at all. If you only want to override a few
+/// settings, start from <see cref="CreateDefault"/> instead of <c>new HtmlSanitizerOptions()</c>.
+/// </remarks>
 public class HtmlSanitizerOptions
 {
     /// <summary>
@@ -69,4 +79,29 @@ public class HtmlSanitizerOptions
     /// </code>
     /// </example>
     public bool AllowDataAttributes { get; set; }
+
+    /// <summary>
+    /// Creates a new <see cref="HtmlSanitizerOptions"/> instance whose collections are
+    /// pre-populated from <see cref="HtmlSanitizerDefaults"/>, matching what the parameterless
+    /// <see cref="HtmlSanitizer()"/> constructor uses. Use this as a starting point when you only
+    /// want to adjust a handful of settings rather than specifying every collection yourself.
+    /// </summary>
+    /// <example>
+    /// <code>
+    /// var options = HtmlSanitizerOptions.CreateDefault();
+    /// options.AllowedTags.Add("video");
+    /// var sanitizer = new HtmlSanitizer(options);
+    /// </code>
+    /// </example>
+    public static HtmlSanitizerOptions CreateDefault() => new()
+    {
+        AllowedTags = new HashSet<string>(HtmlSanitizerDefaults.AllowedTags, StringComparer.OrdinalIgnoreCase),
+        AllowedAttributes = new HashSet<string>(HtmlSanitizerDefaults.AllowedAttributes, StringComparer.OrdinalIgnoreCase),
+        AllowedCssClasses = new HashSet<string>(HtmlSanitizerDefaults.AllowedClasses, StringComparer.OrdinalIgnoreCase),
+        AllowedCssProperties = new HashSet<string>(HtmlSanitizerDefaults.AllowedCssProperties, StringComparer.OrdinalIgnoreCase),
+        AllowedAtRules = new HashSet<CssRuleType>(HtmlSanitizerDefaults.AllowedAtRules),
+        AllowedSchemes = new HashSet<string>(HtmlSanitizerDefaults.AllowedSchemes, StringComparer.OrdinalIgnoreCase),
+        UriAttributes = new HashSet<string>(HtmlSanitizerDefaults.UriAttributes, StringComparer.OrdinalIgnoreCase),
+        UriListAttributes = new HashSet<string>(HtmlSanitizerDefaults.UriListAttributes, StringComparer.OrdinalIgnoreCase),
+    };
 }
