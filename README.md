@@ -26,6 +26,7 @@ In order to facilitate different use cases, HtmlSanitizer can be customized at s
 - Configure HTML attributes that contain URIs (such as "src", "href" etc.) through the property `UriAttributes`.
 - Configure HTML attributes that contain a *list* of URIs (such as "srcset", "ping") through the property `UriListAttributes`. Every entry is checked separately.
 - Provide a base URI that will be used to resolve relative URIs against.
+- Sanitize a fragment for the element it will be inserted into, rather than for `<body>`, through `SanitizeFragment()`. This keeps markup such as a lone `<th>` that is only valid deeper in the tree.
 - Cancelable events are raised before a tag, attribute, or style is removed.
 
 Usage
@@ -553,9 +554,40 @@ sanitizer.AllowedAttributes.Add("srcdoc");
 
 Nested `srcdoc` documents are sanitized as well, up to a fixed depth, beyond which the attribute is removed.
 
+### Sanitizing a fragment in context
+
+`Sanitize()` parses its input as if it were being inserted into `<body>`. Markup that is only valid deeper in the tree is therefore discarded by the parser before sanitization ever sees it, exactly as it would be by `div.innerHTML` in a browser:
+
+```C#
+sanitizer.Sanitize(@"<th>Header</th>"); // "Header" - the th is gone
+```
+
+Use `SanitizeFragment()` to name the element the fragment will be inserted into:
+
+```C#
+sanitizer.SanitizeFragment(@"<th>Header</th>", "tr"); // "<th>Header</th>"
+```
+
+This is useful when you sanitize table rows, list items, or `<option>` elements on their own, e.g. to return them from an endpoint that patches part of a page.
+
+The result is only safe in the context it was sanitized for, so insert it into that same context. A fragment sanitized for `tr` that is put into a `<div>` instead gets re-parsed under different rules, and the tree the browser ends up with is not the one that was screened.
+
+Contexts whose content is raw text - `style`, `script`, `xmp`, `iframe`, `noembed` and `noframes` - are rejected with an `ArgumentException`. The parser turns a fragment in those into a single text node, so there are no tags or attributes left to remove and nothing is escaped on the way out; the input would come back verbatim, looking sanitized without having been. An unknown context name is rejected too, so a typo fails instead of quietly falling back to `<body>` behaviour.
+
+There is also an overload taking an `IElement`, for contexts outside the HTML namespace that a tag name alone cannot express:
+
+```C#
+sanitizer.AllowedTags.Add("text");
+using var document = sanitizer.HtmlParserFactory().ParseDocument(string.Empty);
+var context = document.CreateElement(NamespaceNames.SvgUri, "svg");
+sanitizer.SanitizeFragment(@"<text>hi</text>", context); // "<text>hi</text>"
+```
+
+The element only selects the parser's insertion mode and is left untouched, so you can reuse one across calls.
+
 ### Thread safety
 
-The `Sanitize()` and `SanitizeDocument()` methods are thread-safe, i.e. you can use these methods on a single shared instance from different threads provided you do not simultaneously set instance or static properties. A typical use case is that you prepare an `HtmlSanitizer` instance once (i.e. set desired properties such as `AllowedTags` etc.) from a single thread, then call `Sanitize()`/`SanitizeDocument()` from multiple threads.
+The `Sanitize()`, `SanitizeFragment()` and `SanitizeDocument()` methods are thread-safe, i.e. you can use these methods on a single shared instance from different threads provided you do not simultaneously set instance or static properties. A typical use case is that you prepare an `HtmlSanitizer` instance once (i.e. set desired properties such as `AllowedTags` etc.) from a single thread, then call `Sanitize()`/`SanitizeFragment()`/`SanitizeDocument()` from multiple threads.
 
 ### Text content not necessarily preserved as-is
 
