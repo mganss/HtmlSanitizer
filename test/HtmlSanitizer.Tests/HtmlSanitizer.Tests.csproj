@@ -18,7 +18,7 @@
 	<CoverletOutputFormat>opencover</CoverletOutputFormat>
 	<CoverletOutput>../../coverage.xml</CoverletOutput>
 	<SonarQubeExclude>true</SonarQubeExclude>
-	<NoWarn>$(NoWarn);IDE0130;SYSLIB1045</NoWarn>
+	<NoWarn>$(NoWarn);IDE0130;SYSLIB1045;CA1016</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

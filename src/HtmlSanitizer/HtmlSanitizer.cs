@@ -1243,7 +1243,7 @@ public class HtmlSanitizer : IHtmlSanitizer
 
         foreach (var style in styles.Where(s => string.IsNullOrEmpty(s.Value)))
         {
-            (opaque ??= [with(StringComparer.OrdinalIgnoreCase)]).Add(style.Name);
+            (opaque ??= new HashSet<string>(StringComparer.OrdinalIgnoreCase)).Add(style.Name);
         }
 
         // An empty longhand is not proof of a pending value on its own: "font: 12px/1.5 Arial"
@@ -1295,7 +1295,7 @@ public class HtmlSanitizer : IHtmlSanitizer
         longhandsOf.GetOrAdd(property, static p =>
         {
             var longhands = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            Expand(p, longhands, [with(StringComparer.OrdinalIgnoreCase)]);
+            Expand(p, longhands, new HashSet<string>(StringComparer.OrdinalIgnoreCase));
             return longhands;
         });
 
