@@ -27,6 +27,7 @@ In order to facilitate different use cases, HtmlSanitizer can be customized at s
 - Configure HTML attributes that contain a *list* of URIs (such as "srcset", "ping") through the property `UriListAttributes`. Every entry is checked separately.
 - Provide a base URI that will be used to resolve relative URIs against.
 - Cancelable events are raised before a tag, attribute, or style is removed.
+- All of the above can be set in one go by passing an `HtmlSanitizerOptions` object to the constructor. Note that its collections start out *empty* rather than at their defaults, see [Configuring with `HtmlSanitizerOptions`](#configuring-with-htmlsanitizeroptions).
 
 Usage
 -----
@@ -48,6 +49,57 @@ Assert.Equal(expected, sanitized);
 There's an [online demo](https://xss.ganss.org/), plus there's also a [.NET Fiddle](https://dotnetfiddle.net/892nOk) you can play with.
 
 More example code and a description of possible options can be found in the [Wiki](https://github.com/mganss/HtmlSanitizer/wiki).
+
+### Configuring with `HtmlSanitizerOptions`
+
+A sanitizer can also be configured in one go by passing an `HtmlSanitizerOptions` object to the constructor:
+
+```C#
+var sanitizer = new HtmlSanitizer(new HtmlSanitizerOptions
+{
+    AllowedTags = new HashSet<string> { "a", "img" },
+    AllowedAttributes = new HashSet<string> { "href", "src" },
+    UriAttributes = HtmlSanitizerDefaults.UriAttributes,
+    AllowedSchemes = HtmlSanitizerDefaults.AllowedSchemes,
+});
+```
+
+**Every collection on `HtmlSanitizerOptions` starts out empty, so this constructor replaces the defaults instead of adding to them.** Whatever you leave unset is empty on the resulting sanitizer - unlike the parameterless `new HtmlSanitizer()`, which seeds all of these from `HtmlSanitizerDefaults`. Set each collection you care about explicitly, using the corresponding `HtmlSanitizerDefaults` member where you want the default value.
+
+This matters most for `UriAttributes`, which is a *screening* list rather than an allow list: leaving it empty does not deny URI attributes, it means no attribute is treated as carrying a URI at all. Its value is then never checked against `AllowedSchemes`, so
+
+```C#
+// UriAttributes not set - href is not screened
+var sanitizer = new HtmlSanitizer(new HtmlSanitizerOptions
+{
+    AllowedTags = new HashSet<string> { "a" },
+    AllowedAttributes = new HashSet<string> { "href" },
+});
+// <a href="javascript:alert(1)">click</a> is preserved as-is
+```
+
+`UriAttributes` and `AllowedSchemes` need to be set together. Screening an attribute against an empty scheme set drops every absolute URI, valid `https` ones included:
+
+```C#
+// UriAttributes set but AllowedSchemes left empty - every absolute URI is dropped
+var sanitizer = new HtmlSanitizer(new HtmlSanitizerOptions
+{
+    AllowedTags = new HashSet<string> { "a" },
+    AllowedAttributes = new HashSet<string> { "href" },
+    UriAttributes = HtmlSanitizerDefaults.UriAttributes,
+});
+// <a href="https://example.com">ok</a> becomes <a>ok</a>
+```
+
+If you only want to adjust a handful of settings, it is safer to start from the defaults and modify the properties, because everything you do not touch keeps its default value:
+
+```C#
+var sanitizer = new HtmlSanitizer();
+sanitizer.AllowedTags.Clear();
+sanitizer.AllowedTags.Add("a");
+sanitizer.AllowedTags.Add("img");
+// UriAttributes, AllowedSchemes, etc. remain at their defaults
+```
 
 ### Tags allowed by default
 `a`,
@@ -525,6 +577,8 @@ The value of an attribute listed in `UriAttributes` is checked against `AllowedS
 sanitizer.AllowedAttributes.Add("data-thumbnail");
 sanitizer.UriAttributes.Add("data-thumbnail");
 ```
+
+The same applies to the attributes listed above when you configure the sanitizer through `HtmlSanitizerOptions`, whose `UriAttributes` starts out empty - see [Configuring with `HtmlSanitizerOptions`](#configuring-with-htmlsanitizeroptions).
 
 _Note:_ attributes that merely name something in the same document rather than locating a resource - `usemap`, `classid`, `profile` - are deliberately not treated as URI attributes. Nothing fetches them, and resolving them against a base URI would break them: `usemap="#map"` has to stay a hash-name reference to match its `<map>`.
 
