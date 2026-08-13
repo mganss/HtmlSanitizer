@@ -49,7 +49,12 @@ public sealed class TooSlowForThreadTestAttribute : Attribute
 /// <summary>
 /// Tests for <see cref="HtmlSanitizer"/>.
 /// </summary>
-public class HtmlSanitizerTests : IClassFixture<HtmlSanitizerFixture>
+/// <remarks>
+/// Partial so that a group of tests can live in its own file while staying part of this type, which
+/// is what <see cref="ThreadTest"/> reflects over: tests moved to a class of their own would drop
+/// out of the concurrency sweep without anything failing to say so. See FragmentTests.cs.
+/// </remarks>
+public partial class HtmlSanitizerTests : IClassFixture<HtmlSanitizerFixture>
 {
     public HtmlSanitizer Sanitizer { get; set; }
 
@@ -3130,6 +3135,11 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         Assert.DoesNotContain(invocations, i => i.Method.Name == nameof(HexColorTest));
         Assert.DoesNotContain(invocations, i => i.Method.Name == nameof(SanitizeSrcdocDeeplyNestedIsBoundedTest));
         Assert.DoesNotContain(invocations, i => i.Method.Name == nameof(ConcurrentSanitizeProducesSameResultTest));
+
+        // Tests kept in another file take part only for as long as that file declares them part of
+        // this class. Moving them to a class of their own would drop them from the sweep with
+        // nothing failing to say so, so the discovery of one of them is asserted here.
+        Assert.Contains(invocations, i => i.Method.Name == nameof(SanitizeFragmentKeepsTagValidOnlyInContextTest));
 
         // Every entry must be invocable: argument count has to match the signature.
         Assert.All(invocations, i =>

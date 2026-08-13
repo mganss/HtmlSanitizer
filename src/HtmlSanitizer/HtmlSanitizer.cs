@@ -485,6 +485,141 @@ public class HtmlSanitizer : IHtmlSanitizer
     }
 
     /// <summary>
+    /// Sanitizes the specified HTML fragment as if it were being inserted into an element with the
+    /// given tag name, rather than into <c>&lt;body&gt;</c>.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="Sanitize(string, string, IMarkupFormatter)"/> always parses in <c>&lt;body&gt;</c>
+    /// context, so markup that is only valid deeper in the tree is discarded by the parser before
+    /// sanitization ever sees it - <c>&lt;th&gt;Header&lt;/th&gt;</c> becomes the bare text
+    /// <c>Header</c>. Naming the context the fragment is destined for keeps that markup intact:
+    /// with a context of <c>tr</c> the same input stays <c>&lt;th&gt;Header&lt;/th&gt;</c>.
+    /// <para>
+    /// The result is only safe in the context it was sanitized for. A fragment sanitized for
+    /// <c>tr</c> must be inserted into a <c>tr</c>; putting it in a <c>div</c> instead re-runs the
+    /// parser under different rules and can yield a different tree than the one that was screened.
+    /// </para>
+    /// </remarks>
+    /// <param name="html">The HTML fragment to sanitize.</param>
+    /// <param name="context">
+    /// The tag name of the element the fragment will be inserted into, e.g. "tr" or "ul".
+    /// </param>
+    /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
+    /// <param name="outputFormatter">The formatter used to render the DOM. Using the <see cref="OutputFormatter"/> if null.</param>
+    /// <returns>The sanitized HTML fragment.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="html"/> or <paramref name="context"/> is null.</exception>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="context"/> is not a known HTML element, or names an element whose content is
+    /// raw text - see the <see cref="SanitizeFragment(string, IElement, string, IMarkupFormatter)"/>
+    /// overload for why those are rejected.
+    /// </exception>
+    public string SanitizeFragment(string html, string context, string baseUrl = "", IMarkupFormatter? outputFormatter = null)
+    {
+        if (context == null) throw new ArgumentNullException(nameof(context));
+
+        var parser = HtmlParserFactory();
+
+        // An element can only be created through a document, so one is parsed here to create it
+        // from. The element contributes only its name and namespace, which is all the parser reads
+        // to pick an insertion mode - the fragment's own configuration comes from the parser that
+        // parses it, below. That parser is this one: taking it from the factory a second time would
+        // call a caller-supplied factory twice per sanitize, where Sanitize calls it once.
+        using var owner = parser.ParseDocument(string.Empty);
+
+        IElement contextElement;
+
+        try
+        {
+            contextElement = owner.CreateElement(context);
+        }
+        catch (Exception ex)
+        {
+            throw new ArgumentException($"'{context}' is not a valid element name.", nameof(context), ex);
+        }
+
+        if (contextElement is IHtmlUnknownElement)
+            throw new ArgumentException($"'{context}' is not a known HTML element.", nameof(context));
+
+        return SanitizeFragment(html, contextElement, baseUrl, outputFormatter, parser);
+    }
+
+    /// <summary>
+    /// Sanitizes the specified HTML fragment as if it were being inserted into the given element,
+    /// rather than into <c>&lt;body&gt;</c>.
+    /// </summary>
+    /// <remarks>
+    /// Takes the context as an element rather than a tag name so that contexts outside the HTML
+    /// namespace can be expressed, which a name alone cannot do: <c>CreateElement("svg")</c> makes
+    /// an unknown HTML element, and only <c>CreateElement(NamespaceNames.SvgUri, "svg")</c> makes
+    /// the SVG one that puts the parser into foreign content.
+    /// <para>
+    /// The element is used purely to select the parser's insertion mode and is left untouched -
+    /// AngleSharp clones it - so a single context element can be reused across calls.
+    /// </para>
+    /// <para>
+    /// Elements whose content model is raw text - <c>style</c>, <c>script</c>, <c>xmp</c>,
+    /// <c>iframe</c>, <c>noembed</c> and <c>noframes</c> - are rejected. In those contexts the
+    /// parser produces one text node instead of a tree, so there are no tags or attributes left for
+    /// the sanitizer to act on and none of the markup is escaped on the way out; the input would be
+    /// returned verbatim, giving the appearance of sanitization while performing none.
+    /// </para>
+    /// </remarks>
+    /// <param name="html">The HTML fragment to sanitize.</param>
+    /// <param name="context">The element the fragment will be inserted into.</param>
+    /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
+    /// <param name="outputFormatter">The formatter used to render the DOM. Using the <see cref="OutputFormatter"/> if null.</param>
+    /// <returns>The sanitized HTML fragment.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="html"/> or <paramref name="context"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="context"/> is an element whose content is raw text.</exception>
+    public string SanitizeFragment(string html, IElement context, string baseUrl = "", IMarkupFormatter? outputFormatter = null) =>
+        SanitizeFragment(html, context, baseUrl, outputFormatter, parser: null);
+
+    /// <summary>
+    /// Sanitizes a fragment in the context of the given element, optionally with a parser the caller
+    /// has already taken from <see cref="HtmlParserFactory"/>.
+    /// </summary>
+    /// <remarks>
+    /// The overload taking a tag name has to build the context element before it can parse the
+    /// fragment, and building it needs a parser too. Passing that parser on keeps the factory called
+    /// once per sanitize either way, which matters for a factory that returns a new parser per call
+    /// or that counts its calls.
+    /// </remarks>
+    private string SanitizeFragment(string html, IElement context, string baseUrl,
+        IMarkupFormatter? outputFormatter, HtmlParser? parser)
+    {
+        if (html == null) throw new ArgumentNullException(nameof(html));
+        if (context == null) throw new ArgumentNullException(nameof(context));
+
+        if (context.Flags.HasFlag(NodeFlags.LiteralText))
+            throw new ArgumentException(
+                $"'{context.LocalName}' holds raw text, so a fragment parsed in it cannot be sanitized. " +
+                "Sanitize the fragment in the context it will be rendered as markup in instead.",
+                nameof(context));
+
+        parser ??= HtmlParserFactory();
+
+        var nodes = parser.ParseFragment(html, context);
+
+        if (nodes.Length == 0) return string.Empty;
+
+        // ParseFragment builds the nodes under a copy of the context element inside a document of
+        // its own, and that copy is the parent to sanitize within: it holds exactly the fragment
+        // and nothing else, while still standing in for the context so selectors and the CSS object
+        // model see the same shape the fragment will have once inserted.
+        if (nodes[0].Parent is not INode parent || parent is not IParentNode parentNode) return string.Empty;
+
+        // The parent stands in for the document here, rather than the document it belongs to, because
+        // the fragment hangs off it without being attached to that document's tree: a style element
+        // inside the fragment is registered in neither the document's stylesheet list nor its
+        // descendants, so sanitizing from the document would search past the fragment entirely and
+        // leave its CSS untouched. Post processing still reaches the document through the parent's
+        // owner, which is set even while the subtree is detached.
+        DoSanitize(parent, parentNode, baseUrl);
+
+        return parent.ChildNodes.ToHtml(outputFormatter ?? OutputFormatter);
+    }
+
+    /// <summary>
     /// Sanitizes the specified HTML document. Even if only a fragment is given, a whole document will be returned.
     /// </summary>
     /// <param name="html">The HTML document to sanitize.</param>

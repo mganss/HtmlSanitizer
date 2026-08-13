@@ -1,5 +1,6 @@
 using AngleSharp;
 using AngleSharp.Css.Dom;
+using AngleSharp.Dom;
 using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using System;
@@ -169,6 +170,30 @@ public interface IHtmlSanitizer
     /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
     /// <returns>The sanitized HTML document.</returns>
     IHtmlDocument SanitizeDom(IHtmlDocument document, IHtmlElement? context = null, string baseUrl = "");
+
+    /// <summary>
+    /// Sanitizes the specified HTML fragment as if it were being inserted into an element with the
+    /// given tag name, rather than into <c>&lt;body&gt;</c>.
+    /// </summary>
+    /// <param name="html">The HTML fragment to sanitize.</param>
+    /// <param name="context">
+    /// The tag name of the element the fragment will be inserted into, e.g. "tr" or "ul".
+    /// </param>
+    /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
+    /// <param name="outputFormatter">The formatter used to render the DOM. Using the <see cref="OutputFormatter"/> if null.</param>
+    /// <returns>The sanitized HTML fragment.</returns>
+    string SanitizeFragment(string html, string context, string baseUrl = "", IMarkupFormatter? outputFormatter = null);
+
+    /// <summary>
+    /// Sanitizes the specified HTML fragment as if it were being inserted into the given element,
+    /// rather than into <c>&lt;body&gt;</c>.
+    /// </summary>
+    /// <param name="html">The HTML fragment to sanitize.</param>
+    /// <param name="context">The element the fragment will be inserted into.</param>
+    /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
+    /// <param name="outputFormatter">The formatter used to render the DOM. Using the <see cref="OutputFormatter"/> if null.</param>
+    /// <returns>The sanitized HTML fragment.</returns>
+    string SanitizeFragment(string html, IElement context, string baseUrl = "", IMarkupFormatter? outputFormatter = null);
 
     /// <summary>
     /// Sanitizes the specified HTML document. Even if only a fragment is given, a whole document will be returned.
