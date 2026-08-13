@@ -514,9 +514,11 @@ public class HtmlSanitizer : IHtmlSanitizer
 
         var parser = HtmlParserFactory();
 
-        // An element can only be created through a document, and it has to be a document from this
-        // parser's browsing context so the element is built by the same configuration - notably the
-        // CSS one - that the fragment itself will be parsed under.
+        // An element can only be created through a document, so one is parsed here to create it
+        // from. The element contributes only its name and namespace, which is all the parser reads
+        // to pick an insertion mode - the fragment's own configuration comes from the parser that
+        // parses it, below. That parser is this one: taking it from the factory a second time would
+        // call a caller-supplied factory twice per sanitize, where Sanitize calls it once.
         using var owner = parser.ParseDocument(string.Empty);
 
         IElement contextElement;
@@ -533,7 +535,7 @@ public class HtmlSanitizer : IHtmlSanitizer
         if (contextElement is IHtmlUnknownElement)
             throw new ArgumentException($"'{context}' is not a known HTML element.", nameof(context));
 
-        return SanitizeFragment(html, contextElement, baseUrl, outputFormatter);
+        return SanitizeFragment(html, contextElement, baseUrl, outputFormatter, parser);
     }
 
     /// <summary>
@@ -564,7 +566,21 @@ public class HtmlSanitizer : IHtmlSanitizer
     /// <returns>The sanitized HTML fragment.</returns>
     /// <exception cref="ArgumentNullException"><paramref name="html"/> or <paramref name="context"/> is null.</exception>
     /// <exception cref="ArgumentException"><paramref name="context"/> is an element whose content is raw text.</exception>
-    public string SanitizeFragment(string html, IElement context, string baseUrl = "", IMarkupFormatter? outputFormatter = null)
+    public string SanitizeFragment(string html, IElement context, string baseUrl = "", IMarkupFormatter? outputFormatter = null) =>
+        SanitizeFragment(html, context, baseUrl, outputFormatter, parser: null);
+
+    /// <summary>
+    /// Sanitizes a fragment in the context of the given element, optionally with a parser the caller
+    /// has already taken from <see cref="HtmlParserFactory"/>.
+    /// </summary>
+    /// <remarks>
+    /// The overload taking a tag name has to build the context element before it can parse the
+    /// fragment, and building it needs a parser too. Passing that parser on keeps the factory called
+    /// once per sanitize either way, which matters for a factory that returns a new parser per call
+    /// or that counts its calls.
+    /// </remarks>
+    private string SanitizeFragment(string html, IElement context, string baseUrl,
+        IMarkupFormatter? outputFormatter, HtmlParser? parser)
     {
         if (html == null) throw new ArgumentNullException(nameof(html));
         if (context == null) throw new ArgumentNullException(nameof(context));
@@ -575,7 +591,8 @@ public class HtmlSanitizer : IHtmlSanitizer
                 "Sanitize the fragment in the context it will be rendered as markup in instead.",
                 nameof(context));
 
-        var parser = HtmlParserFactory();
+        parser ??= HtmlParserFactory();
+
         var nodes = parser.ParseFragment(html, context);
 
         if (nodes.Length == 0) return string.Empty;

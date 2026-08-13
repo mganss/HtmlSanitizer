@@ -1,4 +1,6 @@
+using AngleSharp;
 using AngleSharp.Dom;
+using AngleSharp.Html.Parser;
 using Xunit;
 
 namespace Ganss.Xss.Tests;
@@ -107,6 +109,61 @@ public partial class HtmlSanitizerTests
             @"<td><style type="""">a { behavior: url(x) }</style>x</td>", "tr");
 
         Assert.DoesNotContain("behavior", actual, StringComparison.Ordinal);
+    }
+
+    // Building the context element needs a parser and so does parsing the fragment, but a caller's
+    // factory is not obliged to return the same one twice - it may build a parser per call, or count
+    // them. Sanitize asks once, and so must this.
+    [Theory]
+    [InlineData("tr")]
+    [InlineData("style")]
+    [InlineData("notatag")]
+    public void SanitizeFragmentCallsParserFactoryOnceTest(string context)
+    {
+        var sanitizer = new HtmlSanitizer();
+        var parser = sanitizer.HtmlParserFactory();
+        var calls = 0;
+        sanitizer.HtmlParserFactory = () => { calls++; return parser; };
+
+        // A rejected context must not have cost more than an accepted one either.
+        try { sanitizer.SanitizeFragment(@"<th>H</th>", context); }
+        catch (ArgumentException) { }
+
+        Assert.Equal(1, calls);
+    }
+
+    [Fact]
+    public void SanitizeFragmentWithContextElementCallsParserFactoryOnceTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        var parser = sanitizer.HtmlParserFactory();
+        using var document = parser.ParseDocument(string.Empty);
+        var context = document.CreateElement("tr");
+        var calls = 0;
+        sanitizer.HtmlParserFactory = () => { calls++; return parser; };
+
+        sanitizer.SanitizeFragment(@"<th>H</th>", context);
+
+        Assert.Equal(1, calls);
+    }
+
+    // The parser handed on from the tag-name overload has to be the one that parses the fragment,
+    // since that is what decides the fragment's configuration - a CSS-less one drops styles.
+    [Fact]
+    public void SanitizeFragmentParsesWithTheFactorysParserTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        var withoutCss = new HtmlParser(new HtmlParserOptions { IsScripting = true },
+            BrowsingContext.New(Configuration.Default));
+        sanitizer.HtmlParserFactory = () => withoutCss;
+
+        Assert.Equal(@"<td>x</td>",
+            sanitizer.SanitizeFragment(@"<td style=""color: red"">x</td>", "tr"));
+
+        sanitizer.HtmlParserFactory = HtmlSanitizer.DefaultHtmlParserFactory;
+
+        Assert.Equal(@"<td style=""color: rgba(255, 0, 0, 1)"">x</td>",
+            sanitizer.SanitizeFragment(@"<td style=""color: red"">x</td>", "tr"));
     }
 
     [Fact]
