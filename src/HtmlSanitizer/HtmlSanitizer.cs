@@ -737,6 +737,37 @@ public class HtmlSanitizer : IHtmlSanitizer
             tag.SetInnerText(escapedHtml);
     }
 
+    /// <summary>
+    /// Fills <paramref name="buffer"/> with the attributes of <paramref name="tag"/> that match
+    /// <paramref name="predicate"/>, or with all of them when it is <c>null</c>.
+    /// </summary>
+    /// <remarks>
+    /// Attributes have to be copied out before a pass over them can add, remove or rewrite any,
+    /// and the passes in <see cref="DoSanitize"/> run over every element of the document. Filling a
+    /// caller-owned buffer by index keeps that off the allocator: a LINQ filter would allocate a
+    /// closure, an iterator and a list per pass per element, and <see cref="INamedNodeMap"/> hands
+    /// out a heap-allocated enumerator on top of that. The predicate is passed the sanitizer rather
+    /// than capturing it so it can stay <c>static</c>, which is what keeps the closure away.
+    /// </remarks>
+    private void Snapshot(List<IAttr> buffer, IElement tag, Func<HtmlSanitizer, IAttr, bool>? predicate)
+    {
+        buffer.Clear();
+
+        var attributes = tag.Attributes;
+
+        for (var i = 0; i < attributes.Length; i++)
+        {
+            // Indexed access is annotated as nullable even though a well-formed map returns an
+            // attribute for every index below Length; enumerating never yields null, so skipping
+            // here keeps this identical to the enumeration it replaces.
+            if (attributes[i] is not { } attribute)
+                continue;
+
+            if (predicate == null || predicate(this, attribute))
+                buffer.Add(attribute);
+        }
+    }
+
     private void DoSanitize(INode dom, IParentNode context, string baseUrl = "", int srcdocDepth = 0)
     {
         // remove disallowed tags
@@ -764,6 +795,12 @@ public class HtmlSanitizer : IHtmlSanitizer
 
         SanitizeStyleSheets(dom, baseUrl);
 
+        // Reused across every element and every pass below rather than allocated per pass. Each
+        // pass has to take its own snapshot - the loop bodies add, remove and rewrite attributes,
+        // which would otherwise mutate the collection being walked - but the snapshots do not
+        // overlap in time, so one buffer serves them all.
+        var attributeBuffer = new List<IAttr>();
+
         // cleanup attributes
         foreach (var tag in context.QuerySelectorAll("*").ToList())
         {
@@ -773,7 +810,8 @@ public class HtmlSanitizer : IHtmlSanitizer
             }
 
             // remove disallowed attributes
-            foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
+            Snapshot(attributeBuffer, tag, static (s, a) => !s.IsAllowedAttribute(a));
+            foreach (var attribute in attributeBuffer)
             {
                 RemoveAttribute(tag, attribute, RemoveReason.NotAllowedAttribute);
             }
@@ -782,7 +820,8 @@ public class HtmlSanitizer : IHtmlSanitizer
             SanitizeSrcdoc(tag, baseUrl, srcdocDepth);
 
             // sanitize URLs in URL-marked attributes
-            foreach (var attribute in tag.Attributes.Where(a => IsUriAttribute(a) && !IsUriListAttribute(a)).ToList())
+            Snapshot(attributeBuffer, tag, static (s, a) => s.IsUriAttribute(a) && !s.IsUriListAttribute(a));
+            foreach (var attribute in attributeBuffer)
             {
                 var url = SanitizeUrl(tag, attribute.Value, baseUrl);
 
@@ -793,7 +832,8 @@ public class HtmlSanitizer : IHtmlSanitizer
             }
 
             // sanitize every entry of attributes holding a list of URLs
-            foreach (var attribute in tag.Attributes.Where(IsUriListAttribute).ToList())
+            Snapshot(attributeBuffer, tag, static (s, a) => s.IsUriListAttribute(a));
+            foreach (var attribute in attributeBuffer)
             {
                 SanitizeUriList(tag, attribute, baseUrl);
             }
@@ -803,7 +843,8 @@ public class HtmlSanitizer : IHtmlSanitizer
             SanitizeStyle(tag, baseUrl);
 
             // sanitize the value of the attributes
-            foreach (var attribute in tag.Attributes.ToList())
+            Snapshot(attributeBuffer, tag, null);
+            foreach (var attribute in attributeBuffer)
             {
                 // The '& Javascript include' is a possible method to execute Javascript and can lead to XSS.
                 // (see https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#.26_JavaScript_includes)
