@@ -709,7 +709,12 @@ public class HtmlSanitizer : IHtmlSanitizer
     /// <returns><c>true</c> if any comments were removed; otherwise, <c>false</c>.</returns>
     private void RemoveComments(INode context)
     {
-        foreach (var comment in GetAllNodes(context).OfType<IComment>().ToList())
+        var comments = FindComments(context);
+
+        if (comments == null)
+            return;
+
+        foreach (var comment in comments)
         {
             EncodeComment(comment);
 
@@ -719,6 +724,57 @@ public class HtmlSanitizer : IHtmlSanitizer
             if (!e.Cancel)
                 comment.Remove();
         }
+    }
+
+    /// <summary>
+    /// Returns every comment below <paramref name="context"/> in document order, or <c>null</c> if
+    /// there are none.
+    /// </summary>
+    /// <remarks>
+    /// Comments have to be collected before any is removed, since removing one while walking would
+    /// disturb the walk. Collecting them through <see cref="GetAllNodes"/> meant handing every node
+    /// in the document to an iterator and filtering the result, which is nearly all waste: comments
+    /// are rare, and the large document in the benchmark project holds two among 107,000 nodes.
+    /// <para>
+    /// This follows the tree's own first-child and next-sibling links instead, so no iterator or
+    /// auxiliary stack is built, and no list is allocated for a document that has no comments at
+    /// all - the common case.
+    /// </para>
+    /// <para>
+    /// Deliberately not recursive. The input is untrusted and may be nested arbitrarily deeply; a
+    /// recursive walk overflows the stack at a few thousand levels, and that cannot be caught - it
+    /// takes the process down. Following links costs nothing per level.
+    /// </para>
+    /// </remarks>
+    private static List<IComment>? FindComments(INode context)
+    {
+        List<IComment>? comments = null;
+        var node = context.FirstChild;
+
+        while (node != null)
+        {
+            if (node is IComment comment)
+                (comments ??= []).Add(comment);
+
+            var next = node.FirstChild;
+
+            if (next == null)
+            {
+                // Nothing below this node, so climb until a level has a sibling left to visit.
+                // Stopping at the context keeps the walk inside the subtree asked for.
+                while (node != null && node != context && node.NextSibling == null)
+                    node = node.Parent;
+
+                if (node == null || node == context)
+                    break;
+
+                next = node.NextSibling;
+            }
+
+            node = next;
+        }
+
+        return comments;
     }
 
     private static void DefaultEncodeComment(IComment comment)
