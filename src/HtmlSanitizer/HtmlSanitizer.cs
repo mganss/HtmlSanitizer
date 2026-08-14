@@ -812,11 +812,10 @@ public class HtmlSanitizer : IHtmlSanitizer
 
         for (var i = 0; i < attributes.Length; i++)
         {
-            // Indexed access is annotated as nullable even though a well-formed map returns an
-            // attribute for every index below Length; enumerating never yields null, so skipping
-            // here keeps this identical to the enumeration it replaces.
-            if (attributes[i] is not { } attribute)
-                continue;
+            // The indexer is annotated as nullable because it returns null for an index outside the
+            // map; Length is the item count, so an index below it always has an attribute. The
+            // enumeration this replaces never yielded null either.
+            var attribute = attributes[i]!;
 
             if (predicate == null || predicate(this, attribute))
                 buffer.Add(attribute);
