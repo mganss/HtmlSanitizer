@@ -639,16 +639,19 @@ The result is only safe in the context it was sanitized for, so insert it into t
 
 Contexts whose content is raw text - `style`, `script`, `xmp`, `iframe`, `noembed` and `noframes` - are rejected with an `ArgumentException`. The parser turns a fragment in those into a single text node, so there are no tags or attributes left to remove and nothing is escaped on the way out; the input would come back verbatim, looking sanitized without having been. An unknown context name is rejected too, so a typo fails instead of quietly falling back to `<body>` behaviour.
 
-There is also an overload taking an `IElement`, for contexts outside the HTML namespace that a tag name alone cannot express:
+There is also an overload taking an `IElement`, for callers that hold one already:
 
 ```C#
-sanitizer.AllowedTags.Add("text");
 using var document = sanitizer.HtmlParserFactory().ParseDocument(string.Empty);
-var context = document.CreateElement(NamespaceNames.SvgUri, "svg");
-sanitizer.SanitizeFragment(@"<text>hi</text>", context); // "<text>hi</text>"
+var context = document.CreateElement("tr");
+sanitizer.SanitizeFragment(@"<th>Header</th>", context); // "<th>Header</th>"
 ```
 
-The element only selects the parser's insertion mode and is left untouched, so you can reuse one across calls.
+Only the local name of the element is read - the parser rebuilds the context in the HTML namespace, so an element carries no more information into the parse than a tag name does. The element itself is left untouched, so you can reuse one across calls.
+
+For the same reason a context outside the HTML namespace is rejected with an `ArgumentException` rather than parsed as if it were an HTML element of the same name. An SVG or MathML element does not put the parser into foreign content here the way it does inside a document, and a fragment screened under HTML rules but inserted under SVG or MathML ones is not the tree that was screened. Sanitize such markup together with the element that establishes the foreign context - an `<svg>` element and its content in one string - using `Sanitize()`.
+
+`PostProcessDom` handlers see the document the fragment was parsed into, not the kind of document `Sanitize()` gives them: the fragment hangs off a stand-in for the context, detached from the document tree, so the document has no `Body` and the fragment's nodes are not below it. Use `PostProcessNode`, which is raised for each node of the fragment as usual.
 
 ### Thread safety
 

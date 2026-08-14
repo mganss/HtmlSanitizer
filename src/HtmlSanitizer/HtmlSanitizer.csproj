@@ -32,7 +32,7 @@
 		<LangVersion>preview</LangVersion>
 		<Nullable>enable</Nullable>
 		<WarningsAsErrors>nullable</WarningsAsErrors>
-		<NoWarn>$(NoWarn);IDE0130;SYSLIB1045</NoWarn>
+		<NoWarn>$(NoWarn);IDE0130;SYSLIB1045;CA1510</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(CI)' == 'True'">

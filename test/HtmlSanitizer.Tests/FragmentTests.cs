@@ -1,5 +1,6 @@
 using AngleSharp;
 using AngleSharp.Dom;
+using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using Xunit;
 
@@ -209,6 +210,71 @@ public partial class HtmlSanitizerTests
         Assert.True(postProcessedNode);
     }
 
+    // A fragment is parsed into a document of its own that the fragment hangs off detached, so a
+    // PostProcessDom handler written for Sanitize finds neither a body nor the fragment's nodes.
+    // Handlers that need the nodes get them from PostProcessNode.
+    [Fact]
+    public void SanitizeFragmentPostProcessDomSeesFragmentDocumentTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        IHtmlDocument document = null;
+        var bodyWasNull = false;
+        var cellsInDocument = -1;
+        var nodeNames = new List<string>();
+
+        sanitizer.PostProcessDom += (_, e) =>
+        {
+            document = e.Document;
+            bodyWasNull = e.Document.Body == null;
+            cellsInDocument = e.Document.QuerySelectorAll("th").Length;
+        };
+        sanitizer.PostProcessNode += (_, e) => nodeNames.Add(e.Node.NodeName);
+
+        Assert.Equal(@"<th>H</th>", sanitizer.SanitizeFragment(@"<th>H</th>", "tr"));
+
+        Assert.NotNull(document);
+        Assert.True(bodyWasNull);
+        Assert.Equal(0, cellsInDocument);
+        Assert.Contains("TH", nodeNames);
+    }
+
+    // The fragment document is created per call and holds resources of its own, as the one Sanitize
+    // parses does, so it is disposed - after the output has been rendered from it. Disposal clears
+    // the document's tree, which is what makes it observable here.
+    [Fact]
+    public void SanitizeFragmentDisposesFragmentDocumentTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        IHtmlDocument document = null;
+        var childrenDuringSanitize = 0;
+
+        sanitizer.PostProcessDom += (_, e) =>
+        {
+            document = e.Document;
+            childrenDuringSanitize = e.Document.ChildNodes.Length;
+        };
+
+        Assert.Equal(@"<th>H</th>", sanitizer.SanitizeFragment(@"<th>H</th>", "tr"));
+
+        Assert.NotNull(document);
+        Assert.NotEqual(0, childrenDuringSanitize);
+        Assert.Equal(0, document.ChildNodes.Length);
+    }
+
+    // Disposing the fragment document must not take the browsing context the shared default parser
+    // works in with it, or the next call would come up empty.
+    [Fact]
+    public void SanitizeFragmentLeavesSharedParserUsableTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+
+        Assert.Equal(@"<th>A</th>", sanitizer.SanitizeFragment(@"<th>A</th>", "tr"));
+        Assert.Equal(@"<th>B</th>", sanitizer.SanitizeFragment(@"<th>B</th>", "tr"));
+        Assert.Equal(@"<p>c</p>", sanitizer.Sanitize(@"<p>c</p>"));
+        Assert.Equal(@"<td style=""color: rgba(255, 0, 0, 1)"">x</td>",
+            sanitizer.SanitizeFragment(@"<td style=""color: red"">x</td>", "tr"));
+    }
+
     // Sanitizing the output again in the same context must not change it, or the markup handed back
     // would not be the markup that was screened.
     [Theory]
@@ -318,24 +384,82 @@ public partial class HtmlSanitizerTests
         Assert.Equal(0, context.ChildNodes.Length);
     }
 
-    // A tag name can only ever name an HTML element, so foreign content needs the element overload.
-    [Fact]
-    public void SanitizeFragmentAcceptsForeignContentContextTest()
+    // The parser rebuilds the context in the HTML namespace, so a foreign context does not put it
+    // into foreign content: the fragment would be screened under HTML rules and inserted under SVG
+    // or MathML ones, which is a different tree than the one that was screened.
+    [Theory]
+    [InlineData("svg")]
+    [InlineData("foreignObject")]
+    [InlineData("text")]
+    public void SanitizeFragmentRejectsSvgContextElementTest(string localName)
     {
         var sanitizer = new HtmlSanitizer();
-        sanitizer.AllowedTags.Add("text");
         using var document = sanitizer.HtmlParserFactory().ParseDocument(string.Empty);
-        var context = document.CreateElement(NamespaceNames.SvgUri, "svg");
+        var context = document.CreateElement(NamespaceNames.SvgUri, localName);
 
-        var actual = sanitizer.SanitizeFragment(@"<text onclick=""alert(1)"">hi</text>", context);
+        var ex = Assert.Throws<ArgumentException>(() => sanitizer.SanitizeFragment(@"<text>hi</text>", context));
 
-        Assert.Equal(@"<text>hi</text>", actual);
+        Assert.Equal("context", ex.ParamName);
+    }
+
+    [Theory]
+    [InlineData("math")]
+    [InlineData("mtext")]
+    [InlineData("annotation-xml")]
+    public void SanitizeFragmentRejectsMathMlContextElementTest(string localName)
+    {
+        var sanitizer = new HtmlSanitizer();
+        using var document = sanitizer.HtmlParserFactory().ParseDocument(string.Empty);
+        var context = document.CreateElement(NamespaceNames.MathMlUri, localName);
+
+        var ex = Assert.Throws<ArgumentException>(() => sanitizer.SanitizeFragment(@"<mi>x</mi>", context));
+
+        Assert.Equal("context", ex.ParamName);
+    }
+
+    // The raw text guard reads the flags of the element handed in, but the parse runs in the HTML
+    // element of the same name, and outside the HTML namespace the two disagree: an SVG <script>
+    // carries no LiteralText flag while the parse it produces is an HTML <script>, whose single text
+    // node is emitted verbatim. Without the namespace check these would come back unsanitized.
+    [Theory]
+    [InlineData("script")]
+    [InlineData("style")]
+    [InlineData("iframe")]
+    public void SanitizeFragmentRejectsForeignRawTextContextElementTest(string localName)
+    {
+        var sanitizer = new HtmlSanitizer();
+        using var document = sanitizer.HtmlParserFactory().ParseDocument(string.Empty);
+        const string Payload = @"<img src=""x"" onerror=""alert(1)"">";
+
+        foreach (var ns in new[] { NamespaceNames.SvgUri, NamespaceNames.MathMlUri })
+        {
+            var context = document.CreateElement(ns, localName);
+
+            var ex = Assert.Throws<ArgumentException>(() => sanitizer.SanitizeFragment(Payload, context));
+
+            Assert.Equal("context", ex.ParamName);
+        }
+    }
+
+    // A tag name always names an element in the HTML namespace, so the namespace check cannot fire
+    // for that overload.
+    [Theory]
+    [InlineData("tr")]
+    [InlineData("table")]
+    [InlineData("div")]
+    public void SanitizeFragmentAcceptsHtmlNamespaceContextTest(string context)
+    {
+        var sanitizer = new HtmlSanitizer();
+        using var document = sanitizer.HtmlParserFactory().ParseDocument(string.Empty);
+
+        Assert.Equal(sanitizer.SanitizeFragment(@"<th>H</th>", context),
+            sanitizer.SanitizeFragment(@"<th>H</th>", document.CreateElement(context)));
     }
 
     [Fact]
     public void SanitizeFragmentIsExposedOnInterfaceTest()
     {
-        IHtmlSanitizer sanitizer = new HtmlSanitizer();
+        var sanitizer = new HtmlSanitizer();
         using var document = new HtmlSanitizer().HtmlParserFactory().ParseDocument(string.Empty);
 
         Assert.Equal(@"<th>H</th>", sanitizer.SanitizeFragment(@"<th>H</th>", "tr"));

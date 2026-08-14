@@ -186,7 +186,8 @@ public interface IHtmlSanitizer
 
     /// <summary>
     /// Sanitizes the specified HTML fragment as if it were being inserted into the given element,
-    /// rather than into <c>&lt;body&gt;</c>.
+    /// rather than into <c>&lt;body&gt;</c>. Only the local name of the element is read, and it must
+    /// be in the HTML namespace.
     /// </summary>
     /// <param name="html">The HTML fragment to sanitize.</param>
     /// <param name="context">The element the fragment will be inserted into.</param>
