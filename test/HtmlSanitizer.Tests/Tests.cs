@@ -4910,4 +4910,27 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
     {
         Assert.DoesNotContain("srcdoc", new HtmlSanitizer().UriAttributes);
     }
+
+    // The interface fell behind the class repeatedly - UriListAttributes, AllowCssCustomProperties,
+    // FilterCssRule and the Stream overload of SanitizeDocument were each added to HtmlSanitizer
+    // without it - which leaves code written against IHtmlSanitizer unable to reach security
+    // relevant settings. Every public instance member of the class belongs on the interface, so the
+    // check is for the set to be empty rather than for particular names.
+    [Fact]
+    public void EveryPublicMemberIsOnTheInterfaceTest()
+    {
+        var map = typeof(HtmlSanitizer).GetInterfaceMap(typeof(IHtmlSanitizer));
+        var implementing = new HashSet<MethodInfo>(map.TargetMethods);
+
+        // Property and event accessors carry SpecialName and are included deliberately: they are how
+        // a missing property or event shows up here.
+        var missing = typeof(HtmlSanitizer)
+            .GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+            .Where(m => !implementing.Contains(m))
+            .Select(m => m.Name)
+            .OrderBy(n => n, StringComparer.Ordinal)
+            .ToList();
+
+        Assert.Empty(missing);
+    }
 }

@@ -5,6 +5,7 @@ using AngleSharp.Html.Dom;
 using AngleSharp.Html.Parser;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 
 namespace Ganss.Xss;
@@ -29,6 +30,21 @@ public interface IHtmlSanitizer
     /// Gets or sets the <see cref="IMarkupFormatter"/> object used for generating output.
     /// </summary>
     IMarkupFormatter OutputFormatter { get; set; }
+
+    /// <summary>
+    /// Gets or sets the <see cref="IStyleFormatter"/> object used for generating CSS output.
+    /// </summary>
+    IStyleFormatter StyleFormatter { get; set; }
+
+    /// <summary>
+    /// Gets or sets the <see cref="Action{IComment}"/> method that encodes comments.
+    /// </summary>
+    Action<IComment> EncodeComment { get; set; }
+
+    /// <summary>
+    /// Gets or sets the <see cref="Action{IElement}"/> method that encodes literal text content.
+    /// </summary>
+    Action<IElement> EncodeLiteralTextElementContent { get; set; }
 
     /// <summary>
     /// Gets the allowed CSS at-rules such as "@media" and "@font-face".
@@ -76,12 +92,28 @@ public interface IHtmlSanitizer
     ISet<string> UriAttributes { get; }
 
     /// <summary>
+    /// Gets the attributes whose value is a <em>list</em> of URLs rather than a single one, such as
+    /// <c>srcset</c> and <c>ping</c>. Each entry is screened against <see cref="AllowedSchemes"/> on
+    /// its own and failing entries are dropped; the attribute itself is removed only when nothing
+    /// survives.
+    /// </summary>
+    /// <value>
+    /// The URI list attributes.
+    /// </value>
+    ISet<string> UriListAttributes { get; }
+
+    /// <summary>
     /// Gets or sets the allowed CSS properties such as "font" and "margin".
     /// </summary>
     /// <value>
     /// The allowed CSS properties.
     /// </value>
     ISet<string> AllowedCssProperties { get; }
+
+    /// <summary>
+    /// Allow all custom CSS properties (variables) prefixed with <c>--</c>.
+    /// </summary>
+    bool AllowCssCustomProperties { get; set; }
 
     /// <summary>
     /// Gets or sets a regex that must not match for legal CSS property values.
@@ -102,47 +134,52 @@ public interface IHtmlSanitizer
     /// <summary>
     /// Occurs after sanitizing the document and post processing nodes.
     /// </summary>
-    event EventHandler<PostProcessDomEventArgs> PostProcessDom;
+    event EventHandler<PostProcessDomEventArgs>? PostProcessDom;
 
     /// <summary>
     /// Occurs for every node after sanitizing.
     /// </summary>
-    event EventHandler<PostProcessNodeEventArgs> PostProcessNode;
+    event EventHandler<PostProcessNodeEventArgs>? PostProcessNode;
 
     /// <summary>
     /// Occurs before a tag is removed.
     /// </summary>
-    event EventHandler<RemovingTagEventArgs> RemovingTag;
+    event EventHandler<RemovingTagEventArgs>? RemovingTag;
 
     /// <summary>
     /// Occurs before an attribute is removed.
     /// </summary>
-    event EventHandler<RemovingAttributeEventArgs> RemovingAttribute;
+    event EventHandler<RemovingAttributeEventArgs>? RemovingAttribute;
 
     /// <summary>
     /// Occurs before a style is removed.
     /// </summary>
-    event EventHandler<RemovingStyleEventArgs> RemovingStyle;
+    event EventHandler<RemovingStyleEventArgs>? RemovingStyle;
 
     /// <summary>
     /// Occurs before an at-rule is removed.
     /// </summary>
-    event EventHandler<RemovingAtRuleEventArgs> RemovingAtRule;
+    event EventHandler<RemovingAtRuleEventArgs>? RemovingAtRule;
 
     /// <summary>
     /// Occurs before a comment is removed.
     /// </summary>
-    event EventHandler<RemovingCommentEventArgs> RemovingComment;
+    event EventHandler<RemovingCommentEventArgs>? RemovingComment;
 
     /// <summary>
     /// Occurs before a CSS class is removed.
     /// </summary>
-    event EventHandler<RemovingCssClassEventArgs> RemovingCssClass;
+    event EventHandler<RemovingCssClassEventArgs>? RemovingCssClass;
 
     /// <summary>
     /// Occurs when a URL is being sanitized.
     /// </summary>
     event EventHandler<FilterUrlEventArgs>? FilterUrl;
+
+    /// <summary>
+    /// Occurs when a CSS rule is being sanitized.
+    /// </summary>
+    event EventHandler<FilterCssRuleEventArgs>? FilterCssRule;
 
     /// <summary>
     /// Sanitizes the specified HTML.
@@ -204,4 +241,13 @@ public interface IHtmlSanitizer
     /// <param name="outputFormatter">The formatter used to render the DOM. Using the <see cref="OutputFormatter"/> if null.</param>
     /// <returns>The sanitized HTML document.</returns>
     string SanitizeDocument(string html, string baseUrl = "", IMarkupFormatter? outputFormatter = null);
+
+    /// <summary>
+    /// Sanitizes the specified HTML document. Even if only a fragment is given, a whole document will be returned.
+    /// </summary>
+    /// <param name="html">The HTML document to sanitize.</param>
+    /// <param name="baseUrl">The base URL relative URLs are resolved against. No resolution if empty.</param>
+    /// <param name="outputFormatter">The formatter used to render the DOM. Using the <see cref="OutputFormatter"/> if null.</param>
+    /// <returns>The sanitized HTML document.</returns>
+    string SanitizeDocument(Stream html, string baseUrl = "", IMarkupFormatter? outputFormatter = null);
 }

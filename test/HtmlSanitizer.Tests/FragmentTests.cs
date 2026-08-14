@@ -459,7 +459,9 @@ public partial class HtmlSanitizerTests
     [Fact]
     public void SanitizeFragmentIsExposedOnInterfaceTest()
     {
-        var sanitizer = new HtmlSanitizer();
+        // Declared as the interface on purpose: with var this would call the class and assert
+        // nothing about the interface at all.
+        IHtmlSanitizer sanitizer = new HtmlSanitizer();
         using var document = new HtmlSanitizer().HtmlParserFactory().ParseDocument(string.Empty);
 
         Assert.Equal(@"<th>H</th>", sanitizer.SanitizeFragment(@"<th>H</th>", "tr"));
