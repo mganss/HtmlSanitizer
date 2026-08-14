@@ -703,10 +703,9 @@ public class HtmlSanitizer : IHtmlSanitizer
     }
 
     /// <summary>
-    /// Removes all comment nodes from a list of nodes.
+    /// Removes every comment node below <paramref name="context"/>.
     /// </summary>
     /// <param name="context">The node within which to remove comments.</param>
-    /// <returns><c>true</c> if any comments were removed; otherwise, <c>false</c>.</returns>
     private void RemoveComments(INode context)
     {
         var comments = FindComments(context);
