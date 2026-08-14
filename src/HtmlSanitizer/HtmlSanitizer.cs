@@ -416,8 +416,6 @@ public class HtmlSanitizer : IHtmlSanitizer
     /// <returns>All nested subnodes.</returns>
     private static IEnumerable<INode> GetAllNodes(INode dom)
     {
-        if (dom.ChildNodes.Length == 0) yield break;
-
         var s = new Stack<INode>();
         for (var i = dom.ChildNodes.Length - 1; i >= 0; i--)
         {
