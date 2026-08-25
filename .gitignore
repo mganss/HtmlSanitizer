@@ -165,3 +165,6 @@ coverity.zip
 
 /.idea
 /.claude
+
+# BenchmarkDotNet output
+BenchmarkDotNet.Artifacts/

@@ -4933,4 +4933,24 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
         Assert.Empty(missing);
     }
+
+    // The input is untrusted and can be nested as deeply as the attacker likes, so every walk over
+    // it has to be iterative. A recursive one overflows the stack at a few thousand levels, and a
+    // StackOverflowException cannot be caught: it takes the whole process with it. This document is
+    // nested past the depth at which that happens, so a walk rewritten to recurse fails here - by
+    // killing the test run rather than by asserting, which is the loudest signal available for it.
+    [Theory]
+    [InlineData("<!-- c -->")]
+    [InlineData("<span>x</span>")]
+    [TooSlowForThreadTest]
+    public void SanitizeDeeplyNestedInputDoesNotRecurseTest(string innermost)
+    {
+        const int Depth = 20000;
+        var html = string.Concat(Enumerable.Repeat("<div>", Depth)) + innermost;
+
+        var actual = new HtmlSanitizer().Sanitize(html);
+
+        Assert.DoesNotContain("<!--", actual, StringComparison.Ordinal);
+        Assert.Equal(Depth, actual.Split("<div>").Length - 1);
+    }
 }
