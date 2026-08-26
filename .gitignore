@@ -168,3 +168,4 @@ coverity.zip
 
 # BenchmarkDotNet output
 BenchmarkDotNet.Artifacts/
+launchSettings.json
