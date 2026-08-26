@@ -3493,6 +3493,27 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
     }
 
     [Fact]
+    public void SanitizeDomWrapperAttributeCleanupSurvivesHandlerRemovingSiblingTest()
+    {
+        // A RemovingAttribute handler can reach back into the element and remove a different,
+        // not-yet-processed attribute out from under the cleanup loop. The loop still has to
+        // reach every disallowed attribute afterwards rather than skipping or throwing.
+        var sanitizer = new HtmlSanitizer();
+        var removed = new List<string>();
+        sanitizer.RemovingAttribute += (s, e) =>
+        {
+            removed.Add(e.Attribute.Name);
+            if (e.Attribute.Name == "c")
+                e.Tag.RemoveAttribute("a");
+        };
+
+        using var dom = sanitizer.SanitizeDom("<html a=\"1\" b=\"2\" c=\"3\"><body><p>hi</p></body></html>");
+
+        Assert.Empty(dom.DocumentElement!.Attributes);
+        Assert.Contains("b", removed);
+    }
+
+    [Fact]
     public void StyleByPassTest()
     {
         var sanitizer = new HtmlSanitizer();
