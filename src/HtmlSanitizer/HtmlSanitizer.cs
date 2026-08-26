@@ -755,25 +755,6 @@ public class HtmlSanitizer : IHtmlSanitizer
             tag.SetInnerText(escapedHtml);
     }
 
-    /// <summary>
-    /// Copies the attributes of <paramref name="tag"/> into <paramref name="buffer"/>.
-    /// </summary>
-    /// <remarks>
-    /// The attribute passes in <see cref="DoSanitize"/> add, remove and rewrite attributes, so each
-    /// has to run over a copy rather than over the live collection. Filling a buffer the caller
-    /// reuses keeps that copy off the allocator, which is worth doing because the passes run over
-    /// every element of every document.
-    /// </remarks>
-    private static void SnapshotAttributes(IElement tag, List<IAttr> buffer)
-    {
-        buffer.Clear();
-
-        var attributes = tag.Attributes;
-
-        for (var i = 0; i < attributes.Length; i++)
-            buffer.Add(attributes[i]!); // the indexer only returns null past Length
-    }
-
     private void DoSanitize(INode dom, IParentNode context, string baseUrl = "", int srcdocDepth = 0)
     {
         // remove disallowed tags
@@ -801,9 +782,6 @@ public class HtmlSanitizer : IHtmlSanitizer
 
         SanitizeStyleSheets(dom, baseUrl);
 
-        // Reused by the attribute passes below instead of each allocating a list per element.
-        var attributes = new List<IAttr>();
-
         // cleanup attributes
         foreach (var tag in context.QuerySelectorAll("*").ToList())
         {
@@ -813,23 +791,17 @@ public class HtmlSanitizer : IHtmlSanitizer
             }
 
             // remove disallowed attributes
-            SnapshotAttributes(tag, attributes);
-            foreach (var attribute in attributes)
+            foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
             {
-                if (!IsAllowedAttribute(attribute))
-                    RemoveAttribute(tag, attribute, RemoveReason.NotAllowedAttribute);
+                RemoveAttribute(tag, attribute, RemoveReason.NotAllowedAttribute);
             }
 
             // sanitize the content of a surviving srcdoc attribute
             SanitizeSrcdoc(tag, baseUrl, srcdocDepth);
 
             // sanitize URLs in URL-marked attributes
-            SnapshotAttributes(tag, attributes);
-            foreach (var attribute in attributes)
+            foreach (var attribute in tag.Attributes.Where(a => IsUriAttribute(a) && !IsUriListAttribute(a)).ToList())
             {
-                if (!IsUriAttribute(attribute) || IsUriListAttribute(attribute))
-                    continue;
-
                 var url = SanitizeUrl(tag, attribute.Value, baseUrl);
 
                 if (url == null)
@@ -839,11 +811,9 @@ public class HtmlSanitizer : IHtmlSanitizer
             }
 
             // sanitize every entry of attributes holding a list of URLs
-            SnapshotAttributes(tag, attributes);
-            foreach (var attribute in attributes)
+            foreach (var attribute in tag.Attributes.Where(IsUriListAttribute).ToList())
             {
-                if (IsUriListAttribute(attribute))
-                    SanitizeUriList(tag, attribute, baseUrl);
+                SanitizeUriList(tag, attribute, baseUrl);
             }
 
             // sanitize the style attribute
@@ -851,8 +821,7 @@ public class HtmlSanitizer : IHtmlSanitizer
             SanitizeStyle(tag, baseUrl);
 
             // sanitize the value of the attributes
-            SnapshotAttributes(tag, attributes);
-            foreach (var attribute in attributes)
+            foreach (var attribute in tag.Attributes.ToList())
             {
                 // The '& Javascript include' is a possible method to execute Javascript and can lead to XSS.
                 // (see https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet#.26_JavaScript_includes)
