@@ -3452,6 +3452,36 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         Assert.Equal("<html><head></head><body><div>hi</div></body></html>", returnedDocument.ToHtml());
     }
 
+    [Theory]
+    [InlineData("<body onload=alert(1)><p>hi</p>")]
+    [InlineData("<html onload=alert(1)><body><p>hi</p>")]
+    public void SanitizeDomWrapperAttributeTest(string html)
+    {
+        // A <body> or <html> start tag in the input does not create a new element - HTML5 tree
+        // construction merges its attributes onto the wrapper SanitizeDom parses into. Since
+        // DoSanitize only screens descendants of its context, an event handler landing there
+        // would otherwise survive in the returned document.
+        var sanitizer = new HtmlSanitizer();
+
+        using var dom = sanitizer.SanitizeDom(html);
+
+        Assert.Equal("<!DOCTYPE html><html><head></head><body><p>hi</p></body></html>", dom.ToHtml());
+    }
+
+    [Fact]
+    public void SanitizeDomWrapperAttributeRaisesRemovingAttributeTest()
+    {
+        // The wrapper cleanup goes through RemoveAttribute like every other removal, so handlers
+        // observe it rather than seeing the attribute vanish silently.
+        var sanitizer = new HtmlSanitizer();
+        var removed = new List<string>();
+        sanitizer.RemovingAttribute += (s, e) => removed.Add(e.Attribute.Name);
+
+        using var dom = sanitizer.SanitizeDom("<body onload=alert(1)><p>hi</p>");
+
+        Assert.Equal(["onload"], removed);
+    }
+
     [Fact]
     public void StyleByPassTest()
     {

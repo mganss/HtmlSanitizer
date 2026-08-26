@@ -165,3 +165,7 @@ coverity.zip
 
 /.idea
 /.claude
+
+# BenchmarkDotNet output
+BenchmarkDotNet.Artifacts/
+launchSettings.json

@@ -459,7 +459,25 @@ public class HtmlSanitizer : IHtmlSanitizer
         var dom = parser.ParseDocument("<!doctype html><html><body>" + html);
 
         if (dom.Body != null)
+        {
+            // Strip the scaffolding elements bare before sanitizing. They come from the wrapper
+            // prefix above, which carries no attributes of its own, so every attribute found on
+            // them originates in the caller's input: per HTML5 tree construction an <html> or
+            // <body> start tag merges its attributes onto the existing element rather than
+            // creating a new one, and DoSanitize screens only the descendants of its context -
+            // never the context element itself, nor anything above it. Without this, an input of
+            // "<body onload=alert(1)>" would leave a live event handler on the returned document
+            // for any caller that serializes more of it than dom.Body.ChildNodes.
+            foreach (var wrapper in new IElement?[] { dom.DocumentElement, dom.Head, dom.Body })
+            {
+                if (wrapper == null) continue;
+
+                foreach (var attribute in wrapper.Attributes.ToList())
+                    RemoveAttribute(wrapper, attribute, RemoveReason.NotAllowedAttribute);
+            }
+
             DoSanitize(dom, dom.Body, baseUrl);
+        }
 
         return dom;
     }
