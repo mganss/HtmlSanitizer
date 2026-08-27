@@ -116,9 +116,13 @@ public class HtmlSanitizer : IHtmlSanitizer
     /// </summary>
     /// <param name="options">Options to control the sanitizing.</param>
     /// <remarks>
-    /// Unlike the parameterless constructor, this replaces every collection with the one from
-    /// <paramref name="options"/> rather than merging with <see cref="HtmlSanitizerDefaults"/>. See
-    /// the remarks on <see cref="HtmlSanitizerOptions"/> and <see cref="HtmlSanitizerOptions.CreateDefault"/>.
+    /// <paramref name="options"/> itself starts out pre-populated from
+    /// <see cref="HtmlSanitizerDefaults"/> when constructed with <c>new HtmlSanitizerOptions()</c>,
+    /// so a sanitizer built from it behaves like the parameterless constructor unless you change
+    /// something. Each collection is taken from <paramref name="options"/> as given - reassigning
+    /// one on <paramref name="options"/> replaces that collection's default rather than merging
+    /// with it. See the remarks on <see cref="HtmlSanitizerOptions"/> and
+    /// <see cref="HtmlSanitizerOptions.Empty"/>.
     /// </remarks>
     public HtmlSanitizer(HtmlSanitizerOptions options)
     {
@@ -127,7 +131,7 @@ public class HtmlSanitizer : IHtmlSanitizer
         AllowedAttributes = new HashSet<string>(options.AllowedAttributes, StringComparer.OrdinalIgnoreCase);
         UriAttributes = new HashSet<string>(options.UriAttributes, StringComparer.OrdinalIgnoreCase);
         UriListAttributes = new HashSet<string>(options.UriListAttributes, StringComparer.OrdinalIgnoreCase);
-        AllowedClasses = new HashSet<string>(options.AllowedCssClasses, StringComparer.OrdinalIgnoreCase);
+        AllowedClasses = new HashSet<string>(options.AllowedClasses, StringComparer.OrdinalIgnoreCase);
         AllowedCssProperties = new HashSet<string>(options.AllowedCssProperties, StringComparer.OrdinalIgnoreCase);
         AllowedAtRules = new HashSet<CssRuleType>(options.AllowedAtRules);
         AllowCssCustomProperties = options.AllowCssCustomProperties;

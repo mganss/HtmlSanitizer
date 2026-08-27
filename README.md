@@ -28,7 +28,7 @@ In order to facilitate different use cases, HtmlSanitizer can be customized at s
 - Provide a base URI that will be used to resolve relative URIs against.
 - Sanitize a fragment for the element it will be inserted into, rather than for `<body>`, through `SanitizeFragment()`. This keeps markup such as a lone `<th>` that is only valid deeper in the tree.
 - Cancelable events are raised before a tag, attribute, or style is removed.
-- All of the above can be set in one go by passing an `HtmlSanitizerOptions` object to the constructor. Note that `new HtmlSanitizerOptions()` starts with *empty* collections rather than the defaults - use `HtmlSanitizerOptions.CreateDefault()` if you only want to override a few settings, see [Configuring with `HtmlSanitizerOptions`](#configuring-with-htmlsanitizeroptions).
+- All of the above can be set in one go by passing an `HtmlSanitizerOptions` object to the constructor. `new HtmlSanitizerOptions()` starts pre-populated with the same defaults as `new HtmlSanitizer()`, so you only need to set what you want to change; use `HtmlSanitizerOptions.Empty()` instead if you want a blank slate, see [Configuring with `HtmlSanitizerOptions`](#configuring-with-htmlsanitizeroptions).
 
 Usage
 -----
@@ -53,64 +53,49 @@ More example code and a description of possible options can be found in the [Wik
 
 ### Configuring with `HtmlSanitizerOptions`
 
-A sanitizer can also be configured in one go by passing an `HtmlSanitizerOptions` object to the constructor:
+A sanitizer can also be configured in one go by passing an `HtmlSanitizerOptions` object to the constructor. Every collection on `HtmlSanitizerOptions` starts out pre-populated from `HtmlSanitizerDefaults`, the same defaults `new HtmlSanitizer()` uses, so you only need to set what you want to change:
+
+```C#
+var options = new HtmlSanitizerOptions();
+options.AllowedTags.Clear();
+options.AllowedTags.Add("a");
+options.AllowedTags.Add("img");
+// AllowedAttributes, UriAttributes, AllowedSchemes, etc. remain at their defaults
+var sanitizer = new HtmlSanitizer(options);
+```
+
+Reassigning a collection outright, rather than mutating the pre-populated one, still replaces the default for that property alone - the other properties are unaffected:
 
 ```C#
 var sanitizer = new HtmlSanitizer(new HtmlSanitizerOptions
 {
     AllowedTags = new HashSet<string> { "a", "img" },
     AllowedAttributes = new HashSet<string> { "href", "src" },
-    UriAttributes = HtmlSanitizerDefaults.UriAttributes,
-    AllowedSchemes = HtmlSanitizerDefaults.AllowedSchemes,
+    // UriAttributes and AllowedSchemes are not reassigned here, so they keep their defaults
 });
 ```
 
-**Every collection on `HtmlSanitizerOptions` starts out empty, so this constructor replaces the defaults instead of adding to them.** Whatever you leave unset is empty on the resulting sanitizer - unlike the parameterless `new HtmlSanitizer()`, which seeds all of these from `HtmlSanitizerDefaults`. Set each collection you care about explicitly, using the corresponding `HtmlSanitizerDefaults` member where you want the default value, or start from `HtmlSanitizerOptions.CreateDefault()` as shown below.
-
-This matters most for `UriAttributes`, which is a *screening* list rather than an allow list: leaving it empty does not deny URI attributes, it means no attribute is treated as carrying a URI at all. Its value is then never checked against `AllowedSchemes`, so
+If you want a blank slate instead - nothing allowed until you add it - start from `HtmlSanitizerOptions.Empty()`:
 
 ```C#
-// UriAttributes not set - href is not screened
-var sanitizer = new HtmlSanitizer(new HtmlSanitizerOptions
-{
-    AllowedTags = new HashSet<string> { "a" },
-    AllowedAttributes = new HashSet<string> { "href" },
-});
+var options = HtmlSanitizerOptions.Empty();
+options.AllowedTags.Add("a");
+options.AllowedAttributes.Add("href");
+var sanitizer = new HtmlSanitizer(options);
+// UriAttributes is empty, so href is *not* screened against AllowedSchemes
 // <a href="javascript:alert(1)">click</a> is preserved as-is
 ```
 
-`UriAttributes` and `AllowedSchemes` need to be set together. Screening an attribute against an empty scheme set drops every absolute URI, valid `https` ones included:
+`UriAttributes` is a *screening* list rather than an allow list: an attribute not in it is not treated as carrying a URI at all, so its value is never checked against `AllowedSchemes`. This matters most when building an allowlist from `Empty()`, where it's easy to allow `href` without also adding it to `UriAttributes`. And `UriAttributes` and `AllowedSchemes` need to be set together - screening an attribute against an empty scheme set drops every absolute URI, valid `https` ones included:
 
 ```C#
-// UriAttributes set but AllowedSchemes left empty - every absolute URI is dropped
-var sanitizer = new HtmlSanitizer(new HtmlSanitizerOptions
-{
-    AllowedTags = new HashSet<string> { "a" },
-    AllowedAttributes = new HashSet<string> { "href" },
-    UriAttributes = HtmlSanitizerDefaults.UriAttributes,
-});
-// <a href="https://example.com">ok</a> becomes <a>ok</a>
-```
-
-If you only want to adjust a handful of settings, it is safer to start from the defaults and modify the properties, because everything you do not touch keeps its default value. You can do this either on the sanitizer itself:
-
-```C#
-var sanitizer = new HtmlSanitizer();
-sanitizer.AllowedTags.Clear();
-sanitizer.AllowedTags.Add("a");
-sanitizer.AllowedTags.Add("img");
-// UriAttributes, AllowedSchemes, etc. remain at their defaults
-```
-
-or, if you want an `HtmlSanitizerOptions` instance (e.g. to build it up before constructing the sanitizer), by starting from `HtmlSanitizerOptions.CreateDefault()` instead of `new HtmlSanitizerOptions()`:
-
-```C#
-var options = HtmlSanitizerOptions.CreateDefault();
-options.AllowedTags.Clear();
+var options = HtmlSanitizerOptions.Empty();
 options.AllowedTags.Add("a");
-options.AllowedTags.Add("img");
-// UriAttributes, AllowedSchemes, etc. remain at their defaults
+options.AllowedAttributes.Add("href");
+options.UriAttributes.Add("href");
+// AllowedSchemes left empty - every absolute URI is dropped
 var sanitizer = new HtmlSanitizer(options);
+// <a href="https://example.com">ok</a> becomes <a>ok</a>
 ```
 
 ### Tags allowed by default

@@ -2589,7 +2589,7 @@ S
         {
             AllowedTags = new HashSet<string> { "div" },
             AllowedAttributes = new HashSet<string> { "class" },
-            AllowedCssClasses  = new HashSet<string> { "good" },
+            AllowedClasses  = new HashSet<string> { "good" },
         };
         RemoveReason? reason = null;
         string removedClass = null;
@@ -2615,7 +2615,7 @@ S
         {
             AllowedTags = new HashSet<string> { "div" },
             AllowedAttributes = new HashSet<string> { "class" },
-            AllowedCssClasses  = new HashSet<string> { "other" },
+            AllowedClasses  = new HashSet<string> { "other" },
         };
         RemoveReason? reason = null;
         string attributeName = null;
@@ -3179,7 +3179,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             AllowedTags = new HashSet<string> { "div" },
             AllowedAttributes = new HashSet<string> { "class" },
-            AllowedCssClasses = new HashSet<string> { "good" },
+            AllowedClasses = new HashSet<string> { "good" },
         };
         var sanitizer = new HtmlSanitizer(options);
 
@@ -3217,7 +3217,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             AllowedTags = new HashSet<string> { "div" },
             AllowedAttributes = new HashSet<string> { "class" },
-            AllowedCssClasses  = new HashSet<string> { "other" },
+            AllowedClasses  = new HashSet<string> { "other" },
         };
         var sanitizer = new HtmlSanitizer(options);
 
@@ -3695,7 +3695,7 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         {
             AllowedTags = new HashSet<string>() { "strong", "em", "p" },
             AllowedAttributes = new HashSet<string>() { "title" },
-            AllowedCssClasses = new HashSet<string>(),
+            AllowedClasses = new HashSet<string>(),
             AllowedCssProperties = new HashSet<string>(),
             AllowedAtRules = new HashSet<CssRuleType>(),
             AllowedSchemes = new HashSet<string>() { "https" },
@@ -3865,10 +3865,10 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
     }
 
     [Fact]
-    public void HtmlSanitizerOptionsCreateDefaultMatchesParameterlessConstructorTest()
+    public void HtmlSanitizerOptionsDefaultConstructorMatchesParameterlessConstructorTest()
     {
         // see https://github.com/mganss/HtmlSanitizer/issues/570
-        var options = HtmlSanitizerOptions.CreateDefault();
+        var options = new HtmlSanitizerOptions();
         var fromOptions = new HtmlSanitizer(options);
         var fromDefaultCtor = new HtmlSanitizer();
 
@@ -3886,20 +3886,45 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
     }
 
     [Fact]
-    public void HtmlSanitizerOptionsCreateDefaultAllowsOverridingOneSettingTest()
+    public void HtmlSanitizerOptionsDefaultConstructorAllowsOverridingOneSettingTest()
     {
         // see https://github.com/mganss/HtmlSanitizer/issues/570
-        var options = HtmlSanitizerOptions.CreateDefault();
+        var options = new HtmlSanitizerOptions();
         options.AllowedTags.Clear();
         options.AllowedTags.Add("a");
 
         var sanitizer = new HtmlSanitizer(options);
 
         // href is still screened against the (default) AllowedSchemes, unlike an
-        // HtmlSanitizerOptions built from scratch with UriAttributes left unset - the malicious
+        // HtmlSanitizerOptions built from Empty() with UriAttributes left unset - the malicious
         // href is stripped even though the (still default) AllowedAttributes allows "href".
         var sanitized = sanitizer.Sanitize(@"<a href=""javascript:alert(1)"">click</a><div>dropped</div>");
         Assert.Equal("<a>click</a>", sanitized);
+    }
+
+    [Fact]
+    public void HtmlSanitizerOptionsEmptyStartsWithEmptyCollectionsTest()
+    {
+        // see https://github.com/mganss/HtmlSanitizer/issues/570
+        var options = HtmlSanitizerOptions.Empty();
+
+        Assert.Empty(options.AllowedTags);
+        Assert.Empty(options.AllowedAttributes);
+        Assert.Empty(options.AllowedClasses);
+        Assert.Empty(options.AllowedCssProperties);
+        Assert.Empty(options.AllowedAtRules);
+        Assert.Empty(options.AllowedSchemes);
+        Assert.Empty(options.UriAttributes);
+        Assert.Empty(options.UriListAttributes);
+
+        options.AllowedTags.Add("a");
+        options.AllowedAttributes.Add("href");
+
+        var sanitizer = new HtmlSanitizer(options);
+
+        // UriAttributes was left empty, so href is not screened against AllowedSchemes at all.
+        var sanitized = sanitizer.Sanitize(@"<a href=""javascript:alert(1)"">click</a>");
+        Assert.Equal(@"<a href=""javascript:alert(1)"">click</a>", sanitized);
     }
 
     [Fact]

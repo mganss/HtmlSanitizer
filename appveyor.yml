@@ -1,4 +1,4 @@
-version: 10.0.{build}
+version: 10.0.{build}-beta
 skip_tags: true
 image: Visual Studio 2026
 environment:
