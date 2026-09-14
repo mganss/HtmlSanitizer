@@ -2531,7 +2531,7 @@ S
             actual = args.Reason;
         };
 
-        var h = s.Sanitize("<a style=\"background-image:url(javascript:alert('xss'))\">just any content</a>");
+        var h = s.Sanitize("<a style=\"background-image:url(&quot;javascript:alert('xss')&quot;)\">just any content</a>");
 
         // Assert
         Assert.Equal(RemoveReason.NotAllowedUrlValue, actual);
@@ -4481,10 +4481,10 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
     // SanitizeStyleRule only recognized style, grouping, page and keyframe rules, so every other
     // at-rule reached the output with its declarations untouched. The src descriptor of an
     // @font-face rule is a URL the browser really requests, so it has to pass the scheme check.
-    [InlineData(@"@font-face { font-family: x; src: url(javascript:alert(1)) }")]
+    [InlineData(@"@font-face { font-family: x; src: url(""javascript:alert(1)"") }")]
     [InlineData(@"@font-face { font-family: x; src: url(data:font/woff;base64,AA) }")]
-    [InlineData(@"@font-face { font-family: x; src: local(""y""), url(javascript:alert(1)) }")]
-    [InlineData(@"@import url(javascript:alert(1));")]
+    [InlineData(@"@font-face { font-family: x; src: local(""y""), url(""javascript:alert(1)"") }")]
+    [InlineData(@"@import url(""javascript:alert(1)"");")]
     [Theory]
     public void SanitizeAtRuleWithDisallowedUrlTest(string css)
     {
