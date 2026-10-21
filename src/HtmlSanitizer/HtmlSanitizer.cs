@@ -1,4 +1,4 @@
-﻿using AngleSharp;
+using AngleSharp;
 using AngleSharp.Css;
 using AngleSharp.Css.Dom;
 using AngleSharp.Css.Parser;
@@ -1234,7 +1234,11 @@ public class HtmlSanitizer : IHtmlSanitizer
             return;
         }
 
-        element.SetAttribute(StyleAttributeName, element.GetStyle().ToCss(StyleFormatter));
+        // Normalizing through the style object model would turn a shorthand that omits some of its
+        // longhands ("font: 12px Arial") into those longhands with empty values, so a declaration
+        // block that has such values is rebuilt from the recovered shorthands below instead.
+        if (!element.GetStyle().Any(s => string.IsNullOrEmpty(s.Value)))
+            element.SetAttribute(StyleAttributeName, element.GetStyle().ToCss(StyleFormatter));
 
         var styles = element.GetStyle();
         if (styles == null || styles.Length == 0)
@@ -1320,7 +1324,8 @@ public class HtmlSanitizer : IHtmlSanitizer
                 setStyles[setKey] = setValue!;
         }
 
-        if (removeStyles.Count == 0 && setStyles.Count == 0)
+        // A recovered shorthand is always written back so that the attribute is normalized like the rest.
+        if (pending.Count == 0 && removeStyles.Count == 0 && setStyles.Count == 0)
             return;
 
         var removedNames = new HashSet<string>();
@@ -1337,7 +1342,8 @@ public class HtmlSanitizer : IHtmlSanitizer
         // Rebuild the declaration list once instead of mutating it property by property:
         // AngleSharp.Css re-serializes the whole style attribute on every SetProperty/RemoveProperty call,
         // which is quadratic in the number of declarations.
-        var cssText = new StringBuilder();
+        var declarations = new List<string>();
+        var partial = covered != null && styles.Any(s => covered.Contains(s.Name) && !string.IsNullOrEmpty(s.Value));
         var written = pending.Count == 0 ? null : new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         foreach (var style in styles)
@@ -1359,7 +1365,7 @@ public class HtmlSanitizer : IHtmlSanitizer
                     ? newValue
                     : Value;
 
-                cssText.Append(Name).Append(':').Append(value).Append(';');
+                declarations.Add($"{Name}: {value}");
 
                 continue;
             }
@@ -1368,12 +1374,23 @@ public class HtmlSanitizer : IHtmlSanitizer
                 continue;
 
             if (setStyles.TryGetValue(DecodeCss(style.Name), out var updatedValue))
-                cssText.Append(style.Name).Append(':').Append(updatedValue).Append(';');
+                declarations.Add($"{style.Name}: {updatedValue}");
             else
-                cssText.Append(style.ToCss()).Append(';');
+                declarations.Add(style.ToCss());
         }
 
-        styles.CssText = cssText.ToString();
+        var cssText = string.Join("; ", declarations);
+
+        if (partial)
+        {
+            // Assigning CssText would make the object model re-serialize the attribute, which
+            // expands the partial shorthand into longhands again.
+            element.SetAttribute(StyleAttributeName, cssText);
+        }
+        else
+        {
+            styles.CssText = cssText;
+        }
     }
 
     /// <summary>
@@ -1454,10 +1471,14 @@ public class HtmlSanitizer : IHtmlSanitizer
         }
 
         // An empty longhand is not proof of a pending value on its own: "font: 12px/1.5 Arial"
-        // leaves the sub-properties it omits empty as well. Those are weeded out below by the
-        // requirement that a shorthand account for all of its longhands.
+        // leaves the sub-properties it omits empty as well. A shorthand that does not produce a
+        // value of its own is weeded out below. A shorthand that does is kept even if only some of
+        // its longhands are empty, because the object model serializes the longhands of a partial
+        // shorthand as "font-weight: " and writing those out would corrupt the declaration.
         if (opaque == null)
             return pending;
+
+        var present = new HashSet<string>(styles.Select(s => s.Name), StringComparer.OrdinalIgnoreCase);
 
         // A longhand can belong to more than one shorthand (border-top-color is reachable from
         // border, border-top and border-color). Take the widest shorthand the opaque longhands
@@ -1472,7 +1493,7 @@ public class HtmlSanitizer : IHtmlSanitizer
 
         foreach (var (name, longhands) in candidates)
         {
-            if (longhands.Count == 0 || !longhands.All(opaque.Contains))
+            if (longhands.Count == 0 || !longhands.Any(opaque.Contains) || !longhands.All(present.Contains))
                 continue;
 
             var value = styles.GetPropertyValue(name);
