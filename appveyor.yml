@@ -23,7 +23,7 @@ test_script:
   - ps: cp coverage.*.xml ./coverage.xml
   - ps: |
       if (-not $env:APPVEYOR_PULL_REQUEST_NUMBER) {
-          dotnet sonarscanner end /d:sonar.login="$env:sonar_token"
+          dotnet sonarscanner end /d:sonar.token="$env:sonar_token"
       }
   - pip install codecov
   - codecov -f "coverage.xml"
