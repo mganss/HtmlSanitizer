@@ -11,7 +11,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Xunit;
 using Xunit.Sdk;
-
+using Xunit.v3;
 // Tests based on tests from http://roadkill.codeplex.com/
 
 // To create unit tests in this class reference is taken from
@@ -2968,12 +2968,14 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
                 continue;
             }
 
-            // [Theory]: InlineData, MemberData and ClassData all derive from DataAttribute.
-            foreach (var data in method.GetCustomAttributes(typeof(DataAttribute), false).Cast<DataAttribute>())
+            // [Theory]: InlineData, MemberData and ClassData all implement IDataAttribute.
+            foreach (var data in method.GetCustomAttributes(typeof(IDataAttribute), false).Cast<IDataAttribute>())
             {
-                foreach (var args in data.GetData(method))
+                var rows = data.GetData(method, new DisposalTracker()).AsTask().GetAwaiter().GetResult();
+
+                foreach (var row in rows)
                 {
-                    yield return (method, args);
+                    yield return (method, row.GetData());
                 }
             }
         }
