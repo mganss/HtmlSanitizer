@@ -2,8 +2,8 @@ HtmlSanitizer
 =============
 
 [![NuGet version](https://badge.fury.io/nu/HtmlSanitizer.svg)](https://badge.fury.io/nu/HtmlSanitizer)
-[![Build status](https://ci.appveyor.com/api/projects/status/418bmfx643iae00c/branch/master?svg=true)](https://ci.appveyor.com/project/mganss/htmlsanitizer/branch/master)
-[![codecov.io](https://codecov.io/github/mganss/HtmlSanitizer/coverage.svg?branch=master)](https://codecov.io/github/mganss/HtmlSanitizer?branch=master)
+[![Build status](https://github.com/mganss/HtmlSanitizer/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/mganss/HtmlSanitizer/actions/workflows/build.yml)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=mganss_HtmlSanitizer&metric=coverage)](https://sonarcloud.io/dashboard?id=mganss_HtmlSanitizer)
 [![Sonarcloud Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=mganss_HtmlSanitizer&metric=alert_status)](https://sonarcloud.io/dashboard?id=mganss_HtmlSanitizer)
 
 [![netstandard2.0](https://img.shields.io/badge/netstandard-2.0-brightgreen.svg)](https://img.shields.io/badge/netstandard-2.0-brightgreen.svg)

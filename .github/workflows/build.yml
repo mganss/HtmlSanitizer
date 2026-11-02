@@ -1,0 +1,112 @@
+name: Build
+
+on:
+  push:
+    branches: [ '**' ]
+  pull_request:
+
+env:
+  CI_BUILD_VERSION: 10.0.${{ github.run_number }}
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Setup Java (for SonarScanner)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Pack
+        run: dotnet pack --include-symbols --include-source -c Release src/HtmlSanitizer -o packages
+
+      - name: Install SonarScanner
+        if: github.event_name != 'pull_request'
+        run: dotnet tool install --global dotnet-sonarscanner
+
+      - name: SonarScanner begin
+        if: github.event_name != 'pull_request'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: >
+          dotnet sonarscanner begin
+          /k:"mganss_HtmlSanitizer"
+          /v:"${{ env.CI_BUILD_VERSION }}"
+          /o:"mganss-github"
+          /d:sonar.host.url="https://sonarcloud.io"
+          /d:sonar.token="$SONAR_TOKEN"
+          /d:sonar.cs.opencover.reportsPaths="${{ github.workspace }}/coverage.xml"
+          /d:sonar.coverage.exclusions="**/Program.cs"
+          /d:sonar.exclusions="**/*.html"
+
+      - name: Build
+        if: github.event_name != 'pull_request'
+        run: dotnet build
+
+      - name: Test
+        run: dotnet test test/HtmlSanitizer.Tests/HtmlSanitizer.Tests.csproj -f net8.0 --coverlet --coverlet-output-format opencover --results-directory .
+
+      - name: Rename coverage report
+        run: cp coverage.*.xml ./coverage.xml
+
+      - name: SonarScanner end
+        if: github.event_name != 'pull_request'
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: src/**/*.*nupkg
+
+      - name: NuGet login (trusted publishing)
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to NuGet.org
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        run: dotnet nuget push "packages/*.nupkg" --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Create release
+        if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ env.CI_BUILD_VERSION }}
+          name: ${{ env.CI_BUILD_VERSION }}
+          body: ${{ github.event.head_commit.message }}
+          draft: true
+          files: src/**/*.*nupkg
