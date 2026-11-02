@@ -86,7 +86,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: packages
-          path: src/**/*.*nupkg
+          path: packages/*.*nupkg
 
       - name: NuGet login (trusted publishing)
         if: github.ref == 'refs/heads/master' && github.event_name == 'push'
@@ -109,4 +109,4 @@ jobs:
           name: ${{ env.CI_BUILD_VERSION }}
           body: ${{ github.event.head_commit.message }}
           draft: true
-          files: src/**/*.*nupkg
+          files: packages/*.*nupkg
