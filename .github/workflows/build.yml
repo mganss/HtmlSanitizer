@@ -47,11 +47,11 @@ jobs:
         run: dotnet pack --include-symbols --include-source -c Release src/HtmlSanitizer -o packages
 
       - name: Install SonarScanner
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.actor != 'dependabot[bot]'
         run: dotnet tool install --global dotnet-sonarscanner
 
       - name: SonarScanner begin
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.actor != 'dependabot[bot]'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: >
@@ -76,7 +76,7 @@ jobs:
         run: cp coverage.*.xml ./coverage.xml
 
       - name: SonarScanner end
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.actor != 'dependabot[bot]'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: dotnet sonarscanner end /d:sonar.token="$SONAR_TOKEN"
