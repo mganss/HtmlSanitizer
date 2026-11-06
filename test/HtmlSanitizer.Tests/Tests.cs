@@ -5031,4 +5031,26 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
         Assert.DoesNotContain("<!--", actual, StringComparison.Ordinal);
         Assert.Equal(Depth, actual.Split("<div>").Length - 1);
     }
+
+    // An editable region gives an attacker a paste target on the host page. Firefox keeps <style>
+    // elements pasted into it, so CSS the sanitizer would otherwise strip ends up applied to the
+    // whole page (e.g. attribute-selector exfiltration of tokens in links).
+    [Fact]
+    public void ContentEditableIsRemovedByDefaultTest()
+    {
+        var actual = new HtmlSanitizer().Sanitize("<div contenteditable=\"true\">Paste in here</div>");
+
+        Assert.Equal("<div>Paste in here</div>", actual);
+    }
+
+    [Fact]
+    public void ContentEditableCanBeAllowedTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedAttributes.Add("contenteditable");
+
+        var actual = sanitizer.Sanitize("<div contenteditable=\"true\">Paste in here</div>");
+
+        Assert.Equal("<div contenteditable=\"true\">Paste in here</div>", actual);
+    }
 }

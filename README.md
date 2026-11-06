@@ -225,7 +225,6 @@ var sanitizer = new HtmlSanitizer(options);
 `cols`,
 `colspan`,
 `compact`,
-`contenteditable`,
 `coords`,
 `datetime`,
 `dir`,

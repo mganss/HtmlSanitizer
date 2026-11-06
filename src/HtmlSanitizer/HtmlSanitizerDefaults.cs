@@ -93,7 +93,6 @@ public static class HtmlSanitizerDefaults
         "step", // <input>
         "wrap", // <textarea>
         "challenge", // <keygen>
-        "contenteditable", // Global attribute
         "draggable", // Global attribute
         "dropzone", // Global attribute
         "autocomplete", // <form>, <input>
