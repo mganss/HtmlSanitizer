@@ -6,7 +6,7 @@ on:
   pull_request:
 
 env:
-  CI_BUILD_VERSION: 10.1.${{ github.run_number }}
+  CI_BUILD_VERSION: 11.0.${{ github.run_number }}
 
 permissions:
   contents: write
