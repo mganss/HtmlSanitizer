@@ -108,6 +108,7 @@ public class HtmlSanitizer : IHtmlSanitizer
         AllowedCssProperties = new HashSet<string>(HtmlSanitizerDefaults.AllowedCssProperties, StringComparer.OrdinalIgnoreCase);
         AllowedAtRules = new HashSet<CssRuleType>(HtmlSanitizerDefaults.AllowedAtRules);
         AllowedClasses = new HashSet<string>(HtmlSanitizerDefaults.AllowedClasses);
+        NamedPropertyTags = new HashSet<string>(HtmlSanitizerDefaults.NamedPropertyTags, StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -136,6 +137,7 @@ public class HtmlSanitizer : IHtmlSanitizer
         AllowedAtRules = new HashSet<CssRuleType>(options.AllowedAtRules);
         AllowCssCustomProperties = options.AllowCssCustomProperties;
         AllowDataAttributes = options.AllowDataAttributes;
+        NamedPropertyTags = new HashSet<string>(options.NamedPropertyTags, StringComparer.OrdinalIgnoreCase);
     }
 
     /// <summary>
@@ -224,6 +226,18 @@ public class HtmlSanitizer : IHtmlSanitizer
     /// Allow all HTML5 data attributes; the attributes prefixed with <c>data-</c>.
     /// </summary>
     public bool AllowDataAttributes { get; set; }
+
+    /// <summary>
+    /// Gets the HTML elements whose <c>name</c> attribute is always removed, even if <c>name</c>
+    /// is in <see cref="AllowedAttributes"/>. Browsers expose the <c>name</c> of these elements as
+    /// a named property on <c>document</c> (and <c>window</c>), so e.g. <c>&lt;img name=getElementById&gt;</c>
+    /// would clobber <c>document.getElementById</c> on the page hosting the sanitized output.
+    /// Clear this set to keep <c>name</c> on these elements.
+    /// </summary>
+    /// <value>
+    /// The tag names. Default is <see cref="HtmlSanitizerDefaults.NamedPropertyTags"/>.
+    /// </value>
+    public ISet<string> NamedPropertyTags { get; private set; }
 
     /// <summary>
     /// Gets or sets the HTML attributes that can contain a URI such as "href".
@@ -795,7 +809,7 @@ public class HtmlSanitizer : IHtmlSanitizer
             }
 
             // remove disallowed attributes
-            foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(a)).ToList())
+            foreach (var attribute in tag.Attributes.Where(a => !IsAllowedAttribute(tag, a)).ToList())
             {
                 RemoveAttribute(tag, attribute, RemoveReason.NotAllowedAttribute);
             }
@@ -1206,10 +1220,16 @@ public class HtmlSanitizer : IHtmlSanitizer
     /// <summary>
     /// Determines whether the specified attribute is allowed.
     /// </summary>
+    /// <param name="tag">The element the attribute belongs to.</param>
     /// <param name="attribute">The attribute.</param>
     /// <returns><c>true</c> if the attribute is allowed; otherwise, <c>false</c>.</returns>
-    private bool IsAllowedAttribute(IAttr attribute)
+    private bool IsAllowedAttribute(IElement tag, IAttr attribute)
     {
+        // the name of these elements becomes a named property on document/window (DOM clobbering)
+        if (string.Equals(attribute.Name, "name", StringComparison.OrdinalIgnoreCase)
+            && NamedPropertyTags.Contains(tag.LocalName))
+            return false;
+
         return AllowedAttributes.Contains(attribute.Name)
             // test html5 data- attributes
             || (AllowDataAttributes && attribute.Name != null && attribute.Name.StartsWith("data-", StringComparison.OrdinalIgnoreCase));

@@ -590,6 +590,25 @@ These hold several URIs in one value, so each entry is checked on its own and th
 
 Checking such an attribute through `UriAttributes` instead would inspect the whole value as a single URI, which only ever looks at the first entry - so use `UriListAttributes` for these.
 
+### The `name` attribute and DOM clobbering
+
+Browsers expose the `name` of `embed`, `form`, `iframe`, `img` and `object` elements as a property of `document` (and `window`). Sanitized content like `<img name="getElementById">` would otherwise replace `document.getElementById` on the page that displays it and break that page's scripts. So `name` is always removed from the elements in `NamedPropertyTags`, even though `name` is in `AllowedAttributes`. Elsewhere it is kept, e.g. on `<a name>` anchors, `<map name>` image maps and form fields.
+
+```C#
+// <img name="getElementById" src="https://example.com/a.png">
+// becomes <img src="https://example.com/a.png">
+```
+
+Clear the set to keep `name` on these elements, or cancel the removal for individual cases in the `RemovingAttribute` event:
+
+```C#
+sanitizer.NamedPropertyTags.Clear();
+```
+
+If you allow `iframe` and use its `name` as a link `target`, remove `iframe` from the set. `HtmlSanitizerOptions.Empty()` leaves `NamedPropertyTags` at its default, since it is a protection rather than an allowlist.
+
+_Note:_ `id` is not allowed by default for the same reason - an element with an `id` becomes a property of `window`. If you allow `id`, the sanitized content can clobber globals of the hosting page.
+
 ### The `srcdoc` attribute
 
 `srcdoc` holds a complete HTML document rather than a URI, and a browser parses and runs it in its own browsing context. It is therefore not a URI attribute: if you allow it, its content is sanitized as HTML with the same settings as the surrounding document.

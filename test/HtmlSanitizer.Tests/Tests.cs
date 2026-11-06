@@ -5053,4 +5053,77 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
         Assert.Equal("<div contenteditable=\"true\">Paste in here</div>", actual);
     }
+
+    // The name of embed, form, iframe, img and object elements becomes a named property on
+    // document and window, so it could clobber DOM APIs of the hosting page (DOM clobbering).
+    [Theory]
+    [InlineData("<img name=\"getElementById\" src=\"http://example.com/x.png\">", "<img src=\"http://example.com/x.png\">")]
+    [InlineData("<IMG NAME=\"querySelector\">", "<img>")]
+    [InlineData("<form name=\"querySelector\"></form>", "<form></form>")]
+    [InlineData("<form name=\"getElementById\"><input name=\"q\"></form>", "<form><input name=\"q\"></form>")]
+    public void NamedPropertyNameIsRemovedTest(string html, string expected)
+    {
+        var actual = new HtmlSanitizer().Sanitize(html);
+
+        Assert.Equal(expected, actual);
+    }
+
+    [Theory]
+    [InlineData("<a name=\"top\">Top</a>")]
+    [InlineData("<map name=\"m\"><area href=\"http://example.com/\"></map><img usemap=\"#m\">")]
+    [InlineData("<select name=\"s\"><option>x</option></select>")]
+    public void NameIsKeptOnOtherElementsTest(string html)
+    {
+        var actual = new HtmlSanitizer().Sanitize(html);
+
+        Assert.Equal(html, actual);
+    }
+
+    [Fact]
+    public void NamedPropertyNameIsRemovedFromOptInElementsTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.AllowedTags.Add("iframe");
+
+        var actual = sanitizer.Sanitize("<iframe name=\"getElementById\"></iframe>");
+
+        Assert.Equal("<iframe></iframe>", actual);
+    }
+
+    [Fact]
+    public void NamedPropertyTagsCanBeClearedTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.NamedPropertyTags.Clear();
+
+        var actual = sanitizer.Sanitize("<img name=\"a\"><form name=\"b\"></form>");
+
+        Assert.Equal("<img name=\"a\"><form name=\"b\"></form>", actual);
+    }
+
+    [Fact]
+    public void NamedPropertyTagsFromOptionsTest()
+    {
+        var defaults = new HtmlSanitizer(new HtmlSanitizerOptions());
+        Assert.Equal("<img>", defaults.Sanitize("<img name=\"a\">"));
+
+        var empty = HtmlSanitizerOptions.Empty();
+        empty.AllowedTags.Add("img");
+        empty.AllowedAttributes.Add("name");
+        Assert.Equal("<img>", new HtmlSanitizer(empty).Sanitize("<img name=\"a\">"));
+
+        var optOut = new HtmlSanitizerOptions { NamedPropertyTags = new HashSet<string>() };
+        Assert.Equal("<img name=\"a\">", new HtmlSanitizer(optOut).Sanitize("<img name=\"a\">"));
+    }
+
+    [Fact]
+    public void NamedPropertyNameRemovalCanBeCancelledTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.RemovingAttribute += (s, e) => e.Cancel = e.Attribute.Name == "name" && e.Attribute.Value == "logo";
+
+        var actual = sanitizer.Sanitize("<img name=\"logo\"><img name=\"getElementById\">");
+
+        Assert.Equal("<img name=\"logo\"><img>", actual);
+    }
 }

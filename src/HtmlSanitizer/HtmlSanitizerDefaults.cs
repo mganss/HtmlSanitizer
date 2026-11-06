@@ -401,4 +401,15 @@ public static class HtmlSanitizerDefaults
     /// </summary>
     public static ISet<string> AllowedClasses { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
         .ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// The default HTML elements whose <c>name</c> attribute is removed even if <c>name</c> is
+    /// an allowed attribute. Browsers expose the <c>name</c> of these elements as a named property
+    /// on <c>document</c> (and <c>window</c>), which lets sanitized content clobber DOM APIs of the
+    /// hosting page such as <c>document.getElementById</c> (DOM clobbering).
+    /// </summary>
+    public static ISet<string> NamedPropertyTags { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+    {
+        "embed", "form", "iframe", "img", "object"
+    }.ToImmutableHashSet(StringComparer.OrdinalIgnoreCase);
 }

@@ -84,6 +84,15 @@ public interface IHtmlSanitizer
     bool AllowDataAttributes { get; set; }
 
     /// <summary>
+    /// Gets the HTML elements whose <c>name</c> attribute is always removed to prevent
+    /// DOM clobbering, even if <c>name</c> is an allowed attribute.
+    /// </summary>
+    /// <value>
+    /// The tag names.
+    /// </value>
+    ISet<string> NamedPropertyTags { get; }
+
+    /// <summary>
     /// Gets or sets the HTML attributes that can contain a URI such as "href".
     /// </summary>
     /// <value>

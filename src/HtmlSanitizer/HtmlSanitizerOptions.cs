@@ -62,6 +62,13 @@ public class HtmlSanitizerOptions
     public ISet<string> UriListAttributes { get; set; } = new HashSet<string>(HtmlSanitizerDefaults.UriListAttributes, StringComparer.OrdinalIgnoreCase);
 
     /// <summary>
+    /// Gets or sets the HTML elements whose <c>name</c> attribute is always removed to prevent
+    /// DOM clobbering. See <see cref="HtmlSanitizerDefaults.NamedPropertyTags"/>. This is a
+    /// protection rather than an allowlist, so <see cref="Empty"/> leaves it at its default.
+    /// </summary>
+    public ISet<string> NamedPropertyTags { get; set; } = new HashSet<string>(HtmlSanitizerDefaults.NamedPropertyTags, StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
     /// Allow all custom CSS properties (variables) prefixed with <c>--</c>.
     /// </summary>
     /// <example>
