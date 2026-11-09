@@ -27,7 +27,7 @@
   <ItemGroup>
     <PackageReference Include="AngleSharp.Xml" Version="1.3.0" />
     <PackageReference Include="coverlet.MTP" Version="10.1.0" />
-    <PackageReference Include="xunit.v3" Version="4.0.2" />
+    <PackageReference Include="xunit.v3" Version="4.0.3" />
     <PackageReference Include="System.Text.Encoding.CodePages" Version="10.0.13" />
   </ItemGroup>
 
