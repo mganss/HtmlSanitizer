@@ -9,7 +9,7 @@ env:
   CI_BUILD_VERSION: 11.0.${{ github.run_number }}
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build:
@@ -120,6 +120,8 @@ jobs:
     needs: [build, verify-signature]
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Download build artifacts
