@@ -14,7 +14,6 @@
 		<AssemblyName>HtmlSanitizer</AssemblyName>
 		<AssemblyOriginatorKeyFile>HtmlSanitizer.snk</AssemblyOriginatorKeyFile>
 		<SignAssembly>true</SignAssembly>
-		<PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
 		<PackageId>HtmlSanitizer</PackageId>
 		<PackageTags>xss;anti;antixss;html;security</PackageTags>
 		<PackageProjectUrl>https://github.com/mganss/HtmlSanitizer</PackageProjectUrl>
