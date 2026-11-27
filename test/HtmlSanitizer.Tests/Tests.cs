@@ -4456,6 +4456,38 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
             sanitizer.Sanitize(@"<div style=""color: red; background: var(--a, url(http://www.example.com/a.png)); behavior: url(x.htc)"">x</div>"));
     }
 
+    // A CSS parser stricter than AngleSharp.Css's serializer does not read back every declaration
+    // that serializer wrote. The style attribute then holds text that no rule was applied to, and
+    // none of it may survive. See https://github.com/mganss/HtmlSanitizer/issues/699
+    [Fact]
+    public void SanitizeStyleDeclarationThatDoesNotReadBackTest()
+    {
+        static HtmlSanitizer Strict(bool noBackslashRule) => new()
+        {
+            HtmlParserFactory = () => new HtmlParser(new HtmlParserOptions(),
+                BrowsingContext.New(Configuration.Default.With((object)new NoBackslashDeclarationFactory()).WithCss())),
+            DisallowCssPropertyValue = noBackslashRule ? new Regex(@"[<>\\]") : new HtmlSanitizer().DisallowCssPropertyValue,
+        };
+
+        // AngleSharp.Css serializes 'a"b' as "a\"b", which the strict parser refuses on the re-read.
+        // Nothing reads back, so nothing was checked and the attribute has to go.
+        Assert.Equal("<span>x</span>",
+            Strict(noBackslashRule: true).Sanitize(@"<span style=""font-family: 'a&quot;b'"">x</span>"));
+
+        // Which rule would have caught the declaration is beside the point: it is unchecked either way.
+        Assert.Equal("<span>x</span>",
+            Strict(noBackslashRule: false).Sanitize(@"<span style=""font-family: 'a&quot;b'"">x</span>"));
+
+        // With a declaration next to it that does read back and needs no change, the block is still
+        // rebuilt from what was checked, so the unchecked text is gone and color survives.
+        Assert.Equal(@"<span style=""color: rgba(255, 0, 0, 1)"">x</span>",
+            Strict(noBackslashRule: true).Sanitize(@"<span style=""font-family: 'a&quot;b'; color: red"">x</span>"));
+
+        // The default parser reads its own serialization back, so there the value rule does the removing.
+        Assert.Equal("<span>x</span>", new HtmlSanitizer { DisallowCssPropertyValue = new Regex(@"[<>\\]") }
+            .Sanitize(@"<span style=""font-family: 'a&quot;b'"">x</span>"));
+    }
+
     // The same hole existed in style elements, which share the declaration sanitizing code.
     [Fact]
     public void SanitizeStyleTagVarShorthandTest()
@@ -5242,5 +5274,32 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
         var expected = Enumerable.Range(0, Wide).SelectMany(_ => new[] { "o:p", "o:q" });
         Assert.Equal(expected, seen);
+    }
+}
+
+/// <summary>
+/// A declaration factory that refuses any declaration whose value contains a backslash. That makes
+/// the parser stricter than AngleSharp.Css's serializer, which escapes a quote inside a string as
+/// <c>\"</c>: such a value is accepted as written but refused when its serialization is read back.
+/// </summary>
+internal sealed class NoBackslashDeclarationFactory : IDeclarationFactory
+{
+    private readonly DefaultDeclarationFactory inner = new();
+
+    public DeclarationInfo Create(string name)
+    {
+        var info = inner.Create(name);
+
+        // An unknown declaration has no converter of its own to wrap.
+        return (info.Flags & PropertyFlags.Unknown) != 0
+            ? info
+            : new DeclarationInfo(info.Name, new RefuseBackslash(info.Converter), info.Flags,
+                info.InitialValue, info.Shorthands, info.Longhands);
+    }
+
+    private sealed class RefuseBackslash(IValueConverter inner) : IValueConverter
+    {
+        public ICssValue Convert(AngleSharp.Text.StringSource source) =>
+            source.Content.Contains('\\') ? null : inner.Convert(source);
     }
 }

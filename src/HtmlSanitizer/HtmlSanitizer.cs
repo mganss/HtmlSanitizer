@@ -1279,7 +1279,8 @@ public class HtmlSanitizer : IHtmlSanitizer
         if (attribute == null)
             return;
 
-        if (element.GetStyle() == null)
+        var style = element.GetStyle();
+        if (style == null)
         {
             element.RemoveAttribute(StyleAttributeName);
             return;
@@ -1288,14 +1289,32 @@ public class HtmlSanitizer : IHtmlSanitizer
         // Normalizing through the style object model would turn a shorthand that omits some of its
         // longhands ("font: 12px Arial") into those longhands with empty values, so a declaration
         // block that has such values is rebuilt from the recovered shorthands below instead.
-        if (!element.GetStyle().Any(s => string.IsNullOrEmpty(s.Value)))
-            element.SetAttribute(StyleAttributeName, element.GetStyle().ToCss(StyleFormatter));
+        var normalized = !style.Any(s => string.IsNullOrEmpty(s.Value));
+        if (normalized)
+            element.SetAttribute(StyleAttributeName, style.ToCss(StyleFormatter));
 
         var styles = element.GetStyle();
         if (styles == null || styles.Length == 0)
-            return;
+        {
+            // Nothing read back, so no declaration was checked: the normalized text written above
+            // must not survive unchecked. An attribute that is empty at this point is left to the
+            // attribute loop in SanitizeTag, which keeps it only if the input had it empty too.
+            if (!string.IsNullOrEmpty(element.GetAttribute(StyleAttributeName)))
+                element.RemoveAttribute(StyleAttributeName);
 
-        SanitizeStyleDeclaration(element, styles, baseUrl);
+            return;
+        }
+
+        // The declarations that are about to be checked have to account for the whole attribute
+        // text. They do not when the configured CSS parser does not read back its own
+        // serialization: the text then also holds declarations that no rule was applied to, and
+        // those are gone only if the block is rewritten from the checked declarations, so the
+        // rewrite must not be skipped in that case. There is nothing to compare against where the
+        // block was left unnormalized above, since its text is the author's rather than the object
+        // model's; a declaration the parser drops outright is kept there as it was before.
+        var complete = !normalized || styles.ToCss(StyleFormatter) == element.GetAttribute(StyleAttributeName);
+
+        SanitizeStyleDeclaration(element, styles, baseUrl, forceWrite: !complete);
     }
 
     /// <summary>
@@ -1311,7 +1330,7 @@ public class HtmlSanitizer : IHtmlSanitizer
             || AllowCssCustomProperties && propertyName != null && propertyName.StartsWith("--");
     }
 
-    private void SanitizeStyleDeclaration(IElement element, ICssStyleDeclaration styles, string baseUrl)
+    private void SanitizeStyleDeclaration(IElement element, ICssStyleDeclaration styles, string baseUrl, bool forceWrite = false)
     {
         var pending = GetPendingShorthands(styles);
         var covered = pending.Count == 0 ? null
@@ -1375,8 +1394,10 @@ public class HtmlSanitizer : IHtmlSanitizer
                 setStyles[setKey] = setValue!;
         }
 
-        // A recovered shorthand is always written back so that the attribute is normalized like the rest.
-        if (pending.Count == 0 && removeStyles.Count == 0 && setStyles.Count == 0)
+        // A recovered shorthand is always written back so that the attribute is normalized like the
+        // rest. So is a block whose caller found the attribute text to hold more than these
+        // declarations: leaving it would leave the surplus unchecked.
+        if (!forceWrite && pending.Count == 0 && removeStyles.Count == 0 && setStyles.Count == 0)
             return;
 
         var removedNames = new HashSet<string>();
