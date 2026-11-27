@@ -745,7 +745,13 @@ public class HtmlSanitizer : IHtmlSanitizer
     /// <returns><c>true</c> if any comments were removed; otherwise, <c>false</c>.</returns>
     private void RemoveComments(INode context)
     {
-        foreach (var comment in GetAllNodes(context).OfType<IComment>().ToList())
+        var comments = GetAllNodes(context).OfType<IComment>().ToList();
+
+        if (comments.Count == 0) return;
+
+        var removing = new HashSet<IComment>();
+
+        foreach (var comment in comments)
         {
             EncodeComment(comment);
 
@@ -753,7 +759,35 @@ public class HtmlSanitizer : IHtmlSanitizer
             OnRemovingComment(e);
 
             if (!e.Cancel)
-                comment.Remove();
+                removing.Add(comment);
+        }
+
+        if (removing.Count == 0) return;
+
+        // One parent at a time, for the reason SetChildNodes gives: removing n comments from one
+        // long child list one by one is quadratic. Comments are leaves, so unlike the tag groups
+        // in RemoveTags these are independent of each other and need no ordering.
+        foreach (var group in removing.Where(c => c.Parent is not null).GroupBy(c => c.Parent!))
+        {
+            var parent = group.Key;
+
+            if (parent.ChildNodes.Length <= WideParentThreshold)
+            {
+                foreach (var comment in group)
+                    comment.Remove();
+
+                continue;
+            }
+
+            var keep = new List<INode>(parent.ChildNodes.Length);
+
+            foreach (var child in parent.ChildNodes)
+            {
+                if (child is not IComment comment || !removing.Contains(comment))
+                    keep.Add(child);
+            }
+
+            SetChildNodes(parent, keep);
         }
     }
 
@@ -776,10 +810,7 @@ public class HtmlSanitizer : IHtmlSanitizer
     private void DoSanitize(INode dom, IParentNode context, string baseUrl = "", int srcdocDepth = 0)
     {
         // remove disallowed tags
-        foreach (var tag in context.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList())
-        {
-            RemoveTag(tag, RemoveReason.NotAllowedTag);
-        }
+        RemoveTags(context.QuerySelectorAll("*").Where(t => !IsAllowedTag(t)).ToList());
 
         // always encode text in raw data content, except in style elements: their content is
         // sanitized as CSS by SanitizeStyleSheets below, which owns every style element.
@@ -1676,22 +1707,172 @@ public class HtmlSanitizer : IHtmlSanitizer
     }
 
     /// <summary>
-    /// Removes a tag from the document.
+    /// The number of children above which a parent's child list is rebuilt in one pass rather
+    /// than edited node by node. See <see cref="SetChildNodes"/> for why the two differ, and
+    /// <see cref="RemoveTags"/> for what the rebuild replaces.
     /// </summary>
-    /// <param name="tag">Tag to be removed.</param>
-    /// <param name="reason">Reason for removal.</param>
-    private void RemoveTag(IElement tag, RemoveReason reason)
-    {
-        var e = new RemovingTagEventArgs(tag, reason);
-        OnRemovingTag(e);
+    /// <remarks>
+    /// Node by node is cheaper while the list is short - it touches only the nodes that go,
+    /// where a rebuild detaches and reattaches every sibling - and only becomes quadratic once
+    /// the list is long. The threshold keeps ordinary documents, whose elements have a handful
+    /// of children each, on exactly the path they took before, and is deliberately far below
+    /// the point where the quadratic term is measurable.
+    /// </remarks>
+    private const int WideParentThreshold = 32;
 
-        if (!e.Cancel)
+    /// <summary>
+    /// Removes the given tags from the document, or unwraps them if <see cref="KeepChildNodes"/>
+    /// is set, raising <see cref="RemovingTag"/> for each one first.
+    /// </summary>
+    /// <param name="tags">The tags to be removed, in document order.</param>
+    /// <remarks>
+    /// <para>
+    /// Removing them one at a time is quadratic on wide input, so the decisions are taken first
+    /// and the structural changes are then applied one parent at a time. <see cref="RemovingTag"/>
+    /// is still raised for every tag, in document order, and can still cancel; the one change a
+    /// handler can observe is that it now runs before any tag has actually been removed, so the
+    /// tree it inspects is the one the sanitizer started with.
+    /// </para>
+    /// <para>
+    /// Parents are handled deepest first, which is what keeps the rebuild fast rather than what
+    /// makes it correct: each tag is unwrapped or removed through whatever parent it has at the
+    /// time, so any order produces the same tree. Taking an ancestor first is what costs. With
+    /// <see cref="KeepChildNodes"/> set, rebuilding a wide parent promotes the children of the
+    /// removed tags into it, so a tag that was about to be unwrapped out of one of those removed
+    /// tags is now a child of the wide parent while the group it was collected under has been
+    /// emptied. Its group then measures as narrow, takes the node-by-node path, and pays the
+    /// scan it was grouped to avoid - 500 wide parents of 500 children each took 152 s that way
+    /// against 0.6 s deepest first. Going bottom-up means every parent is rebuilt while its own
+    /// child list is still the one its group was built from.
+    /// </para>
+    /// </remarks>
+    private void RemoveTags(IList<IElement> tags)
+    {
+        if (tags.Count == 0) return;
+
+        var removing = new HashSet<IElement>();
+
+        foreach (var tag in tags)
         {
-            if (KeepChildNodes && tag.HasChildNodes)
-                tag.Replace([.. tag.ChildNodes]);
-            else
-                tag.Remove();
+            var e = new RemovingTagEventArgs(tag, RemoveReason.NotAllowedTag);
+            OnRemovingTag(e);
+
+            if (!e.Cancel)
+                removing.Add(tag);
         }
+
+        if (removing.Count == 0) return;
+
+        // Deepest parent first, so that every parent is rebuilt while its child list is still
+        // the one its group was built from; see the remarks for what taking an ancestor first
+        // costs. Groups at equal depth are independent - neither can be an ancestor of the other -
+        // so their relative order does not matter.
+        var groups = removing
+            .Where(t => t.Parent is not null)
+            .GroupBy(t => t.Parent!)
+            .OrderByDescending(g => Depth(g.Key));
+
+        foreach (var group in groups)
+        {
+            var parent = group.Key;
+
+            // Without KeepChildNodes a removed tag takes its whole subtree with it, so a group
+            // sitting inside another removed tag has nothing left to do.
+            if (!KeepChildNodes && HasRemovedAncestor(parent, removing)) continue;
+
+            if (parent.ChildNodes.Length <= WideParentThreshold)
+            {
+                foreach (var tag in group)
+                {
+                    if (KeepChildNodes && tag.HasChildNodes)
+                        tag.Replace([.. tag.ChildNodes]);
+                    else
+                        tag.Remove();
+                }
+
+                continue;
+            }
+
+            var keep = new List<INode>(parent.ChildNodes.Length);
+
+            foreach (var child in parent.ChildNodes)
+            {
+                if (child is IElement element && removing.Contains(element))
+                {
+                    if (KeepChildNodes)
+                        keep.AddRange(element.ChildNodes);
+                }
+                else
+                {
+                    keep.Add(child);
+                }
+            }
+
+            SetChildNodes(parent, keep);
+        }
+    }
+
+    /// <summary>
+    /// Replaces a node's children with the given sequence in a single pass.
+    /// </summary>
+    /// <param name="parent">The node whose children are replaced.</param>
+    /// <param name="keep">The nodes to have as children, in order. May contain nodes that are
+    /// currently children of <paramref name="parent"/> or of one of its children.</param>
+    /// <remarks>
+    /// <para>
+    /// AngleSharp locates a child inside its parent through <c>NodeList.Index</c>, which answers
+    /// from an index hint carried on the node and otherwise scans the child list from the front.
+    /// The hint is only stored for the first <see cref="ushort.MaxValue"/> positions and goes
+    /// stale as soon as the list changes, so each edit costs a scan proportional to the node's
+    /// position and a run of edits over one long child list is quadratic.
+    /// </para>
+    /// <para>
+    /// Emptying the list front to back avoids that entirely, because the node being removed is
+    /// always the one at index 0, and reattaching the survivors afterwards never scans, because
+    /// each of them is already detached. Detaching a node from its parent does not disturb its
+    /// own children, so an unwrapped element's children can be handed over this way too.
+    /// </para>
+    /// <para>
+    /// Not AngleSharp's own <c>ReplaceChildren</c>: that builds a fragment by appending the
+    /// survivors, and each append detaches one from a parent that still holds everything else,
+    /// which is the quadratic scan again. It is only fast when the nodes being appended come
+    /// from somewhere other than the parent being rebuilt.
+    /// </para>
+    /// </remarks>
+    private static void SetChildNodes(INode parent, IList<INode> keep)
+    {
+        foreach (var child in parent.ChildNodes.ToArray())
+            parent.RemoveChild(child);
+
+        foreach (var child in keep)
+            parent.AppendChild(child);
+    }
+
+    /// <summary>
+    /// Gets the number of ancestors a node has.
+    /// </summary>
+    private static int Depth(INode node)
+    {
+        var depth = 0;
+
+        for (var parent = node.Parent; parent is not null; parent = parent.Parent)
+            depth++;
+
+        return depth;
+    }
+
+    /// <summary>
+    /// Determines whether a node is a descendant of any element in <paramref name="removing"/>.
+    /// </summary>
+    private static bool HasRemovedAncestor(INode node, HashSet<IElement> removing)
+    {
+        for (var parent = node; parent is not null; parent = parent.Parent)
+        {
+            if (parent is IElement element && removing.Contains(element))
+                return true;
+        }
+
+        return false;
     }
 
     /// <summary>

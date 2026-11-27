@@ -5126,4 +5126,121 @@ zqy1QY1kkPOuMvKWvvmFIwClI2393jVVcp91eda4+J+fIYDbfJa7RY5YcNrZhTuV//9k="">
 
         Assert.Equal("<img name=\"logo\"><img>", actual);
     }
+
+    // Tag and comment removal switch to rebuilding a parent's child list in one pass once that
+    // list is longer than HtmlSanitizer.WideParentThreshold, because editing it node by node is
+    // quadratic. Every other test here works on a handful of nodes and so only ever exercises the
+    // node-by-node path; these cross the threshold deliberately, to show that the two agree. The
+    // width is kept just above it rather than large, since what is under test is the result of the
+    // rebuild and not its timing.
+    private const int Wide = 64;
+
+    private static string Times(int n, Func<int, string> unit) =>
+        string.Concat(Enumerable.Range(0, n).Select(unit));
+
+    [Fact]
+    public void WideParentCommentsTest()
+    {
+        var html = Times(Wide, i => $"<b>{i}</b><!--c{i}-->");
+        var expected = Times(Wide, i => $"<b>{i}</b>");
+
+        Assert.Equal(expected, new HtmlSanitizer().Sanitize(html));
+    }
+
+    [Fact]
+    public void WideParentCommentsAmongTextTest()
+    {
+        // Comments at both ends and back to back, so the rebuilt sequence has to preserve position
+        // rather than merely drop the right number of nodes.
+        var html = "<!--a-->head" + Times(Wide, i => $"<!--x{i}--><!--y{i}-->t{i}") + "tail<!--z-->";
+        var expected = "head" + Times(Wide, i => $"t{i}") + "tail";
+
+        Assert.Equal(expected, new HtmlSanitizer().Sanitize(html));
+    }
+
+    [Fact]
+    public void WideParentRemoveTagsTest()
+    {
+        var html = Times(Wide, i => $"<o:p>{i}</o:p><b>{i}</b>");
+        var expected = Times(Wide, i => $"<b>{i}</b>");
+
+        Assert.Equal(expected, new HtmlSanitizer().Sanitize(html));
+    }
+
+    [Fact]
+    public void WideParentKeepChildNodesTest()
+    {
+        var html = Times(Wide, i => $"<o:p>{i}</o:p><b>{i}</b>");
+        var expected = Times(Wide, i => $"{i}<b>{i}</b>");
+
+        Assert.Equal(expected, new HtmlSanitizer { KeepChildNodes = true }.Sanitize(html));
+    }
+
+    [Fact]
+    public void WideParentKeepChildNodesWideChildTest()
+    {
+        // The unwrapped element is itself wide, so its children are handed over in bulk as well.
+        var html = $"<div>{Times(Wide, i => $"<o:p>{Times(Wide, j => $"<b>{i}.{j}</b>")}</o:p>")}</div>";
+        var expected = $"<div>{Times(Wide, i => Times(Wide, j => $"<b>{i}.{j}</b>"))}</div>";
+
+        Assert.Equal(expected, new HtmlSanitizer { KeepChildNodes = true }.Sanitize(html));
+    }
+
+    [Fact]
+    public void WideParentNestedKeepChildNodesTest()
+    {
+        // Both levels are wide and both are disallowed, so the inner parents have to be rebuilt
+        // before the outer one promotes what they produced.
+        var html = $"<div>{Times(Wide, i => $"<o:p>{Times(Wide, j => $"<o:q>{i}.{j}</o:q>")}</o:p>")}</div>";
+        var expected = $"<div>{Times(Wide, i => Times(Wide, j => $"{i}.{j}"))}</div>";
+
+        Assert.Equal(expected, new HtmlSanitizer { KeepChildNodes = true }.Sanitize(html));
+    }
+
+    [Fact]
+    public void WideParentNestedRemoveTagsTest()
+    {
+        // Without KeepChildNodes the outer tag takes the inner ones with it, so the inner groups
+        // have to be left alone rather than rebuilt into a parent that is about to disappear.
+        var html = $"<div>{Times(Wide, i => $"<o:p>{Times(Wide, j => $"<o:q>{i}.{j}</o:q>")}</o:p>")}<b>k</b></div>";
+
+        Assert.Equal("<div><b>k</b></div>", new HtmlSanitizer().Sanitize(html));
+    }
+
+    [Fact]
+    public void WideParentRemovingTagCanBeCancelledTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.RemovingTag += (s, e) => e.Cancel = e.Tag.LocalName == "o:keep";
+
+        var html = Times(Wide, i => $"<o:p>{i}</o:p><o:keep>{i}</o:keep>");
+        var expected = Times(Wide, i => $"<o:keep>{i}</o:keep>");
+
+        Assert.Equal(expected, sanitizer.Sanitize(html));
+    }
+
+    [Fact]
+    public void WideParentRemovingCommentCanBeCancelledTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        sanitizer.RemovingComment += (s, e) => e.Cancel = e.Comment.Data.StartsWith("keep");
+
+        var html = Times(Wide, i => $"<!--keep{i}--><!--drop{i}-->t{i}");
+        var expected = Times(Wide, i => $"<!--keep{i}-->t{i}");
+
+        Assert.Equal(expected, sanitizer.Sanitize(html));
+    }
+
+    [Fact]
+    public void WideParentRemovingTagRaisedInDocumentOrderTest()
+    {
+        var sanitizer = new HtmlSanitizer();
+        var seen = new List<string>();
+        sanitizer.RemovingTag += (s, e) => seen.Add(e.Tag.LocalName);
+
+        sanitizer.Sanitize($"<div>{Times(Wide, i => $"<o:p><o:q>{i}</o:q></o:p>")}</div>");
+
+        var expected = Enumerable.Range(0, Wide).SelectMany(_ => new[] { "o:p", "o:q" });
+        Assert.Equal(expected, seen);
+    }
 }
